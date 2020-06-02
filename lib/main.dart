@@ -57,7 +57,7 @@ DateTime loadLastRefresh() {
 }
 
 // File downloading and management
-Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetries=0, BuildContext context]) async {
+Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetries=0]) async {
   try {
     Response response = await dio.get(
       url,
@@ -85,18 +85,6 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
       throw('Failed to download $url with $maxRetries retries.');
     }
   }
-}
-
-filesExist() async {
-  for (int i = 0; i <= 8; i++) {
-    if (await File(localFilePath('forecast.$i.png')).exists()) {
-      // Do nothing
-    } else {
-      return false;
-    }
-  }
-  // If we check all the files and never have to return false, return true
-  return true;
 }
 
 refreshImages(BuildContext context, bool forceRefresh, bool showSnack) async {
@@ -139,7 +127,8 @@ refreshImages(BuildContext context, bool forceRefresh, bool showSnack) async {
 
 // Images in memory
 safeUpdate() async {
-  // Clear the array and load all the images into memory.
+  // Clear the array and reload all the images into it
+  // Note that the array is a class-level variable in forecast.dart
   forecasts.clear();
   for (int i = 0; i <= 8; i++) {
     forecasts.add(pngDecoder.decodeImage(localFile('forecast.$i.png').readAsBytesSync()));
@@ -165,13 +154,6 @@ getUserLocation() async {
   _locationData = await location.getLocation();
   print(_locationData);
   return _locationData;
-}
-permissionGranted() {
-  if (_permissionGranted == PermissionStatus.granted) {
-    return true;
-  } else {
-    return false;
-  }
 }
 
 // App code
@@ -205,6 +187,7 @@ class SplashState extends State<Splash> {
       print('Holding on splash to update outdated images');
       try {
         await refreshImages(context, true, false);
+        await safeUpdate();
         print('Done attempting to update images');
       } catch (e) {
         print('Error attempting image update');

@@ -56,13 +56,6 @@ class MapScreenState extends State<MapScreen> {
       }
     });
   }
-  _resetCache() {
-    imageCache.clear();
-    for (int i = 0; i <= 8; i++) {
-      precacheImage(FileImage(localFile('forecast.$i.png')), context);
-      precacheImage(FileImage(localFile('forecast_legend.$i.png')), context);
-    }
-  }
   // Widget overrides
   @override
   Widget build(BuildContext context) {
@@ -135,7 +128,7 @@ class MapScreenState extends State<MapScreen> {
               Spacer(),
               IconButton(
                 icon: Icon(Icons.refresh),
-                onPressed: () {setState(() {if (_playing) {_togglePlaying();}; _count = 0; refreshImages(context, false, true);});},
+                onPressed: () {setState(() {if (_playing) {_togglePlaying();} _count = 0; refreshImages(context, false, true);});},
               ),
             ],
           )
