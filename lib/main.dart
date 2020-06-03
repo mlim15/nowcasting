@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Nowcasting/onboarding.dart';
 import 'package:Nowcasting/forecast.dart';
@@ -251,7 +250,12 @@ class SplashState extends State<Splash> {
   Widget build(BuildContext context) {
     return new Scaffold(
       body: new Center(
-        child: new SvgPicture.asset("assets/paaatterns-clarence.svg"),
+        child: Image.asset(
+          "assets/paaatterns-clarence.png",     
+          fit: BoxFit.cover,
+          height: double.infinity,
+          width: double.infinity,
+          alignment: Alignment.center,),
       ),
     );
   }

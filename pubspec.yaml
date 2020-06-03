@@ -22,7 +22,7 @@ dependencies:
   introduction_screen: ^1.0.7
   shared_preferences: '>=0.5.7+3 <2.0.0'
   flutter_progress_button: '^0.6.4'
-  flutter_svg: ^0.17.1
+  #flutter_svg: ^0.17.1
 
 dev_dependencies:
   flutter_test:
