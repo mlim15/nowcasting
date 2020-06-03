@@ -92,7 +92,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     var overlayImages = <OverlayImage>[
       OverlayImage(
         bounds: LatLngBounds(
-            LatLng(35.0491, -88.7654), LatLng(51.0000, -66.7500)),
+        LatLng(35.0491, -88.7654), LatLng(51.0000, -66.7500)),
         opacity: 0.6,
         imageProvider: FileImage(localFile('forecast.$_count.png')),
         gaplessPlayback: true,
@@ -101,12 +101,24 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       basemap = TileLayerOptions(
         tileProvider: AssetTileProvider(),
         urlTemplate: "assets/jawg-matrix/{z}/{x}/{y}.png",
+        maxNativeZoom: 9,
+        minNativeZoom: 5,
         maxZoom: 9,
+        minZoom: 5,
+        backgroundColor: Color(0xFF000000),
       );
     } else {
       basemap = TileLayerOptions(
-        urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
+        //urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
+        tileProvider: AssetTileProvider(),
+        urlTemplate: "assets/jawg-sunny/{z}/{x}/{y}.png",
+        maxNativeZoom: 9,
+        minNativeZoom: 5,
         maxZoom: 9,
+        minZoom: 5,
+        keepBuffer: 3,
+        tileFadeInDuration: 1,
+        backgroundColor: Color(0xFFCCE7FC),
       );
     }
     return Scaffold(
