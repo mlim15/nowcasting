@@ -10,10 +10,10 @@ imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
 List<imglib.Image> forecasts;
 
 // Helper functions
-
 coordinateToPixel(LatLng coordinates) {
   double percEast;
   double percSouth;
+  
 }
 
 getPixelValue(int x, int y, int index) {

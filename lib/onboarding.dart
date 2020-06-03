@@ -34,7 +34,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildImage(String assetName) {
     return Align(
-      child: Image.asset('assets/$assetName.jpg', width: 350.0),
+      child: Image.asset('assets/$assetName.png', width: 350.0),
       alignment: Alignment.bottomCenter,
     );
   }
@@ -59,14 +59,14 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             title: "Welcome!",
             body:
             "Please complete this quick one-time setup.",
-            image: _buildImage('img1'),
+            image: _buildImage('manypixels-iso-weather'),
             decoration: pageDecoration,
           ),
           PageViewModel(
             title: "Initial Download",
             body:
             "Ensure you are connected to the internet to download ~5MB of base maps and the initial weather data.",
-            image: _buildImage('img3'),
+            image: _buildImage('manypixels-iso-digital_nomad'),
             decoration: pageDecoration,
             footer: ProgressButton(
               defaultWidget: const Text('Download Now', style: TextStyle(color: Colors.white)),
@@ -96,7 +96,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               title: "Location Permissions",
               body:
               "Giving access to your location will enable the app to provide local forecasts.",
-              image: _buildImage('img2'),
+              image: _buildImage('manypixels-iso-navigation'),
               decoration: pageDecoration,
               footer: ProgressButton(
                 defaultWidget: const Text('Request Permission', style: TextStyle(color: Colors.white)),
@@ -128,7 +128,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 Text("I hope you find the app useful!", style: bodyStyle),
               ],
             ),
-            image: _buildImage('img1'),
+            image: _buildImage('manypixels-iso-camping'),
             decoration: pageDecoration,
           ),
         ],

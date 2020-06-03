@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Nowcasting/onboarding.dart';
 import 'package:Nowcasting/forecast.dart';
@@ -170,6 +171,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp (
       title: _title,
       home: Splash(),
+      theme: ThemeData(
+        primaryColor: Color(0xff0075b3), 
+        accentColor: Color(0xff0075b3),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Color(0xff0075b3),
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark, 
+        primaryColor: Color(0xff0075b3),
+        accentColor: Color(0xff00a3f9),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          foregroundColor: Colors.white,
+          backgroundColor: Color(0xff0075b3),
+        ),
+      ),
     );
   }
 }
@@ -225,7 +242,7 @@ class SplashState extends State<Splash> {
   Widget build(BuildContext context) {
     return new Scaffold(
       body: new Center(
-        child: new Text('Loading...'),
+        child: new SvgPicture.asset("assets/paaatterns-clarence.svg"),
       ),
     );
   }

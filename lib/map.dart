@@ -83,7 +83,7 @@ class MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 center: LatLng(45.5088, -73.5878),
                 zoom: 6.0,
-                maxZoom: 9,
+                maxZoom: 10,
                 minZoom: 5,
                 swPanBoundary: LatLng(35.0491, -88.7654),
                 nePanBoundary: LatLng(51.0000, -66.7500),
@@ -94,7 +94,7 @@ class MapScreenState extends State<MapScreen> {
               layers: [
                 TileLayerOptions(
                   urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
-                  maxZoom: 9,
+                  maxZoom: 10,
                 ),
                 OverlayImageLayerOptions(overlayImages: overlayImages),
                 MarkerLayerOptions(markers: markers),

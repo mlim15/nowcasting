@@ -22,6 +22,7 @@ dependencies:
   introduction_screen: ^1.0.7
   shared_preferences: '>=0.5.7+3 <2.0.0'
   flutter_progress_button: '^0.6.4'
+  flutter_svg: ^0.17.1
 
 dev_dependencies:
   flutter_test:
@@ -29,17 +30,19 @@ dev_dependencies:
   flutter_launcher_icons: "^0.7.0"
 
 flutter_icons:
-  ios: false
+  ios: true
   android: true
   image_path: "assets/launcher/icon_static.png"
-  adaptive_icon_background: "#3F3F3F"
-  adaptive_icon_foreground: "assets/launcher/icon_foreground.png"
+  adaptive_icon_background: "assets/launcher/icon_bg.png"
+  adaptive_icon_foreground: "assets/launcher/icon_fg.png"
 
 flutter:
   uses-material-design: true
   # Add assets here
   assets:
-    - img1.jpg
-    - img2.jpg
-    - img3.jpg
+    - paaatterns-clarence.svg
+    - manypixels-iso-navigation.png
+    - manypixels-iso-weather.png
+    - manypixels-iso-digital_nomad.png
+    - manypixels-iso-camping.png
 
