@@ -41,15 +41,29 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bodyStyle = TextStyle(fontSize: 14.0);
-    const pageDecoration = const PageDecoration(
-      titleTextStyle: TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700),
-      bodyTextStyle: bodyStyle,
-      descriptionPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-      pageColor: Colors.white,
-      imagePadding: EdgeInsets.zero,
-    );
-
+    PageDecoration pageDecoration;
+    if (darkmode(context)) {
+      const bodyStyle = TextStyle(fontSize: 14.0, color: Colors.white);
+      const headerStyle = TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700, color: Colors.white);
+      pageDecoration = const PageDecoration(
+        titleTextStyle: headerStyle,
+        bodyTextStyle: bodyStyle,
+        descriptionPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+        pageColor: Color(0xff303030),
+        //boxDecoration: BoxDecoration(gradient: Gradient()),
+        imagePadding: EdgeInsets.zero,
+      );
+    } else {
+      const bodyStyle = TextStyle(fontSize: 14.0);
+      const headerStyle = TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700);
+      pageDecoration = const PageDecoration(
+        titleTextStyle: headerStyle,
+        bodyTextStyle: bodyStyle,
+        descriptionPadding: EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+        pageColor: Colors.white,
+        imagePadding: EdgeInsets.zero,
+      );
+    }
     return Scaffold (
       key: _obScaffoldKey,
       body: IntroductionScreen(
@@ -65,7 +79,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           PageViewModel(
             title: "Initial Download",
             body:
-            "Ensure you are connected to the internet to download ~5MB of base maps and the initial weather data.",
+            "Ensure you are connected to the internet to download ~1MB of initial weather data.",
             image: _buildImage('manypixels-iso-digital_nomad'),
             decoration: pageDecoration,
             footer: ProgressButton(
@@ -74,7 +88,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               width: 196,
               height: 48,
               borderRadius: 24,
-              color: Colors.lightBlue,
+              color: Color(0xff0075b3),
               onPressed: () async {
                 bool doNotProceed = false;
                 try {
@@ -104,7 +118,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 width: 196,
                 height: 48,
                 borderRadius: 24,
-                color: Colors.lightBlue,
+                color: Color(0xff0075b3),
                 onPressed: () async {
                   await getUserLocation();
                   // After [onPressed], it will trigger animation running backwards, from end to beginning
@@ -125,7 +139,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             bodyWidget: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Text("I hope you find the app useful!", style: bodyStyle),
+                Text("I hope you find the app useful!"),
               ],
             ),
             image: _buildImage('manypixels-iso-camping'),
