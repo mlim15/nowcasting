@@ -130,7 +130,9 @@ refreshImages(BuildContext context, bool forceRefresh, bool showSnack) async {
 safeUpdate() async {
   // Clear the array and reload all the images into it
   // Note that the array is a class-level variable in forecast.dart
-  forecasts.clear();
+  if (forecasts.length > 0) {
+    forecasts.clear();
+  }
   for (int i = 0; i <= 8; i++) {
     forecasts.add(pngDecoder.decodeImage(localFile('forecast.$i.png').readAsBytesSync()));
   }
