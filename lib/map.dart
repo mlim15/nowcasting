@@ -12,7 +12,7 @@ class MapScreen extends StatefulWidget {
   MapScreenState createState() => new MapScreenState();
 }
 
-class MapScreenState extends State<MapScreen> {
+class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Define timer object and speed for later use
   Timer changeImageTimer;
   Duration speed = Duration(milliseconds: 500);
@@ -26,6 +26,28 @@ class MapScreenState extends State<MapScreen> {
   MapController mapController = MapController();
   UserLocationOptions userLocationOptions;
   List<Marker> markers = [];
+  TileLayerOptions basemap;
+  // Theming management
+  @override
+  void initState() {
+    super.initState();
+     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final Brightness brightness = WidgetsBinding.instance.window.platformBrightness;
+    //inform listeners and rebuild widget tree
+    setState(() {
+      
+    });
+  }
   // State management functions
   _next() {
     setState(() {
@@ -75,6 +97,18 @@ class MapScreenState extends State<MapScreen> {
         imageProvider: FileImage(localFile('forecast.$_count.png')),
         gaplessPlayback: true,
       )];
+    if (darkmode(context)) {
+      basemap = TileLayerOptions(
+        tileProvider: AssetTileProvider(),
+        urlTemplate: "assets/jawg-matrix/{z}/{x}/{y}.png",
+        maxZoom: 9,
+      );
+    } else {
+      basemap = TileLayerOptions(
+        urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
+        maxZoom: 9,
+      );
+    }
     return Scaffold(
       key: _mapScaffoldKey,
       body: Stack(
@@ -83,7 +117,7 @@ class MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 center: LatLng(45.5088, -73.5878),
                 zoom: 6.0,
-                maxZoom: 10,
+                maxZoom: 9,
                 minZoom: 5,
                 swPanBoundary: LatLng(35.0491, -88.7654),
                 nePanBoundary: LatLng(51.0000, -66.7500),
@@ -92,10 +126,7 @@ class MapScreenState extends State<MapScreen> {
                 ],
               ),
               layers: [
-                TileLayerOptions(
-                  urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
-                  maxZoom: 10,
-                ),
+                basemap,
                 OverlayImageLayerOptions(overlayImages: overlayImages),
                 MarkerLayerOptions(markers: markers),
                 userLocationOptions,

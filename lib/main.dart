@@ -157,6 +157,13 @@ getUserLocation() async {
   return _locationData;
 }
 
+// Theming
+bool darkmode(BuildContext context) {
+  final Brightness brightnessValue = MediaQuery.of(context).platformBrightness;
+  bool isDark = brightnessValue == Brightness.dark;
+  return isDark;
+}
+
 // App code
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
