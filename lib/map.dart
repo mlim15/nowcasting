@@ -88,6 +88,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       updateMapLocationOnPositionChange: false,
       showMoveToCurrentLocationFloatingActionButton: true,
       zoomToCurrentLocationOnLoad: true,
+      moveToCurrentLocationFloatingActionButton: FloatingActionButton(onPressed: () {}, child: Icon(Icons.my_location)),
     );
     var overlayImages = <OverlayImage>[
       OverlayImage(
