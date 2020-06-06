@@ -28,19 +28,26 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: "^0.7.0"
+  flutter_native_splash: ^0.1.9
 
 flutter_icons:
   ios: true
   android: true
-  image_path: "assets/launcher/icon_static.png"
+  image_path_android: "assets/launcher/icon_android.png"
+  image_path_ios: "assets/launcher/icon_ios.png"
   adaptive_icon_background: "assets/launcher/icon_bg.png"
-  adaptive_icon_foreground: "assets/launcher/icon_fg.png"
+  adaptive_icon_foreground: "assets/launcher/logo.png"
+
+flutter_native_splash:
+  image: "assets/launcher/logo.png"
+  color: "#0075b3"
+  android_disable_fullscreen: true
 
 flutter:
   uses-material-design: true
   # Add assets here
   assets:
-    - paaatterns-clarence.png
+    - assets/launcher/logo.png
     - manypixels-iso-navigation.png
     - manypixels-iso-weather.png
     - manypixels-iso-digital_nomad.png
