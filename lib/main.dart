@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:location/location.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:location/location.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image/image.dart' as imglib;
 
 import 'package:Nowcasting/onboarding.dart';
 import 'package:Nowcasting/forecast.dart';
@@ -249,13 +250,9 @@ class SplashState extends State<Splash> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+      backgroundColor: Color(0xFF0075b3),
       body: new Center(
-        child: Image.asset(
-          "assets/paaatterns-clarence.png",     
-          fit: BoxFit.cover,
-          height: double.infinity,
-          width: double.infinity,
-          alignment: Alignment.center,),
+        child: Image.asset("assets/launcher/logo.png"),
       ),
     );
   }
