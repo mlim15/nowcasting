@@ -169,9 +169,9 @@ bool darkmode(BuildContext context) {
 // App code
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  appDocPath = await getExternalStorageDirectory();
-  runApp(MyApp());
-}
+  appDocPath = await getApplicationSupportDirectory();
+    runApp(MyApp());
+  }
 
 class MyApp extends StatelessWidget {
   static const String _title = 'MAPLE Nowcasting';

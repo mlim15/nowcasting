@@ -43,6 +43,11 @@
 	<false/>
 	<key>UIStatusBarHidden</key>
 	<true/>
+	
 
+	<key>NSLocationAlwaysUsageDescription</key>
+		<string>Nowcasting uses your location to provide forecasts at your location.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Nowcasting uses your location to provide forecasts at your location.</string>
 </dict>
 </plist>
