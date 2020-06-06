@@ -184,6 +184,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Color(0xff0075b3), 
         accentColor: Color(0xff0075b3),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
+          foregroundColor: Colors.white,
           backgroundColor: Color(0xff0075b3),
         ),
       ),
@@ -269,6 +270,8 @@ class AppState extends State<AppContents> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      // if changing to/from map screen, manage status bar legiblity
+      
     });
   }
   @override
