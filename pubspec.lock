@@ -149,9 +149,11 @@ packages:
   flutter_map:
     dependency: "direct main"
     description:
-      name: flutter_map
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: "381afd019d34f29e12e997018c65d41e79384964"
+      resolved-ref: "381afd019d34f29e12e997018c65d41e79384964"
+      url: "https://github.com/johnpryan/flutter_map.git"
+    source: git
     version: "0.9.0"
   flutter_native_splash:
     dependency: "direct dev"

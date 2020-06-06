@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/plugin_api.dart';
 import 'package:user_location/user_location.dart';
 import 'package:latlong/latlong.dart';
 
@@ -31,7 +32,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -45,7 +46,13 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final Brightness brightness = WidgetsBinding.instance.window.platformBrightness;
     //inform listeners and rebuild widget tree
     setState(() {
-      
+      if (brightness == Brightness.dark) {
+        print('System brightness changed to dark');
+        _updateTileBrightness(true);
+      } else {
+        print('System brightness changed to light');
+        _updateTileBrightness(false);
+      }
     });
   }
   // State management functions
@@ -78,9 +85,33 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       }
     });
   }
-  // Widget overrides
-  @override
-  Widget build(BuildContext context) {
+  _updateTileBrightness(bool isDark) {
+    if (isDark) {
+      basemap = TileLayerOptions(
+        tileProvider: AssetTileProvider(),
+        urlTemplate: "assets/jawg-matrix/{z}/{x}/{y}.png",
+        maxZoom: 9,
+        minZoom: 5,
+        backgroundColor: Color(0xFF000000),
+        overrideTilesWhenUrlChanges: true, 
+        tileFadeInDuration: 0, 
+        tileFadeInStartWhenOverride: 1.0,
+      );
+    } else {
+      basemap = TileLayerOptions(
+        //urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
+        tileProvider: AssetTileProvider(),
+        urlTemplate: "assets/jawg-sunny/{z}/{x}/{y}.png",
+        maxZoom: 9,
+        minZoom: 5,
+        backgroundColor: Color(0xFFCCE7FC),
+        overrideTilesWhenUrlChanges: true, 
+        tileFadeInDuration: 0, 
+        tileFadeInStartWhenOverride: 1.0,
+      );
+    }
+  }
+  _setUserLocationPluginOptions(BuildContext context) {
     userLocationOptions = UserLocationOptions(
       context: context,
       mapController: mapController,
@@ -90,17 +121,23 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       zoomToCurrentLocationOnLoad: true,
       moveToCurrentLocationFloatingActionButton: Container(
         decoration: BoxDecoration(
-        color: Color(0xFF0075b3),
+        color: Theme.of(context).floatingActionButtonTheme.backgroundColor,
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: [
             BoxShadow(color: Colors.grey, blurRadius: 10.0)
             ]),
         child: Icon(
             Icons.my_location,
-            color: Colors.white,
+            color: Theme.of(context).floatingActionButtonTheme.foregroundColor,
         ),
-      ),
+      )
     );
+  }
+  // Widget overrides
+  @override
+  Widget build(BuildContext context) {
+    _updateTileBrightness(darkmode(context));
+    _setUserLocationPluginOptions(context);
     var overlayImages = <OverlayImage>[
       OverlayImage(
         bounds: LatLngBounds(
@@ -109,30 +146,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         imageProvider: FileImage(localFile('forecast.$_count.png')),
         gaplessPlayback: true,
       )];
-    if (darkmode(context)) {
-      basemap = TileLayerOptions(
-        tileProvider: AssetTileProvider(),
-        urlTemplate: "assets/jawg-matrix/{z}/{x}/{y}.png",
-        maxNativeZoom: 9,
-        minNativeZoom: 5,
-        maxZoom: 9,
-        minZoom: 5,
-        backgroundColor: Color(0xFF000000),
-      );
-    } else {
-      basemap = TileLayerOptions(
-        //urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
-        tileProvider: AssetTileProvider(),
-        urlTemplate: "assets/jawg-sunny/{z}/{x}/{y}.png",
-        maxNativeZoom: 9,
-        minNativeZoom: 5,
-        maxZoom: 9,
-        minZoom: 5,
-        keepBuffer: 3,
-        tileFadeInDuration: 1,
-        backgroundColor: Color(0xFFCCE7FC),
-      );
-    }
     return Scaffold(
       key: _mapScaffoldKey,
       body: Stack(
