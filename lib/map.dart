@@ -92,6 +92,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           _togglePlaying();
         }
         _count = 0;
+        imageCache.clear();
+        imageCache.clearLiveImages();
       });
     }
   }
