@@ -11,6 +11,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart';
+import 'package:tesseract_ocr/tesseract_ocr.dart';
 
 import 'package:Nowcasting/onboarding.dart';
 import 'package:Nowcasting/forecast.dart';
@@ -26,6 +27,7 @@ bool _serviceEnabled;
 PermissionStatus _permissionGranted;
 LocationData _locationData;
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
+List<String> legends = [];
 
 // Notifications
 final checkingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Checking for updates...'));
@@ -166,10 +168,22 @@ updateImageArray() async {
     print("updateImageArray: Could not clear image array.");
   }
   for (int i = 0; i <= 8; i++) {
-    if(await localFile('forecast.$i.png').exists()) {
+    if (await localFile('forecast.$i.png').exists()) {
       forecasts.add(pngDecoder.decodeImage(await localFile('forecast.$i.png').readAsBytes()));
     }
   }
+}
+
+updateLegendOCR() async {
+  if (legends.isNotEmpty) {
+    legends.clear();
+  }
+  for (int i = 0; i <= 8; i++) {
+    if (await localFile('forecast_legend.$i.png').exists()) {
+      legends.add(await TesseractOcr.extractText(localFilePath('forecast_legend.$i.png'), language: 'eng'));
+    }
+  }
+  print(legends.toString());
 }
 
 // Location
@@ -319,6 +333,9 @@ class AppState extends State<AppContents> {
 
   void _onItemTapped(int index) {
     setState(() {
+      if (mapScaffoldKey.currentState.isDrawerOpen) {
+        Navigator.pop(mapScaffoldKey.currentContext);
+      }
       _updateStatusBarBrightness(context, index);
       // set current index to passed index
       _selectedIndex = index;

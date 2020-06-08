@@ -9,6 +9,9 @@ import 'package:image/image.dart' as imglib;
 
 import 'package:Nowcasting/main.dart';
 
+// Key for controlling scaffold (e.g. open drawer)
+GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
+
 class MapScreen extends StatefulWidget {
   @override
   MapScreenState createState() => new MapScreenState();
@@ -22,8 +25,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   int _count = 0;
   bool _playing = false;
   Icon _playPauseIcon = Icon(Icons.play_arrow);
-  // Key for controlling scaffold (e.g. open drawer)
-  GlobalKey<ScaffoldState> _mapScaffoldKey = GlobalKey();
   // flutter_map and user_location variables
   MapController mapController = MapController();
   UserLocationOptions userLocationOptions;
@@ -95,6 +96,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _count = 0;
         imageCache.clear();
         imageCache.clearLiveImages();
+        updateLegendOCR();
       });
     }
   }
@@ -172,7 +174,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         gaplessPlayback: true,
       )];
     return Scaffold(
-      key: _mapScaffoldKey,
+      key: mapScaffoldKey,
       body: Stack(
           children: [
             FlutterMap(
@@ -203,7 +205,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             children: [
               IconButton(
                   icon: Icon(Icons.menu),
-                  onPressed: () {_mapScaffoldKey.currentState.openDrawer();}
+                  onPressed: () {mapScaffoldKey.currentState.openDrawer();}
               ),
               Spacer(),
               IconButton(
