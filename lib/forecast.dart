@@ -40,18 +40,19 @@ class ForecastScreenState extends State<ForecastScreen> {
       body: Row(
         mainAxisSize: MainAxisSize.max,
         children: [
-        Expanded(
-          child: Align(
-            alignment: Alignment(0,0), 
-            child: Column(
-              children: [
-                Icon(Icons.warning), 
-                Text("Under Construction")
+          Expanded(
+            child: Align(
+              alignment: Alignment(0,0), 
+              child: Column(
+                children: [
+                  Icon(Icons.warning), 
+                  Text("Under Construction")
                 ]
+              )
             )
           )
-        )
-      ]),
+        ]
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.refresh),
         onPressed: () { setState(() {refreshImages(context, false, true);});},

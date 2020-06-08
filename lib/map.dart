@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:user_location/user_location.dart';
 import 'package:latlong/latlong.dart';
+import 'package:image/image.dart' as imglib;
 
 import 'package:Nowcasting/main.dart';
 
@@ -167,7 +168,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         bounds: LatLngBounds(
         LatLng(35.0491, -88.7654), LatLng(51.0000, -66.7500)),
         opacity: 0.6,
-        imageProvider: FileImage(localFile('forecast.$_count.png')),
+        imageProvider: localFile('forecast.$_count.png').existsSync() ? MemoryImage(localFile('forecast.$_count.png').readAsBytesSync()) : AssetImage('assets/logo.png'),
         gaplessPlayback: true,
       )];
     return Scaffold(
