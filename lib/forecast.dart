@@ -7,7 +7,7 @@ import 'package:Nowcasting/main.dart';
 
 // Variables for this class
 imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-List<imglib.Image> forecasts;
+List<imglib.Image> forecasts = [];
 
 // Helper functions
 coordinateToPixel(LatLng coordinates) {
@@ -30,11 +30,6 @@ class ForecastScreenState extends State<ForecastScreen> {
   @override
   void initState() {
     super.initState();
-    try {
-      updateImageArray();
-    } catch(e) {
-      print('Error updating image array, probably couldn\'t be cleared');
-    }
   }
   @override
   Widget build(BuildContext context) {
@@ -42,7 +37,21 @@ class ForecastScreenState extends State<ForecastScreen> {
       appBar: AppBar(
         title: const Text('Forecast'),
       ),
-      body: Text('Forecast'),
+      body: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment(0,0), 
+            child: Column(
+              children: [
+                Icon(Icons.warning), 
+                Text("Under Construction")
+                ]
+            )
+          )
+        )
+      ]),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.refresh),
         onPressed: () { setState(() {refreshImages(context, false, true);});},

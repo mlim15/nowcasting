@@ -228,7 +228,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       drawer: Drawer(
           child: ListView(
             children: <Widget>[
-              Container(child: Text("Not implemented yet")),
+              Align(alignment: Alignment(0,0), child: Column(children: [Icon(Icons.warning), Text("Under Construction")])),
             ],
           )
       ),
