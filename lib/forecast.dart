@@ -30,7 +30,11 @@ class ForecastScreenState extends State<ForecastScreen> {
   @override
   void initState() {
     super.initState();
-    safeUpdate();
+    try {
+      updateImageArray();
+    } catch(e) {
+      print('Error updating image array, probably couldn\'t be cleared');
+    }
   }
   @override
   Widget build(BuildContext context) {

@@ -42,7 +42,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     PageDecoration pageDecoration;
-    if (darkmode(context)) {
+    if (darkMode(context)) {
       const bodyStyle = TextStyle(fontSize: 14.0, color: Colors.white);
       const headerStyle = TextStyle(fontSize: 22.0, fontWeight: FontWeight.w700, color: Colors.white);
       pageDecoration = const PageDecoration(

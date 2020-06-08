@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:location/location.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image/image.dart' as imglib;
+import 'package:jiffy/jiffy.dart';
 
 import 'package:Nowcasting/onboarding.dart';
 import 'package:Nowcasting/forecast.dart';
@@ -23,9 +25,12 @@ Location location = new Location();
 bool _serviceEnabled;
 PermissionStatus _permissionGranted;
 LocationData _locationData;
+String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
 
 // Notifications
+final checkingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Checking for updates...'));
 final noRefreshSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('No new data to fetch!'));
+final errorRefreshSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error refreshing.'));
 final refreshedSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Done refreshing.'));
 final refreshingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Refreshing...'));
 
@@ -39,25 +44,32 @@ String localFilePath(String fileName) {
   return pathName;
 }
 
-// Setting/value saver/loader functions
-Future<File> saveLastRefresh(DateTime lastRefresh) async {
-  final file = localFile('lastRefresh');
-  return file.writeAsString('$lastRefresh');
-}
-
-DateTime loadLastRefresh() {
-  try {
-    final file = localFile('lastRefresh');
-    // Read the file.
-    String contents = file.readAsStringSync();
-    return DateTime.parse(contents);
-  } catch (e) {
-    // If encountering an error, return arbitrary date that allows for refresh.
-    return DateTime(1984, DateTime.january, 1);
-  }
-}
-
 // File downloading and management
+Future<bool> updateAvailable(String url, File file) async {
+  var urlLastModHeader;
+  DateTime fileLastModified = (await file.lastModified()).toUtc();
+  try {
+    Response header = await dio.head(url);
+    urlLastModHeader = header.headers.value(HttpHeaders.lastModifiedHeader);
+  } catch(e) {
+    print('Failed to get header for $url');
+    // return true by default on failure
+    return true;
+  }
+  Jiffy urlLastModifiedJiffy = Jiffy(urlLastModHeader, headerFormat);
+  DateTime urlLastModified = DateTime.utc(urlLastModifiedJiffy.year, urlLastModifiedJiffy.month, urlLastModifiedJiffy.day, urlLastModifiedJiffy.hour, urlLastModifiedJiffy.minute, urlLastModifiedJiffy.seconds);
+  bool updateAvailable = fileLastModified.isBefore(urlLastModified);
+  // Debug info
+  print('Local $file modified '+fileLastModified.toString());
+  print('Remote URL $file modified '+urlLastModified.toString());
+  if (updateAvailable) {
+    print('Updating $file, remote version is newer');
+  } else {
+    print('Not updating $file, remote version not newer');
+  }
+  return updateAvailable;
+}
+
 Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetries=0]) async {
   try {
     Response response = await dio.get(
@@ -69,7 +81,8 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
           followRedirects: false,
           receiveTimeout: 0),
     );
-    print(response.headers);
+    // Debug info
+    //print(response.headers);
     File file = File(savePath);
     var raf = file.openSync(mode: FileMode.write);
     // response.data is List<int> type
@@ -88,46 +101,62 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   }
 }
 
-refreshImages(BuildContext context, bool forceRefresh, bool showSnack) async {
-  int diff;
-  // Ensure it's been longer than 10 minutes since last refresh.
-  // Unless forceRefresh is true, then bypass this check.
-  if (forceRefresh) {
-    diff = 11;
-  } else {
-    lastRefresh = loadLastRefresh();
-    diff = DateTime.now().difference(lastRefresh).inMinutes;
+refreshImages(BuildContext context, bool forceRefresh, bool notSilent) async {
+  showSnackBarIf(notSilent, context, checkingSnack, 'Starting image update process');
+  bool notYetShownStartSnack = true;
+  // Download all the images using our downloadFile method.
+  // The HTTP last modified header is individually checked for each file before downloading.
+  for (int i = 0; i <= 8; i++) {
+    if (forceRefresh || await updateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', localFile('forecast.$i.png'))) {
+      if (notYetShownStartSnack) {showSnackBarIf(notSilent, context, refreshingSnack, 'An image was found that needs updating. Starting update');notYetShownStartSnack=false;}
+      try {
+        downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', localFilePath('forecast.$i.png'));
+      } catch(e) {
+        showSnackBarIf(notSilent, context, errorRefreshSnack, 'Error updating image number $i');
+        return false;
+      }
+    }
+    if (forceRefresh || await updateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_legend.$i.png', localFile('forecast_legend.$i.png'))) {
+      if (notYetShownStartSnack) {showSnackBarIf(notSilent, context, refreshingSnack, 'An image was found that needs updating. Starting update');notYetShownStartSnack=false;}
+      try {
+        downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_legend.$i.png', localFilePath('forecast_legend.$i.png'));
+      } catch(e) {
+        showSnackBarIf(notSilent, context, errorRefreshSnack, 'Error updating image legend $i');
+        return false;
+      }
+    }
   }
-  if (diff > 10) {
-    // We are refreshing. Show a notification telling the user we are refreshing.
-    if (showSnack) {
-      Scaffold.of(context).showSnackBar(refreshingSnack);
-    }
-    // Download all the images using our downloadFile method.
-    for (int i = 0; i <= 8; i++) {
-      await downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', localFilePath('forecast.$i.png'));
-      await downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_legend.$i.png', localFilePath('forecast_legend.$i.png'));
-    }
-    // Clear the image cache.
-    imageCache.clear();
-    // Set the time we last refreshed to now and save the variable to disk.
-    lastRefresh = DateTime.now();
-    saveLastRefresh(lastRefresh);
-    // Show a notification saying we successfully refreshed.
-    if (showSnack) {
-      Scaffold.of(context).showSnackBar(refreshedSnack);
-    }
+  if (notYetShownStartSnack) {
+    // If no files needed updating, the start snack will never have been shown.
+    // We aren't refreshing because no files needed refreshing.
+    // Show a notification saying so and return.
+    showSnackBarIf(notSilent, context, noRefreshSnack, 'No images needed updating');
+    return false;
   } else {
-    // We aren't refreshing because it was too soon.
-    // Show a notification saying so.
-    if (showSnack) {
-      Scaffold.of(context).showSnackBar(noRefreshSnack);
+    // Clear the image cache.
+    try {
+      //updateImageArray();
+    } catch(e) {
+      print('Image cache couldn\'t be cleared. It is probably being initialized for the first time.');
     }
+    // Show a notification saying we successfully refreshed.
+    showSnackBarIf(notSilent, context, refreshedSnack, 'Image update successful');
+    return true;
+  }
+}
+
+showSnackBarIf(bool showControl, BuildContext context, SnackBar passedSnack, [String debugMessage = '']) {
+  if (showControl) {
+    Scaffold.of(context).removeCurrentSnackBar();
+    Scaffold.of(context).showSnackBar(passedSnack);
+    print(debugMessage);
+  } else {
+    print("Didn't show snack bar because passed bool was false.");
   }
 }
 
 // Images in memory
-safeUpdate() async {
+updateImageArray() async {
   // Clear the array and reload all the images into it
   // Note that the array is a class-level variable in forecast.dart
   if (forecasts.length > 0) {
@@ -160,7 +189,7 @@ getUserLocation() async {
 }
 
 // Theming
-bool darkmode(BuildContext context) {
+bool darkMode(BuildContext context) {
   final Brightness brightnessValue = MediaQuery.of(context).platformBrightness;
   bool isDark = brightnessValue == Brightness.dark;
   return isDark;
@@ -170,8 +199,8 @@ bool darkmode(BuildContext context) {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   appDocPath = await getApplicationSupportDirectory();
-    runApp(MyApp());
-  }
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   static const String _title = 'MAPLE Nowcasting';
@@ -207,28 +236,27 @@ class Splash extends StatefulWidget {
 }
 
 class SplashState extends State<Splash> {
+
   updateOutdatedImages() async {
-    lastRefresh = loadLastRefresh();
-    // If it's been an hour since the app was last opened, force a refresh.
-    if (DateTime.now().difference(lastRefresh).inMinutes > 60) {
-      print('Holding on splash to update outdated images');
-      try {
-        await refreshImages(context, true, false);
-        await safeUpdate();
-        print('Done attempting to update images');
-      } catch (e) {
-        print('Error attempting image update');
-      }
-      print('proceeding past splash');
-      return true;
+    print('Holding on splash to update outdated images');
+    try {
+      await refreshImages(context, true, false);
+      print('Done attempting to update images');
+    } catch (e) {
+      print('Error attempting image update');
     }
-    print('No need to update images, proceeding past splash');
-    return false;
+    try {
+      await updateImageArray();
+    } catch(e) {
+      print("Error updating image array. Probably tried to clear when it's empty");
+    }
+    print('Proceeding past splash');
+    return true;
   }
+
   Future checkFirstSeen() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool _seen = (prefs.getBool('seen') ?? false);
-
     if (_seen) {
       // Before going off the load screen, try to refresh outdated images.
       await updateOutdatedImages();
@@ -267,15 +295,39 @@ class AppContents extends StatefulWidget {
 
 class AppState extends State<AppContents> {
   int _selectedIndex = 0;
+  _updateStatusBarBrightness(BuildContext context, [index = 1]) {
+    // check current index
+    // if changing to/from map screen, manage status bar legiblity
+    if (_selectedIndex == 1 && index != 1) {
+      // changing from map to something else
+      if (darkMode(context)) {
+        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+      } else {
+        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+      }
+    } else {
+      if (index == 1) {
+        // going to map
+        if (darkMode(context)) {
+          SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light, statusBarColor: Colors.transparent));
+        } else {
+          SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarColor: Colors.transparent));
+        }
+      }
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
+      _updateStatusBarBrightness(context, index);
+      // set current index to passed index
       _selectedIndex = index;
-      // if changing to/from map screen, manage status bar legiblity
-      
     });
   }
+
   @override
   Widget build(BuildContext context) {
+    _updateStatusBarBrightness(context);
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,

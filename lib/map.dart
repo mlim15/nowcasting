@@ -47,10 +47,10 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     //inform listeners and rebuild widget tree
     setState(() {
       if (brightness == Brightness.dark) {
-        print('System brightness changed to dark');
+        //print('System brightness changed to dark');
         _updateTileBrightness(true);
       } else {
-        print('System brightness changed to light');
+        //print('System brightness changed to light');
         _updateTileBrightness(false);
       }
     });
@@ -85,31 +85,40 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       }
     });
   }
-  _updateTileBrightness(bool isDark) {
-    if (isDark) {
-      basemap = TileLayerOptions(
-        tileProvider: AssetTileProvider(),
-        urlTemplate: "assets/jawg-matrix/{z}/{x}/{y}.png",
-        maxZoom: 9,
-        minZoom: 5,
-        backgroundColor: Color(0xFF000000),
-        overrideTilesWhenUrlChanges: true, 
-        tileFadeInDuration: 0, 
-        tileFadeInStartWhenOverride: 1.0,
-      );
-    } else {
-      basemap = TileLayerOptions(
-        //urlTemplate: "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png",
-        tileProvider: AssetTileProvider(),
-        urlTemplate: "assets/jawg-sunny/{z}/{x}/{y}.png",
-        maxZoom: 9,
-        minZoom: 5,
-        backgroundColor: Color(0xFFCCE7FC),
-        overrideTilesWhenUrlChanges: true, 
-        tileFadeInDuration: 0, 
-        tileFadeInStartWhenOverride: 1.0,
-      );
+  _refreshPressed() async {
+    if (await refreshImages(context, false, true)) {
+      setState( () {
+        if (_playing) {
+          _togglePlaying();
+        }
+        _count = 0;
+      });
     }
+  }
+  _updateTileBrightness(bool isDark) {
+    // Variable settings with safe defaults
+    String urlTemplate = "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png";
+    bool retinaMode = false;
+    Color background = Color(0xFFFFFFFF);
+    // Set basemap based on darkmode
+    if (isDark) {
+      urlTemplate = "assets/jawg-matrix/{z}/{x}/{y}.png";
+      background = Color(0xFF000000);
+    } else {
+      urlTemplate = "assets/jawg-sunny/{z}/{x}/{y}.png";
+      background = Color(0xFFCCE7FC);
+    }
+    basemap = TileLayerOptions(
+      tileProvider: AssetTileProvider(),
+      urlTemplate: urlTemplate,
+      minNativeZoom: 5,
+      maxNativeZoom: 9,
+      backgroundColor: background,
+      overrideTilesWhenUrlChanges: true, 
+      tileFadeInDuration: 0, 
+      tileFadeInStartWhenOverride: 1.0,
+      retinaMode: _retinaMode(context), // Set retinamode based on device DPI
+    );
   }
   _setUserLocationPluginOptions(BuildContext context) {
     userLocationOptions = UserLocationOptions(
@@ -124,7 +133,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         color: Theme.of(context).floatingActionButtonTheme.backgroundColor,
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: [
-            BoxShadow(color: Colors.grey, blurRadius: 10.0)
+            BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5),)
             ]),
         child: Icon(
             Icons.my_location,
@@ -133,11 +142,25 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       )
     );
   }
+  bool _retinaMode(BuildContext context) { 
+    if (MediaQuery.of(context).devicePixelRatio > 2) {
+      return true;
+    } else {
+      return false;
+    }
+  }
   // Widget overrides
   @override
   Widget build(BuildContext context) {
-    _updateTileBrightness(darkmode(context));
+    _updateTileBrightness(darkMode(context));
     _setUserLocationPluginOptions(context);
+    // Set special max zoom if using high density display
+    double maxZoom;
+    if (_retinaMode(context)) {
+      maxZoom = 8.4;
+    } else {
+      maxZoom = 9;
+    }
     var overlayImages = <OverlayImage>[
       OverlayImage(
         bounds: LatLngBounds(
@@ -154,7 +177,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               options: MapOptions(
                 center: LatLng(45.5088, -73.5878),
                 zoom: 6.0,
-                maxZoom: 9,
+                maxZoom: maxZoom, // Dynamically determined above because retina mode doesn't work with overzooming, requires lower threshold
                 minZoom: 5,
                 swPanBoundary: LatLng(35.0491, -88.7654),
                 nePanBoundary: LatLng(51.0000, -66.7500),
@@ -196,7 +219,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               Spacer(),
               IconButton(
                 icon: Icon(Icons.refresh),
-                onPressed: () {setState(() {if (_playing) {_togglePlaying();} _count = 0; refreshImages(context, false, true);});},
+                onPressed: () {_refreshPressed();},
               ),
             ],
           )
