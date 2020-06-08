@@ -98,7 +98,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   _updateTileBrightness(bool isDark) {
     // Variable settings with safe defaults
     String urlTemplate = "http://tiles.meteo.mcgill.ca/tile/{z}/{x}/{y}.png";
-    bool retinaMode = false;
     Color background = Color(0xFFFFFFFF);
     // Set basemap based on darkmode
     if (isDark) {
