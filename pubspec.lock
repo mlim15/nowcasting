@@ -214,13 +214,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.8"
-  jiffy:
-    dependency: "direct main"
-    description:
-      name: jiffy
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.1"
   js:
     dependency: transitive
     description:
@@ -464,6 +457,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.0"
+  tesseract_ocr:
+    dependency: "direct main"
+    description:
+      name: tesseract_ocr
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   test_api:
     dependency: transitive
     description:

@@ -1,24 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:latlong/latlong.dart';
 
-import 'package:image/image.dart' as imglib;
-
-import 'package:Nowcasting/main.dart';
-
-// Variables for this class
-imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-List<imglib.Image> forecasts = [];
-
-// Helper functions
-coordinateToPixel(LatLng coordinates) {
-  double percEast;
-  double percSouth;
-  
-}
-
-getPixelValue(int x, int y, int index) {
-  forecasts[index].getPixel(x, y);
-}
+import 'package:Nowcasting/support-update.dart' as update;
 
 // Widgets
 class ForecastScreen extends StatefulWidget  {
@@ -55,7 +37,7 @@ class ForecastScreenState extends State<ForecastScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.refresh),
-        onPressed: () { setState(() {refreshImages(context, false, true);});},
+        onPressed: () { setState(() {update.remoteImagery(context, false, true);});},
       ),
     );
   }

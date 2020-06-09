@@ -25,8 +25,7 @@ dependencies:
   introduction_screen: ^1.0.7
   shared_preferences: '>=0.5.7+3 <2.0.0'
   flutter_progress_button: '^0.6.4'
-  #flutter_svg: ^0.17.1
-  jiffy: ^3.0.1
+  tesseract_ocr: ^0.3.0
 
 dependency_overrides:
   flutter_map:
@@ -62,6 +61,8 @@ flutter:
     - manypixels-iso-weather.png
     - manypixels-iso-digital_nomad.png
     - manypixels-iso-camping.png
+    - assets/tessdata_config.json
+    - assets/tessdata/
     - assets/jawg-matrix/5/10/
     - assets/jawg-matrix/5/8/
     - assets/jawg-matrix/5/9/
