@@ -110,6 +110,7 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   } else {
     // Clear the image cache.
     await forecasts();
+    await legends();
     // Show a notification saying we successfully refreshed.
     ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.remoteImagery: Image update successful');
     return true;

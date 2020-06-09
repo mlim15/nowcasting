@@ -9,6 +9,7 @@ import 'package:latlong/latlong.dart';
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
+import 'package:Nowcasting/support-imagery.dart' as imagery;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -78,7 +79,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _count = 0;
         imageCache.clear();
         imageCache.clearLiveImages();
-        update.legends();
       });
     }
   }
@@ -97,8 +97,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               zoom: 6.0,
               maxZoom: ux.retinaMode(context) ? 8.4 : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
               minZoom: 5,
-              swPanBoundary: LatLng(35.0491, -88.7654),
-              nePanBoundary: LatLng(51.0000, -66.7500),
+              swPanBoundary: imagery.sw,
+              nePanBoundary: imagery.ne,
               plugins: [
                 UserLocationPlugin(),
               ],
@@ -118,7 +118,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               OverlayImageLayerOptions(overlayImages: <OverlayImage>[
                 OverlayImage(
                   bounds: LatLngBounds(
-                    LatLng(35.0491, -88.7654), LatLng(51.0000, -66.7500)
+                    imagery.sw, imagery.ne
                   ),
                   opacity: 0.6,
                   imageProvider: io.localFile('forecast.$_count.png').existsSync() ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) : AssetImage('assets/logo.png'),
