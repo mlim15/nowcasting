@@ -11,7 +11,7 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 
-var dio = Dio(BaseOptions(connectTimeout: 2000));
+var dio = Dio(BaseOptions(connectTimeout: 1000, receiveTimeout: 3000));
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
 
 imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
