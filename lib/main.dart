@@ -19,6 +19,7 @@ SharedPreferences prefs;
 // App code
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   // Initialize critical filepath information immediately
   io.updateAppDocPath();
   prefs = await SharedPreferences.getInstance();
@@ -56,7 +57,6 @@ class SplashState extends State<Splash> {
       try {
         await update.remoteImagery(context, false, false);
         await update.legends();
-        await update.forecasts();
         print('SplashState: Done attempting to update images');
       } catch (e) {
         print('SplashState: Error attempting image update');
