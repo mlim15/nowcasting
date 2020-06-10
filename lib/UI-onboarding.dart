@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_progress_button/flutter_progress_button.dart';
@@ -74,6 +75,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 bool doNotProceed = false;
                 try {
                   await update.remoteImagery(context, true, false);
+                  await update.legends();
+                  await update.forecasts();
                 } catch(e) {
                   print('onboarding.OnboardingScreenState: Could not get initial images');
                   _obScaffoldKey.currentState.showSnackBar(ux.onboardErrorSnack);
