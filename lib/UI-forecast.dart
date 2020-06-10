@@ -37,7 +37,13 @@ class ForecastScreenState extends State<ForecastScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.refresh),
-        onPressed: () { setState(() {update.remoteImagery(context, false, true);});},
+        onPressed: () async { 
+          if (await update.remoteImagery(context, false, true)) {
+            await update.forecasts();
+            await update.legends();
+            setState( () {});
+          }
+        },
       ),
     );
   }
