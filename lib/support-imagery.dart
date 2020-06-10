@@ -30,6 +30,19 @@ final l11hex = Color(0xFF640064);
 final l11dec = 4284743780;
 final l12hex = Color(0xFF000000); 
 final l12dec = 4278190080;
+// snow 2 and 3 don't seem to be actually in imagery
+final t1hex = Color(0xFF37F0C8);
+final t2hex = Color(0xFF00A58C);
+final t3hex = Color(0xFF287D8C);
+final t4hex = Color(0xFF4B5A6E);
+final t5hex = Color(0xFFFFC382);
+final s1hex = Color(0xFFCEFFFF);
+final s4hex = Color(0xFF86D9FF);
+final s5hex = Color(0xFF6DC1FF);
+final s6hex = Color(0xFF4196FF);
+final s7hex = Color(0xFF2050FF);
+final s8hex = Color(0xFF040ED8);
+final s9hex = Color(0xFFFF9898);
 
 List<imglib.Image> forecasts = [];
 List<String> legends = [];
