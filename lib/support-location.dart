@@ -1,27 +1,16 @@
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 
-Location location = new Location();
-bool _serviceEnabled;
-PermissionStatus _permissionGranted;
-LocationData _locationData;
+Position position;
+Geolocator geolocator = Geolocator()..forceAndroidLocationManager = true;
 
 // Location
 getUserLocation() async {
-  _serviceEnabled = await location.serviceEnabled();
-  if (!_serviceEnabled) {
-    _serviceEnabled = await location.requestService();
-    if (!_serviceEnabled) {
-      return;
-    }
+  GeolocationStatus geolocationStatus  = await geolocator.checkGeolocationPermissionStatus();
+  if (geolocationStatus != GeolocationStatus.granted) {
+    print('support-location: Could not get location, geolocationStatus is '+geolocationStatus.toString());
+    return;
   }
-  _permissionGranted = await location.hasPermission();
-  if (_permissionGranted == PermissionStatus.denied) {
-    _permissionGranted = await location.requestPermission();
-    if (_permissionGranted != PermissionStatus.granted) {
-      return;
-    }
-  }
-  _locationData = await location.getLocation();
-  print(_locationData);
-  return _locationData;
+  Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+  print('support-location: Successfully got location '+position.toString());
+  return position;
 }
