@@ -55,6 +55,8 @@ class SplashState extends State<Splash> {
       print('SplashState: Staying on splash for now to attempt to update images');
       try {
         await update.remoteImagery(context, false, false);
+        await update.legends();
+        await update.forecasts();
         print('SplashState: Done attempting to update images');
       } catch (e) {
         print('SplashState: Error attempting image update');
@@ -107,8 +109,12 @@ class AppState extends State<AppContents> {
       // Close drawers on subpages if they are open,
       // otherwise appbars get unsightly back arrows
       // after changing screens
-      if (map.mapScaffoldKey.currentState.isDrawerOpen) {
-        Navigator.pop(map.mapScaffoldKey.currentContext);
+      try {
+        if (map.mapScaffoldKey.currentState.isDrawerOpen) {
+          Navigator.pop(map.mapScaffoldKey.currentContext);
+        }
+      } catch(e) {
+        print('AppState: could not check status of mapScreen drawer. Likely the MapScreen did not initialize properly.');
       }
       // Update status bar brightness
       if (_selectedIndex == 1 && passedIndex != 1) {
