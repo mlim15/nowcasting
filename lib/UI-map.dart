@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:user_location/user_location.dart';
 import 'package:latlong/latlong.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
@@ -22,7 +25,7 @@ class MapScreen extends StatefulWidget {
 class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Define timer object and speed for later use
   Timer changeImageTimer;
-  Duration speed = Duration(milliseconds: 500);
+  Duration speed = Duration(milliseconds: 800);
 
   // Animation controls and current overlay counter
   int _count = 0;
@@ -72,6 +75,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
   _refreshPressed() async {
     if (await update.remoteImagery(context, false, true)) {
+      await update.forecasts();
+      await update.legends();
       setState( () {
         if (_playing) {
           _togglePlaying();
@@ -150,7 +155,34 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               )
             ], // End of layers
           ),
-          SafeArea(child: Image.file(io.localFile('forecast_legend.$_count.png'), gaplessPlayback: true)),
+          Container (
+            alignment: Alignment.bottomLeft,
+            child: Container(
+              margin: EdgeInsets.all(12), 
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).canvasColor,
+                boxShadow: [
+                  BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5),)
+                ],
+              ),
+              child: CircularPercentIndicator(
+                animationDuration: speed.inMilliseconds,
+                restartAnimation: false,
+                animation: true,
+                animateFromLastPercent: true,
+                radius: 56.0,
+                lineWidth: 4.0,
+                circularStrokeCap: CircularStrokeCap.round,
+                percent: _count/8,
+                center: new Text(imagery.legends[_count].substring(imagery.legends[_count].length-12,imagery.legends[_count].length-7), style: GoogleFonts.lato(fontWeight: FontWeight.w600)),
+                progressColor: Theme.of(context).accentColor,
+                backgroundColor: Theme.of(context).backgroundColor,
+              )
+            ),
+          )
         ]
       ),
       bottomNavigationBar: BottomAppBar(
