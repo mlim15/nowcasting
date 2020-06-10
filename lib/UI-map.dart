@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:user_location/user_location.dart';
@@ -75,7 +74,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
   _refreshPressed() async {
     if (await update.remoteImagery(context, false, true)) {
-      await update.forecasts();
       await update.legends();
       setState( () {
         if (_playing) {
@@ -85,6 +83,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         imageCache.clear();
         imageCache.clearLiveImages();
       });
+      await update.forecasts();
     }
   }
 
@@ -126,7 +125,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     imagery.sw, imagery.ne
                   ),
                   opacity: 0.6,
-                  imageProvider: io.localFile('forecast.$_count.png').existsSync() ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) : AssetImage('assets/logo.png'),
+                  imageProvider: io.localFile('forecast.$_count.png').existsSync() ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) : AssetImage('assets/launcher/logo.png'),
                   gaplessPlayback: true,
                 )
               ]),
@@ -177,7 +176,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 lineWidth: 4.0,
                 circularStrokeCap: CircularStrokeCap.round,
                 percent: _count/8,
-                center: new Text(imagery.legends[_count].substring(imagery.legends[_count].length-12,imagery.legends[_count].length-7), style: GoogleFonts.lato(fontWeight: FontWeight.w600)),
+                center: imagery.legends.length == 9 ? Text(imagery.legends[_count].substring(imagery.legends[_count].length-12,imagery.legends[_count].length-7), style: GoogleFonts.lato(fontWeight: FontWeight.w600)) : Text("...", style: GoogleFonts.lato(fontWeight: FontWeight.w600)),
                 progressColor: Theme.of(context).accentColor,
                 backgroundColor: Theme.of(context).backgroundColor,
               )

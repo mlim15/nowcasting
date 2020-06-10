@@ -39,8 +39,8 @@ class ForecastScreenState extends State<ForecastScreen> {
         child: Icon(Icons.refresh),
         onPressed: () async { 
           if (await update.remoteImagery(context, false, true)) {
-            await update.forecasts();
             await update.legends();
+            await update.forecasts();
             setState( () {});
           }
         },

@@ -59,7 +59,7 @@ final s9dec = 4288190719;
 final colorsDec = [l1dec, l2dec, l3dec, l4dec, l5dec, l6dec, l7dec, l8dec, l9dec, l10dec, l11dec, l12dec, t1dec, t2dec, t3dec, t4dec, t5dec, s1dec, s4dec, s5dec, s6dec, s7dec, s8dec, s9dec];
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Snow", "Heavy Snow", "Heavy Snow", "Snowstorm", "Wet Snowstorm"];
 
-List<imglib.Image> forecasts = [];
+List<imglib.Image> decodedForecasts = [];
 List<String> legends = [];
 
 // Helper functions
@@ -70,5 +70,5 @@ coordinateToPixel(LatLng coordinates) {
 }
 
 getPixelValue(int x, int y, int index) {
-  forecasts[index].getPixel(x, y);
+  decodedForecasts[index].getPixel(x, y);
 }

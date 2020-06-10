@@ -57,6 +57,7 @@ class SplashState extends State<Splash> {
       try {
         await update.remoteImagery(context, false, false);
         await update.legends();
+        update.forecasts();
         print('SplashState: Done attempting to update images');
       } catch (e) {
         print('SplashState: Error attempting image update');

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
@@ -13,9 +14,6 @@ import 'package:Nowcasting/support-imagery.dart' as imagery;
 
 var dio = Dio(BaseOptions(connectTimeout: 1000, receiveTimeout: 3000));
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
-
-imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-
 // Manipulating DateTime
 extension on DateTime{
   DateTime roundDown([Duration delta = const Duration(minutes: 10)]) {
@@ -128,38 +126,49 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   }
 }
 
-// Local product updates
 forecasts() async {
-  print('update.forecasts: Starting update process');
-  // Clear the array and reload all the images into it
-  // Note that the array is a class-level variable in forecast.dart
-  try {
-    if (imagery.forecasts.isNotEmpty) {
-      imagery.forecasts.clear();
-    }
-  } catch(e) {
-    print(e);
-    print("update.forecasts: Could not clear image array");
-  }
+  List<File> _forecastImages = [];
   for (int i = 0; i <= 8; i++) {
     if (await io.localFile('forecast.$i.png').exists()) {
-      print('update.forecasts: decoding image $i of 8.');
-      imagery.forecasts.add(pngDecoder.decodeImage(await io.localFile('forecast.$i.png').readAsBytes()));
+      _forecastImages.add(io.localFile('forecast.$i.png'));
+    } else {
+      throw('update.forecasts: Expected file forecast.$i.png does not exist. Stopping');
     }
   }
-  print('update.forecasts: Done decoding images');
+  imagery.decodedForecasts = await compute(bgForecasts, _forecastImages);
 }
 
 legends() async {
-  print('update.legends: Starting update process');
-  if (imagery.legends.isNotEmpty) {
-    imagery.legends.clear();
-  }
+  List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
     if (await io.localFile('forecast.$i.png').exists()) {
-      imagery.legends.add((await io.localFile('forecast.$i.png').lastModified()).toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString());
+      _filesLastMod.add(io.localFile('forecast.$i.png').lastModifiedSync());
+    } else {
+      throw('update.legends: Expected file forecast.$i.png does not exist. Stopping');
     }
   }
-  // For debug purposes
-  print('update.legends: Legend images converted to: '+imagery.legends.toString());
+  imagery.legends = await compute(bgLegends, _filesLastMod);
+}
+
+// Local product updates
+FutureOr<List<imglib.Image>> bgForecasts(List<File> _files) async {
+  List<imglib.Image> _forecasts = [];
+  imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
+  print('update.forecasts: Starting update process');
+  for (int i = 0; i <= 8; i++) {
+    print('update.forecasts: decoding image $i of 9');
+    _forecasts.add(pngDecoder.decodeImage(await _files[i].readAsBytes()));
+  }
+  print('update.forecasts: Done decoding images');
+  return _forecasts;
+}
+
+FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
+  List<String> _legends = [];
+  print('update.legends: Starting update process');
+  for (int i = 0; i <= 8; i++) {
+    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString());
+  }
+  print('update.legends: Legend images converted to: '+_legends.toString());
+  return _legends;
 }
