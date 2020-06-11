@@ -12,6 +12,9 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 
+// TODO figure out for sure if the legends need 20 min added to their duration
+// or if forecasts are for the stated time
+
 var dio = Dio(BaseOptions(connectTimeout: 1000, receiveTimeout: 3000));
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
 // Manipulating DateTime

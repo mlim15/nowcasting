@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// TODO Make info screen
+
 class InfoScreen extends StatelessWidget  {
   @override
   Widget build(BuildContext context) {

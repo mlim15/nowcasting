@@ -16,6 +16,8 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 
+// TODO animate splash screen
+
 SharedPreferences prefs;
 
 // App code

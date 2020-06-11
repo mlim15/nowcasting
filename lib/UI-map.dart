@@ -214,7 +214,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ],
           )
       ),
-      // TODO Drawer
+      // TODO Rest of drawer: speed and opacity settings, possibly other layers e.g. barbs and composite, make proper legend with hex colors in support-imagery
       drawer: Drawer(
           child: ListView(
             children: <Widget>[

@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 Position locationData;
 Geolocator geolocator = Geolocator();
 
+//TODO Does not request permission on first access
+
 // Location
 getUserLocation() async {
   GeolocationStatus geolocationStatus  = await geolocator.checkGeolocationPermissionStatus();
