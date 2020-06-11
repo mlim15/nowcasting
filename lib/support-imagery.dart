@@ -71,16 +71,24 @@ final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Ra
 List<imglib.Image> decodedForecasts = [];
 List<String> legends = [];
 
-Color dec2hex(int dec) {
-  String aabbggrr = dec.toRadixString(16);
-  aabbggrr = aabbggrr.padRight(8,'0');
-  String aarrggbb = aabbggrr.substring(0,2)+aabbggrr.substring(6,8)+aabbggrr.substring(4,6)+aabbggrr.substring(2,4);
-  return Color(int.parse(aarrggbb, radix: 16));
+String dec2desc(int _dec) {
+  int _index = colorsDec.indexWhere((element) => element==_dec);
+  if (_index == -1) {
+    return "None";
+  }
+  return descriptors[_index];
+}
+
+Color dec2hex(int _dec) {
+  String _aabbggrr = _dec.toRadixString(16);
+  _aabbggrr = _aabbggrr.padRight(8,'0');
+  String _aarrggbb = _aabbggrr.substring(0,2)+_aabbggrr.substring(6,8)+_aabbggrr.substring(4,6)+_aabbggrr.substring(2,4);
+  return Color(int.parse(_aarrggbb, radix: 16));
 }
 
 saveDecodedForecasts(List<imglib.Image> _decodedForecasts) async {
   for (int i = 0; i <= 8; i++) {
-    print ('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
+    print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
     File _file = io.localFile('decodedForecast.$i.raw');
     _file.writeAsBytes(_decodedForecasts[i].getBytes());
   }
@@ -148,8 +156,6 @@ geoToPixel(double lat, double lon) {
   var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
   var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
   int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
-  print(x.toString()+' '+y.toString());
-  
   return [x,y];
 }
 

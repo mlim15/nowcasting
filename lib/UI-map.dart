@@ -12,6 +12,7 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
+import 'package:Nowcasting/support-location.dart' as loc;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -75,6 +76,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   _refreshPressed() async {
     if (await update.remoteImagery(context, false, true)) {
       await update.legends();
+      await loc.getUserLocation();
       setState( () {
         if (_playing) {
           _togglePlaying();
@@ -220,6 +222,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 alignment: Alignment(0,0), 
                 child: Column(
                   children: [
+                    Image.asset('assets/pal_prec_nowcasting.png'),
+                    Text(''),
                     Icon(Icons.warning), 
                     Text("Under Construction")
                   ]

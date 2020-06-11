@@ -1,7 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 
-Position position;
-Geolocator geolocator = Geolocator()..forceAndroidLocationManager = true;
+Position locationData;
+Geolocator geolocator = Geolocator();
 
 // Location
 getUserLocation() async {
@@ -10,7 +10,7 @@ getUserLocation() async {
     print('support-location: Could not get location, geolocationStatus is '+geolocationStatus.toString());
     return;
   }
-  Position position = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
-  print('support-location: Successfully got location '+position.toString());
-  return position;
+  Position locationData = await geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+  print('support-location: Successfully got location '+locationData.toString());
+  return locationData;
 }

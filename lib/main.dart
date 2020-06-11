@@ -14,6 +14,7 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
+import 'package:Nowcasting/support-location.dart' as loc;
 
 SharedPreferences prefs;
 
@@ -55,6 +56,7 @@ class SplashState extends State<Splash> {
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
+      await loc.getUserLocation();
       try {
         if (await update.remoteImagery(context, false, false)) {
           update.forecasts();

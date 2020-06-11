@@ -170,7 +170,7 @@ FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
   print('update.legends: Starting update process');
   for (int i = 0; i <= 8; i++) {
     // Files generated at e.g. XX:13 and labelled as a 20 min forecast for XX:20. That means it represents the weather for XX:40.
-    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20)).add(Duration(minutes: 20*i)).toString());
+    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString());
   }
   print('update.legends: Legend images converted to: '+_legends.toString());
   return _legends;

@@ -57,6 +57,7 @@ flutter:
   uses-material-design: true
   # Add assets here
   assets:
+    - assets/pal_prec_nowcasting.png
     - assets/launcher/logo.png
     - manypixels-iso-navigation.png
     - manypixels-iso-weather.png
