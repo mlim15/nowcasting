@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
@@ -70,6 +71,13 @@ final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Ra
 List<imglib.Image> decodedForecasts = [];
 List<String> legends = [];
 
+Color dec2hex(int dec) {
+  String aabbggrr = dec.toRadixString(16);
+  aabbggrr = aabbggrr.padRight(8,'0');
+  String aarrggbb = aabbggrr.substring(0,2)+aabbggrr.substring(6,8)+aabbggrr.substring(4,6)+aabbggrr.substring(2,4);
+  return Color(int.parse(aarrggbb, radix: 16));
+}
+
 saveDecodedForecasts(List<imglib.Image> _decodedForecasts) async {
   for (int i = 0; i <= 8; i++) {
     print ('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
@@ -109,34 +117,42 @@ loadDecodedForecasts() async {
 }
 
 // Helper functions
-coordinateToPixel(LatLng coordinates) {
-  int x = 0;
-  int y = 0;
+geoToPixel(double lat, double lon) {
   // Check to see if the coordinates are out of bounds.
   double eastBound = ne.longitude;
   double westBound = sw.longitude;
   double northBound = ne.latitude;
   double southBound = sw.latitude;
   try {
-    if (!(westBound <= coordinates.longitude && coordinates.longitude <= eastBound)) {
+    if (!(westBound <= lon && lon <= eastBound)) {
       throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
-    } else if (!(southBound <= coordinates.latitude && coordinates.latitude <= northBound)) {
+    } else if (!(southBound <= lat && lat <= northBound)) {
       throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
     }
   } catch(e) {
     return false;
   }
-  // If they are within bounds, find our pixel.
-  // x,y coordinates for images measure from the top left (NW) corner as 0,0.
-  double percSouth = 1-((coordinates.latitude-southBound)/(northBound-southBound));
-  double percEast = (coordinates.longitude-westBound)/(eastBound-westBound); 
-  print('percSouth: '+percSouth.toString());
-  print('percEast: '+percEast.toString());
-  x = (percSouth*imageryDimensions).toInt();
-  y = (percEast*imageryDimensions).toInt();
-  return [x, y];
+  // If not, then calculate the pixel.
+  int mapWidth = imageryDimensions;
+  int mapHeight = imageryDimensions;
+
+  var mapLonLeft = sw.longitude;
+  var mapLonRight = ne.longitude;
+  var mapLonDelta = mapLonRight - mapLonLeft;
+
+  var mapLatBottom = sw.latitude;
+  var mapLatBottomDegree = mapLatBottom * pi / 180;
+
+  int x = ((lon - mapLonLeft) * (mapWidth / mapLonDelta)).toInt();
+  lat = lat * pi / 180;
+  var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
+  var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
+  int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
+  print(x.toString()+' '+y.toString());
+  
+  return [x,y];
 }
 
 getPixelValue(int x, int y, int index) {
-  decodedForecasts[index].getPixel(x, y);
+  return decodedForecasts[index].getPixelSafe(x, y);
 }
