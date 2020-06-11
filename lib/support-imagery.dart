@@ -1,6 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:latlong/latlong.dart';
+
+import 'package:Nowcasting/support-io.dart' as io;
+import 'package:Nowcasting/support-update.dart' as update;
+
+final int imageryDimensions = 1808;
 
 final LatLng sw = LatLng(35.0491, -88.7654);
 final LatLng ne = LatLng(51.0000, -66.7500);
@@ -56,17 +63,78 @@ final s8dec = 4292349444;
 final s9hex = Color(0xFFFF9898);
 final s9dec = 4288190719; 
 
+final colorsHex = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex, l10hex, l11hex, l12hex, t1hex, t2hex, t3hex, t4hex, t5hex, s1hex, s4hex, s5hex, s6hex, s7hex, s8hex, s9hex];
 final colorsDec = [l1dec, l2dec, l3dec, l4dec, l5dec, l6dec, l7dec, l8dec, l9dec, l10dec, l11dec, l12dec, t1dec, t2dec, t3dec, t4dec, t5dec, s1dec, s4dec, s5dec, s6dec, s7dec, s8dec, s9dec];
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Snow", "Heavy Snow", "Heavy Snow", "Snowstorm", "Wet Snowstorm"];
 
 List<imglib.Image> decodedForecasts = [];
 List<String> legends = [];
 
+saveDecodedForecasts(List<imglib.Image> _decodedForecasts) async {
+  for (int i = 0; i <= 8; i++) {
+    print ('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
+    File _file = io.localFile('decodedForecast.$i.raw');
+    _file.writeAsBytes(_decodedForecasts[i].getBytes());
+  }
+  print('imagery.saveDecodedForecasts: Finished saving decoded images');
+}
+
+loadDecodedForecasts() async {
+  List<imglib.Image> _decodedForecasts = [];
+  try {
+    // First check to make sure none of the local images are newer than the local
+    // decoded images. This could happen if the user closes the app while the images are decoding,
+    // or while the decoded images are being saved.
+    for (int i = 0; i <= 8; i++) {
+      DateTime _forecastLastMod = io.localFile('forecast.$i.png').lastModifiedSync();
+      DateTime _decodedLastMod = io.localFile('decodedForecast.$i.raw').lastModifiedSync();
+      if (_decodedLastMod.isBefore(_forecastLastMod)) {
+        throw('imagery.loadDecodedForecasts: locally cached decoded images are outdated compared to local pngs');
+      }
+    }
+    // If none of them are outdated, load them from disk
+    for (int i = 0; i <= 8; i++) {
+      print('imagery.loadDecodedForecasts: Loading previously decoded image $i (9 total)');
+      File _file = io.localFile('decodedForecast.$i.raw');
+      _decodedForecasts.add(imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync()));
+    }
+    decodedForecasts = _decodedForecasts;
+  } catch (e) {
+    print('imagery.loadDecodedForecasts: Error loading previously decoded images, triggering full refresh: '+e.toString());
+    // If encountering an error, return an empty array.
+    update.forecasts();
+    return;
+  }
+  print('imagery.loadDecodedForecasts: Finished loading previously decoded images');
+}
+
 // Helper functions
 coordinateToPixel(LatLng coordinates) {
-  double percEast;
-  double percSouth;
-  
+  int x = 0;
+  int y = 0;
+  // Check to see if the coordinates are out of bounds.
+  double eastBound = ne.longitude;
+  double westBound = sw.longitude;
+  double northBound = ne.latitude;
+  double southBound = sw.latitude;
+  try {
+    if (!(westBound <= coordinates.longitude && coordinates.longitude <= eastBound)) {
+      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
+    } else if (!(southBound <= coordinates.latitude && coordinates.latitude <= northBound)) {
+      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
+    }
+  } catch(e) {
+    return false;
+  }
+  // If they are within bounds, find our pixel.
+  // x,y coordinates for images measure from the top left (NW) corner as 0,0.
+  double percSouth = 1-((coordinates.latitude-southBound)/(northBound-southBound));
+  double percEast = (coordinates.longitude-westBound)/(eastBound-westBound); 
+  print('percSouth: '+percSouth.toString());
+  print('percEast: '+percEast.toString());
+  x = (percSouth*imageryDimensions).toInt();
+  y = (percEast*imageryDimensions).toInt();
+  return [x, y];
 }
 
 getPixelValue(int x, int y, int index) {

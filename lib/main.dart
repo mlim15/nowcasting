@@ -13,6 +13,7 @@ import 'package:Nowcasting/UI-info.dart' as info;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
+import 'package:Nowcasting/support-imagery.dart' as imagery;
 
 SharedPreferences prefs;
 
@@ -55,9 +56,12 @@ class SplashState extends State<Splash> {
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
       try {
-        await update.remoteImagery(context, false, false);
+        if (await update.remoteImagery(context, false, false)) {
+          update.forecasts();
+        } else {
+          await imagery.loadDecodedForecasts();
+        }
         await update.legends();
-        update.forecasts();
         print('SplashState: Done attempting to update images');
       } catch (e) {
         print('SplashState: Error attempting image update');

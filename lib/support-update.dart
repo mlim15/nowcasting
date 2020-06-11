@@ -126,6 +126,7 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   }
 }
 
+// Local product updates
 forecasts() async {
   List<File> _forecastImages = [];
   for (int i = 0; i <= 8; i++) {
@@ -136,6 +137,7 @@ forecasts() async {
     }
   }
   imagery.decodedForecasts = await compute(bgForecasts, _forecastImages);
+  await imagery.saveDecodedForecasts(imagery.decodedForecasts);
 }
 
 legends() async {
@@ -150,7 +152,7 @@ legends() async {
   imagery.legends = await compute(bgLegends, _filesLastMod);
 }
 
-// Local product updates
+// Local product update isolate helper functions (for backgrounding)
 FutureOr<List<imglib.Image>> bgForecasts(List<File> _files) async {
   List<imglib.Image> _forecasts = [];
   imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
@@ -167,7 +169,8 @@ FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
   List<String> _legends = [];
   print('update.legends: Starting update process');
   for (int i = 0; i <= 8; i++) {
-    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString());
+    // Files generated at e.g. XX:13 and labelled as a 20 min forecast for XX:20. That means it represents the weather for XX:40.
+    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20)).add(Duration(minutes: 20*i)).toString());
   }
   print('update.legends: Legend images converted to: '+_legends.toString());
   return _legends;
