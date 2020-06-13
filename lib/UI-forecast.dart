@@ -7,7 +7,7 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 
-// TODO beautify, use location data cached by support-location instead of the test coord below
+// TODO beautify, use location data cached by support-location instead of the test coord below, add notice about outages due to environment canada maintenance
 LatLng testCoord = ***REMOVED***;
 
 // Widgets
