@@ -58,7 +58,7 @@ class SplashState extends State<Splash> {
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
-      await loc.getUserLocation();
+      loc.getUserLocation();
       try {
         if (await update.remoteImagery(context, false, false)) {
           update.forecasts();
