@@ -128,3 +128,4 @@ updateStatusBarBrightness(BuildContext context, [bool transparent = false, bool 
     }
   }
 }
+
