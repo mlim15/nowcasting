@@ -25,9 +25,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   // Called when pressing done at the end of onboarding.
   void _onIntroEnd(context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     if (_cachedSuccessfully) {
-      await prefs.setBool('seen', true);
+      await main.prefs.setBool('obComplete', true);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => main.AppContents()),
       );

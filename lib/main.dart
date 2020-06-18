@@ -53,12 +53,13 @@ class SplashState extends State<Splash> {
   Future _checkFirstSeen() async {
     // Test the 'seen' SharedPreference which says whether
     // onboarding has been completed or not.
-    if (prefs.getBool('seen') ?? false) {
+    if (prefs.getBool('obComplete') ?? false) {
       // Onboarding is not necessary.
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
-      loc.getUserLocation();
+      await loc.restoreLastKnownLocation();
+      loc.updateLastKnownLocation();
       try {
         if (await update.remoteImagery(context, false, false)) {
           update.forecasts();
