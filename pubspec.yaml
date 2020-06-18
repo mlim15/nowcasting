@@ -20,13 +20,14 @@ dependencies:
     git:
       url: https://github.com/igaurab/user_location_plugin.git
   dio: ^3.0.9
-  geolocator: ^5.3.2+2
+  location: ^3.0.2
   image: any
   introduction_screen: ^1.0.7
   shared_preferences: '>=0.5.7+3 <2.0.0'
   flutter_progress_button: '^0.6.4'
   percent_indicator: ^2.1.4
   google_fonts: ^1.1.0
+  url_launcher: ^5.4.11
 
 dependency_overrides:
   flutter_map:
