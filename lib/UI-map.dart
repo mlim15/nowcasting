@@ -76,7 +76,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   _refreshPressed() async {
     if (await update.remoteImagery(context, false, true)) {
       await update.legends();
-      await loc.getUserLocation();
+      await loc.updateLastKnownLocation();
       setState( () {
         if (_playing) {
           _togglePlaying();
@@ -132,7 +132,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 )
               ]),
               MarkerLayerOptions(
-                markers: markers
+                markers: markers // TODO investigate location marker in wrong spot when zoomed out? maybe only on lollipop emulator?
               ),
               UserLocationOptions(
                 context: context,
