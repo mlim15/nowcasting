@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info/device_info.dart';
 
 import 'package:Nowcasting/UI-onboarding.dart' as onboarding;
 import 'package:Nowcasting/UI-map.dart' as map;
@@ -19,6 +21,9 @@ import 'package:Nowcasting/support-location.dart' as loc;
 // TODO animate splash screen
 
 SharedPreferences prefs;
+DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+AndroidDeviceInfo androidInfo;
+IosDeviceInfo iosInfo;
 
 // App code
 void main() async {
@@ -27,6 +32,12 @@ void main() async {
   // Initialize critical filepath information immediately
   io.updateAppDocPath();
   prefs = await SharedPreferences.getInstance();
+  if (Platform.isAndroid) {
+    androidInfo = await deviceInfo.androidInfo;
+  }
+  if (Platform.isIOS) {
+    iosInfo = await deviceInfo.iosInfo;
+  }
   runApp(MyApp());
 }
 
@@ -59,7 +70,9 @@ class SplashState extends State<Splash> {
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
       await loc.restoreLastKnownLocation();
+      await loc.restorePlaces(context);
       loc.updateLastKnownLocation();
+      await update.radarOutages();
       try {
         if (await update.remoteImagery(context, false, false)) {
           update.forecasts();
