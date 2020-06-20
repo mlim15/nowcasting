@@ -280,6 +280,8 @@ class ForecastSliver extends StatelessWidget {
     // TODO this now needs a big pass for readability.
     // preferably separate out by condition into functions that
     // return their repspective subwidget.
+    // also add buttons to reorder?
+    // TODO also fix blue text on loader, add button when in dark mode
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
