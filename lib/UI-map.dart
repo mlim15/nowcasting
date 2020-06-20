@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
-import 'package:user_location/user_location.dart';
 import 'package:latlong/latlong.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
@@ -34,7 +32,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // flutter_map and user_location variables
   MapController mapController = MapController();
-  List<Marker> markers = [];
+  List<Marker> markerList = [Marker(point: loc.lastKnownLocation, builder: ux.locMarker)];
 
   // Dark mode listening
   @override
@@ -74,9 +72,10 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
+    await loc.updateLastKnownLocation();
+    await update.radarOutages();
     if (await update.remoteImagery(context, false, true)) {
       await update.legends();
-      await loc.updateLastKnownLocation();
       setState( () {
         if (_playing) {
           _togglePlaying();
@@ -85,7 +84,16 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         imageCache.clear();
         imageCache.clearLiveImages();
       });
-      await update.forecasts();
+      update.forecasts();
+    }
+  }
+  _locatePressed() async {
+    if (await loc.checkLocPerm() == false || await loc.checkLocService() == false) {
+      ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
+    } else {
+      loc.getUserLocation(true);
+      await loc.updateLastKnownLocation(); 
+      setState(() {markerList = [Marker(point: loc.lastKnownLocation, builder: ux.locMarker)]; mapController.move(loc.lastKnownLocation, 9);});
     }
   }
 
@@ -105,55 +113,40 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               minZoom: 5,
               swPanBoundary: imagery.sw,
               nePanBoundary: imagery.ne,
-              plugins: [
-                UserLocationPlugin(),
-              ],
             ),
             layers: [
               TileLayerOptions(
                 tileProvider: AssetTileProvider(),
-                urlTemplate: ux.darkMode(context) ? "assets/jawg-matrix/{z}/{x}/{y}.png" : "assets/jawg-sunny/{z}/{x}/{y}.png",
+                urlTemplate: ux.darkMode(context) 
+                  ? "assets/jawg-matrix/{z}/{x}/{y}.png" 
+                  : "assets/jawg-sunny/{z}/{x}/{y}.png",
                 minNativeZoom: 5,
                 maxNativeZoom: 9,
-                backgroundColor: ux.darkMode(context) ? Color(0xFF000000) : Color(0xFFCCE7FC),
+                backgroundColor: ux.darkMode(context) 
+                  ? Color(0xFF000000) 
+                  : Color(0xFFCCE7FC),
                 overrideTilesWhenUrlChanges: true, 
                 tileFadeInDuration: 0, 
                 tileFadeInStartWhenOverride: 1.0,
                 retinaMode: ux.retinaMode(context), // Set retinamode based on device DPI
               ),
-              OverlayImageLayerOptions(overlayImages: <OverlayImage>[
-                OverlayImage(
-                  bounds: LatLngBounds(
-                    imagery.sw, imagery.ne
-                  ),
-                  opacity: 0.6,
-                  imageProvider: io.localFile('forecast.$_count.png').existsSync() ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) : AssetImage('assets/launcher/logo.png'),
-                  gaplessPlayback: true,
-                )
-              ]),
-              MarkerLayerOptions(
-                markers: markers // TODO investigate location marker in wrong spot when zoomed out? maybe only on lollipop emulator?
+              OverlayImageLayerOptions(
+                overlayImages: <OverlayImage>[
+                  OverlayImage(
+                    bounds: LatLngBounds(
+                      imagery.sw, imagery.ne
+                    ),
+                    opacity: 0.6,
+                    imageProvider: io.localFile('forecast.$_count.png').existsSync() 
+                      ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) 
+                      : AssetImage('assets/launcher/logo.png'),
+                    gaplessPlayback: true,
+                  )
+                ]
               ),
-              UserLocationOptions(
-                context: context,
-                mapController: mapController,
-                markers: markers,
-                updateMapLocationOnPositionChange: false,
-                showMoveToCurrentLocationFloatingActionButton: true,
-                zoomToCurrentLocationOnLoad: true,
-                moveToCurrentLocationFloatingActionButton: Container(
-                  decoration: BoxDecoration(
-                  color: Theme.of(context).floatingActionButtonTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5),)
-                    ]),
-                  child: Icon(
-                    Icons.my_location,
-                    color: Theme.of(context).floatingActionButtonTheme.foregroundColor,
-                  ),
-                )
-              )
+              MarkerLayerOptions(
+                markers: markerList,
+              ),
             ], // End of layers
           ),
           Container (
@@ -178,7 +171,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 lineWidth: 4.0,
                 circularStrokeCap: CircularStrokeCap.round,
                 percent: _count/8,
-                center: imagery.legends.length == 9 ? Text(imagery.legends[_count].substring(imagery.legends[_count].length-12,imagery.legends[_count].length-7), style: GoogleFonts.lato(fontWeight: FontWeight.w600)) : Text("...", style: GoogleFonts.lato(fontWeight: FontWeight.w600)),
+                center: imagery.legends.length == 9 
+                  ? Text(imagery.legends[_count].substring(imagery.legends[_count].length - 12, imagery.legends[_count].length - 7), style: ux.latoWhite.merge(TextStyle(color: Theme.of(context).textTheme.bodyText1.color))) 
+                  : Text("...", style: ux.latoWhite),
                 progressColor: Theme.of(context).accentColor,
                 backgroundColor: Theme.of(context).backgroundColor,
               )
@@ -187,50 +182,54 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         ]
       ),
       bottomNavigationBar: BottomAppBar(
-          child: Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () {mapScaffoldKey.currentState.openDrawer();}
-              ),
-              Spacer(),
-              IconButton(
-                icon: Icon(Icons.navigate_before),
-                onPressed: _previousPressed,
-              ),
-              IconButton(
-                icon: _playPauseIcon,
-                onPressed: _togglePlaying,
-              ),
-              IconButton(
-                icon: Icon(Icons.navigate_next),
-                onPressed: _nextPressed,
-              ),
-              Spacer(),
-              IconButton(
-                icon: Icon(Icons.refresh),
-                onPressed: () {_refreshPressed();},
-              ),
-            ],
-          )
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: () {mapScaffoldKey.currentState.openDrawer();}
+            ),
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.navigate_before),
+              onPressed: _previousPressed,
+            ),
+            IconButton(
+              icon: _playPauseIcon,
+              onPressed: _togglePlaying,
+            ),
+            IconButton(
+              icon: Icon(Icons.navigate_next),
+              onPressed: _nextPressed,
+            ),
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {_refreshPressed();},
+            ),
+          ],
+        )
       ),
       // TODO Rest of drawer: speed and opacity settings, possibly other layers e.g. barbs and composite, make proper legend with hex colors in support-imagery
       drawer: Drawer(
-          child: ListView(
-            children: <Widget>[
-              Align(
-                alignment: Alignment(0,0), 
-                child: Column(
-                  children: [
-                    Image.asset('assets/pal_prec_nowcasting.png'),
-                    Text(''),
-                    Icon(Icons.warning), 
-                    Text("Under Construction")
-                  ]
-                )
-              ),
-            ],
-          )
+        child: ListView(
+          children: <Widget>[
+            Align(
+              alignment: Alignment(0,0), 
+              child: Column(
+                children: [
+                  Image.asset('assets/pal_prec_nowcasting.png'),
+                  Text(''),
+                  Icon(Icons.warning), 
+                  Text("Under Construction")
+                ]
+              )
+            ),
+          ],
+        )
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.my_location),
+        onPressed: () {_locatePressed();},
       ),
     );
   }
