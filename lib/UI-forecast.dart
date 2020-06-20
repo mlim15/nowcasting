@@ -91,7 +91,7 @@ class ForecastScreenState extends State<ForecastScreen> {
       appBar: AppBar(
         title: const Text('Forecast'),
         actions: <Widget>[
-          loc.places.isNotEmpty
+          loc.places.isNotEmpty && imagery.decodedForecasts.isNotEmpty
             ? IconButton(
               icon: _editing
                 ? Icon(Icons.done)
