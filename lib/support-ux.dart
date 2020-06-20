@@ -1,4 +1,5 @@
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,10 +13,14 @@ final refreshingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: T
 // Snack bars for onboarding
 final onboardErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Couldn\'t download data! Try again later.'));
 final onboardCannotContinueSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Can\'t proceed without map data! Go back and download it.'));
+// Snack bars about location updates
+final locationOffSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Cannot update location. Check permissions or turn on location services.'));
+final restoreErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error restoring location list. It has been reset to default.'));
 
 // Theme definitions
 final nowcastingColor = const Color(0xFF0075b3);
-final nowcastingColorLighter = const Color(0xff00a3f9);
+final nowcastingColorLighter = const Color(0xff0085c7);
+final nowcastingColorDarker = const Color(0xFF005591);
 final grey850 = const Color(0xFF303030);
 final grey250 = const Color(0xFFFAFAFA);
 final lightTheme = ThemeData(
@@ -72,6 +77,43 @@ final progressButtonColor = nowcastingColor;
 final progressButtonTextStyle = const TextStyle(color: Colors.white);
 final progressButtonWidget = const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white));
 
+// Sliver padding
+final sliverMargins = const EdgeInsets.only(
+  top: 12.0,
+  left: 18.0,
+  right: 18.0,
+);
+final sliverBottomMargins = const EdgeInsets.symmetric(
+  vertical: 12,
+  horizontal: 18,
+);
+final sliverShadow = const BoxShadow(  
+  color: Colors.black12,
+  blurRadius: 10.0,
+  offset: Offset(0.0, 10.0),
+);
+final double sliverHeight = 148;
+final double sliverThinHeight = 96;
+final double sliverTinyHeight = 32;
+final double sliverHeightExpanded = 164;
+
+// Warning levels and styling for slivers
+enum WarningLevel {
+  notice,
+  warning,
+  alert
+}
+final noticeColor = Color(0xFF00b398);
+final warningColor = Color(0xFFB33E00);
+final alertColor = Color(0xFFB3001C);
+final noticeIcon = Icon(Icons.help, color: Colors.white);
+final warningIcon = Icon(Icons.error, color: Colors.white);
+final alertIcon = Icon(Icons.warning, color: Colors.white);
+
+// Fonts
+final latoWhite = GoogleFonts.lato(fontWeight: FontWeight.w600, color: Color(0xFFFFFFFF));
+final latoBlue = GoogleFonts.lato(fontWeight: FontWeight.w600, color: nowcastingColor);
+
 // Helper functions to get info about device theming and properties
 bool darkMode(BuildContext context) {
   final Brightness brightnessValue = MediaQuery.of(context).platformBrightness;
@@ -127,4 +169,20 @@ updateStatusBarBrightness(BuildContext context, [bool transparent = false, bool 
       }
     }
   }
+}
+
+Widget locMarker(BuildContext context) {
+  return Container(
+    padding: EdgeInsets.all(4),
+    //height: 2,
+    //width: 2,
+    decoration: BoxDecoration(
+      border: Border.all(color: nowcastingColor.withOpacity(0.6), width: 3),
+      shape: BoxShape.circle,
+      color: Color(0x80FFFFFF),
+      boxShadow: [
+        BoxShadow(color: Colors.black54.withOpacity(0.1), blurRadius: 0.0,) //offset: const Offset(1, 2.5),)
+      ]
+    ),
+  );
 }
