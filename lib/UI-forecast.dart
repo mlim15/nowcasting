@@ -277,6 +277,9 @@ class ForecastSliver extends StatelessWidget {
       }
       loc.savePlaces();
     }
+    // TODO this now needs a big pass for readability.
+    // preferably separate out by condition into functions that
+    // return their repspective subwidget.
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
