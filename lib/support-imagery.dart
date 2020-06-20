@@ -7,13 +7,16 @@ import 'package:latlong/latlong.dart';
 
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
+// Details relevant to nowcasting imagery products - pixel dimensions
+// and geographical bbox
 final int imageryDimensions = 1808;
-
 final LatLng sw = LatLng(35.0491, -88.7654);
 final LatLng ne = LatLng(51.0000, -66.7500);
-// Imagery legend colors in AARRGGBB hex and equivalent AABBGGRR->raw decimal form
-// Get pixel value on decoded png gives the decimal form
+
+// Imagery legend colors in AARRGGBB hex and equivalent hex AABBGGRR -> decimal AABBGGRR form
+// Getting a pixel value from a decoded png returns the value in the decimal AABBGGRR form
 final l1hex = Color(0xFF00FF00);
 final l1dec = 4278255360;
 final l2hex = Color(0xFF00B400); 
@@ -64,28 +67,48 @@ final s8dec = 4292349444;
 final s9hex = Color(0xFFFF9898);
 final s9dec = 4288190719; 
 
+// Arrays storing data about possible values in a pixel from the nowcasting data products.
+// Indices match between the arrays for easy conversion between them.
 final colorsHex = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex, l10hex, l11hex, l12hex, t1hex, t2hex, t3hex, t4hex, t5hex, s1hex, s4hex, s5hex, s6hex, s7hex, s8hex, s9hex];
 final colorsDec = [l1dec, l2dec, l3dec, l4dec, l5dec, l6dec, l7dec, l8dec, l9dec, l10dec, l11dec, l12dec, t1dec, t2dec, t3dec, t4dec, t5dec, s1dec, s4dec, s5dec, s6dec, s7dec, s8dec, s9dec];
-final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Snow", "Heavy Snow", "Heavy Snow", "Snowstorm", "Wet Snowstorm"];
+final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Snow", "Snow", "Heavy Snow", "Blizzard", "Wet Blizzard"];
+final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
 
+// Arrays storing local products derived from nowcasting data
 List<imglib.Image> decodedForecasts = [];
 List<String> legends = [];
 
+// Functions that take decimal AABBGGRR values queried from the data products
+// and provide the corresponding hex color, icon, or text description
 String dec2desc(int _dec) {
-  int _index = colorsDec.indexWhere((element) => element==_dec);
+  int _index = colorsDec.indexWhere((element) => element == _dec);
   if (_index == -1) {
     return "None";
   }
   return descriptors[_index];
 }
 
+Icon dec2icon(int _dec) {
+  int _index = colorsDec.indexWhere((element) => element == _dec);
+  if (_index == -1) {
+    return Icon(Icons.error, color: Colors.white);
+  }
+  return Icon(icons[_index], color: Colors.white);
+}
+
 Color dec2hex(int _dec) {
+  // TODO probably not safe. Some checks are in order before doing this and blindly returning it
   String _aabbggrr = _dec.toRadixString(16);
   _aabbggrr = _aabbggrr.padRight(8,'0');
   String _aarrggbb = _aabbggrr.substring(0,2)+_aabbggrr.substring(6,8)+_aabbggrr.substring(4,6)+_aabbggrr.substring(2,4);
   return Color(int.parse(_aarrggbb, radix: 16));
 }
 
+// Saving and loading raw decoded AABBGGRR images to/from disk.
+// Decompressing and decoding AARRGGBB png to uncompressed AABBGGRR is computationally expensive,
+// taking up to a minute on slower devices. This saves loading time and battery when compared
+// with decoding the png on every launch, in exchange for eating up what is probably 
+// an unreasonable amount of disk space.
 saveDecodedForecasts(List<imglib.Image> _decodedForecasts) async {
   for (int i = 0; i <= 8; i++) {
     print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
@@ -117,14 +140,14 @@ loadDecodedForecasts() async {
     decodedForecasts = _decodedForecasts;
   } catch (e) {
     print('imagery.loadDecodedForecasts: Error loading previously decoded images, triggering full refresh: '+e.toString());
-    // If encountering an error, return an empty array.
+    // If encountering an error, trigger the decoding of the pngs all over again.
     update.forecasts();
     return;
   }
   print('imagery.loadDecodedForecasts: Finished loading previously decoded images');
 }
 
-// Helper functions
+// Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
 geoToPixel(double lat, double lon) {
   // Check to see if the coordinates are out of bounds.
   double eastBound = ne.longitude;
