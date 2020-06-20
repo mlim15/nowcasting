@@ -11,14 +11,19 @@ import 'package:image/image.dart' as imglib;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
+import 'package:Nowcasting/support-location.dart' as loc;
 
 // TODO figure out for sure if the legends need 20 min added to their duration
 // or if forecasts are for the stated time
 
+// Objects
 var dio = Dio(BaseOptions(connectTimeout: 1000, receiveTimeout: 3000));
+
+// Variables
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
-// Manipulating DateTime
-extension on DateTime{
+
+// Extensions for manipulating DateTime
+extension on DateTime {
   DateTime roundDown([Duration delta = const Duration(minutes: 10)]) {
     return DateTime.fromMillisecondsSinceEpoch(
         this.millisecondsSinceEpoch -
@@ -27,6 +32,7 @@ extension on DateTime{
   }
   DateTime roundUp([Duration delta = const Duration(minutes: 10)]) {
     return DateTime.fromMillisecondsSinceEpoch(
+        // add the duration then follow the round down procedure
         this.millisecondsSinceEpoch + delta.inMilliseconds - 
         this.millisecondsSinceEpoch % delta.inMilliseconds
     );
@@ -65,18 +71,13 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   try {
     Response response = await dio.get(
       url,
-      //onReceiveProgress: showDownloadProgress,
-      //Received data with List<int>
       options: Options(
           responseType: ResponseType.bytes,
           followRedirects: false,
           receiveTimeout: 0),
     );
-    // Debug info
-    //print(response.headers);
     File file = File(savePath);
     var raf = file.openSync(mode: FileMode.write);
-    // response.data is List<int> type
     raf.writeFromSync(response.data);
     await raf.close();
   } catch (e) {
@@ -179,4 +180,26 @@ FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
   return _legends;
 }
 
-// Check for outages or other warnings to show
+// Update functions for booleans stored in support-location that determine 
+// whether certain message slivers are shown on the forecast screen.
+weatherAlert() async {
+  // TODO implement. For now loc.weatherAlert will always be false so the message is never shown
+}
+
+radarOutages() async {
+  // We are guessing about whether or not to show this outage message.
+  // We will only show the message if there is no remote imagery update available
+  // and the local images are older than 22 minutes. Typically the images will have
+  // an update available after 10-11 minutes has elapsed, so this is a safe buffer
+  // to ensure we are really seeing an outage. We don't know for sure that this outage is
+  // due to environment canada radar outages, but we'll blame it on them anyway.
+  bool _updateAvailable = await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.0.png', io.localFile('forecast.0.png'));
+  DateTime _fileLastMod = (await io.localFile('forecast.0.png').lastModified()).toUtc();
+  if (_updateAvailable == false && DateTime.now().difference(_fileLastMod) > Duration(minutes: 22)) {
+    print('update.radarOutages: Seems to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' but difference between file modification and now is '+_fileLastMod.difference(DateTime.now()).toString());
+    loc.radarOutage = true;
+  } else {
+    print('update.radarOutages: Doesn\'t seem to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' and difference between file modification and now is '+DateTime.now().difference(_fileLastMod).toString());
+    loc.radarOutage = false;
+  }
+}
