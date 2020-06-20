@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_progress_button/flutter_progress_button.dart';
 
 import 'package:Nowcasting/main.dart' as main;
@@ -91,7 +90,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           ),
           PageViewModel(
               title: "Location Permissions",
-              body:  "Giving access to your location will enable the app to provide local forecasts.",
+              body:  "Giving access to your location will enable the app to provide local forecasts. For notifications, you will need to grant access even in the background.",
               image: _buildImage('manypixels-iso-navigation'),
               decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
               footer: new ProgressButton(
@@ -102,7 +101,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: ux.progressButtonBorderRadius,
                 color: ux.progressButtonColor,
                 onPressed: () async {    
-                  await loc.getUserLocation(); 
+                  await loc.getUserLocation(true); 
                   return () {
                     _introKey.currentState?.animateScroll(3); 
                   }; 
