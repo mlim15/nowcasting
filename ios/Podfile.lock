@@ -1,7 +1,5 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_compass (0.0.1):
-    - Flutter
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
@@ -10,6 +8,8 @@ PODS:
   - location_web (0.0.1):
     - Flutter
   - path_provider (0.0.1):
+    - Flutter
+  - path_provider_linux (0.0.1):
     - Flutter
   - path_provider_macos (0.0.1):
     - Flutter
@@ -22,43 +22,43 @@ PODS:
   - sqflite (0.0.1):
     - Flutter
     - FMDB (~> 2.7.2)
-  - SwiftyTesseract (2.2.3)
-  - tesseract_ocr (0.3.0):
+  - url_launcher (0.0.1):
     - Flutter
-    - SwiftyTesseract
-  - user_location (0.0.1):
+  - url_launcher_macos (0.0.1):
+    - Flutter
+  - url_launcher_web (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_compass (from `.symlinks/plugins/flutter_compass/ios`)
   - location (from `.symlinks/plugins/location/ios`)
   - location_web (from `.symlinks/plugins/location_web/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - path_provider_linux (from `.symlinks/plugins/path_provider_linux/ios`)
   - path_provider_macos (from `.symlinks/plugins/path_provider_macos/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - shared_preferences_macos (from `.symlinks/plugins/shared_preferences_macos/ios`)
   - shared_preferences_web (from `.symlinks/plugins/shared_preferences_web/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
-  - tesseract_ocr (from `.symlinks/plugins/tesseract_ocr/ios`)
-  - user_location (from `.symlinks/plugins/user_location/ios`)
+  - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+  - url_launcher_macos (from `.symlinks/plugins/url_launcher_macos/ios`)
+  - url_launcher_web (from `.symlinks/plugins/url_launcher_web/ios`)
 
 SPEC REPOS:
   trunk:
     - FMDB
-    - SwiftyTesseract
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_compass:
-    :path: ".symlinks/plugins/flutter_compass/ios"
   location:
     :path: ".symlinks/plugins/location/ios"
   location_web:
     :path: ".symlinks/plugins/location_web/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
+  path_provider_linux:
+    :path: ".symlinks/plugins/path_provider_linux/ios"
   path_provider_macos:
     :path: ".symlinks/plugins/path_provider_macos/ios"
   shared_preferences:
@@ -69,26 +69,28 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_web/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
-  tesseract_ocr:
-    :path: ".symlinks/plugins/tesseract_ocr/ios"
-  user_location:
-    :path: ".symlinks/plugins/user_location/ios"
+  url_launcher:
+    :path: ".symlinks/plugins/url_launcher/ios"
+  url_launcher_macos:
+    :path: ".symlinks/plugins/url_launcher_macos/ios"
+  url_launcher_web:
+    :path: ".symlinks/plugins/url_launcher_web/ios"
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
-  flutter_compass: cbbd285cea1584c7ac9c4e0c3e1f17cbea55e855
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
   location_web: b94e7433cfe28c0f7c8923c2ee482824b32e55a7
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  path_provider_linux: 4d630dc393e1f20364f3e3b4a2ff41d9674a84e4
   path_provider_macos: f760a3c5b04357c380e2fddb6f9db6f3015897e0
   shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
   shared_preferences_web: 141cce0c3ed1a1c5bf2a0e44f52d31eeb66e5ea9
   sqflite: 4001a31ff81d210346b500c55b17f4d6c7589dd0
-  SwiftyTesseract: d92b644e0e12d143bc272bfe1edb73ae07f2b2e8
-  tesseract_ocr: c0790f6235087fd3adcb5bad4ea429027f29781e
-  user_location: ec382950d42014e9d796513cb4a83de2e643a477
+  url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
+  url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
+  url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
 
 PODFILE CHECKSUM: c34e2287a9ccaa606aeceab922830efb9a6ff69a
 

@@ -16,9 +16,6 @@ dependencies:
     git:
       url: https://github.com/johnpryan/flutter_map.git
       ref: b41932100ba8af15326560384d6667b4bd087c35
-  user_location:
-    git:
-      url: https://github.com/igaurab/user_location_plugin.git
   dio: ^3.0.9
   location: ^3.0.2
   image: any
@@ -28,6 +25,8 @@ dependencies:
   percent_indicator: ^2.1.4
   google_fonts: ^1.1.0
   url_launcher: ^5.4.11
+  material_design_icons_flutter: 4.0.5345
+  device_info: '>=0.4.2+4 <2.0.0'
 
 dependency_overrides:
   flutter_map:
