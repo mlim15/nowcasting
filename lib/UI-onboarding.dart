@@ -101,7 +101,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: ux.progressButtonBorderRadius,
                 color: ux.progressButtonColor,
                 onPressed: () async {    
-                  await loc.getUserLocation(true); 
+                  await loc.updateLastKnownLocation(withRequests: true); 
                   return () {
                     _introKey.currentState?.animateScroll(3); 
                   }; 

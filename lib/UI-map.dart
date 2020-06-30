@@ -91,10 +91,12 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (await loc.checkLocPerm() == false || await loc.checkLocService() == false) {
       ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
     } else {
-      loc.getUserLocation(true);
-      await loc.updateLastKnownLocation(); 
+      await loc.updateLastKnownLocation(withRequests: true); 
       setState(() {markerList = [Marker(point: loc.lastKnownLocation, builder: ux.locMarker)]; mapController.move(loc.lastKnownLocation, 9);});
     }
+  }
+  Widget _returnSpacer() {
+    return Text('      ');
   }
 
   // Widget definition
@@ -215,14 +217,50 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           children: <Widget>[
             Align(
               alignment: Alignment(0,0), 
-              child: Column(
-                children: [
-                  Image.asset('assets/pal_prec_nowcasting.png'),
-                  Text(''),
-                  Icon(Icons.warning), 
-                  Text("Under Construction")
-                ]
-              )
+              child: Container(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    // Legend
+                    Align(alignment: Alignment.center, child: Text("Legend")),
+                    Container(child: Row(children: [Text("Rain"), Spacer(), Text('Hail')]), margin: EdgeInsets.all(8),), 
+                    Row(children: [ 
+                      for (int _i=0; _i<1; _i++) 
+                        _returnSpacer(),
+                      for (Color _color in imagery.colorsHex.sublist(0,12))
+                        Container(color: _color, child: _returnSpacer())
+                    ]),
+                    Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition")), margin: EdgeInsets.all(8),),
+                    Row(children: [ 
+                      for (int _i=0; _i<1; _i++) 
+                        _returnSpacer(),
+                      for (Color _color in imagery.colorsHex.sublist(12,17))
+                        Container(color: _color, child: _returnSpacer())
+                    ]),
+                    Container(child: Row(children: [Text("Snow"), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow')]), margin: EdgeInsets.all(8),),
+                    Row(children: [ 
+                      for (Color _color in imagery.colorsHex.sublist(18))
+                        Container(color: _color, child: _returnSpacer())
+                    ]),
+                    // Speed control
+                    Align(alignment: Alignment.center, child: Text("Animation Speed")),
+                    Slider.adaptive(
+                      value: 700-speed.inMilliseconds.toDouble(),
+                      min: -700,
+                      max: 700,
+                      divisions: 14,
+                      onChanged: (newSpeed) {
+                        setState(() {
+                          speed = Duration(milliseconds: newSpeed.round()+700);
+                          if (_playing) {
+                            _togglePlaying();
+                          }
+                        });
+                      },
+                    )
+                  ]
+                )
+              ),
             ),
           ],
         )
