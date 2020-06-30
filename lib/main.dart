@@ -72,7 +72,7 @@ class SplashState extends State<Splash> {
       await loc.restoreLastKnownLocation();
       await loc.restorePlaces(context);
       print('Done restoring places');
-      // TODO Seems to hang here
+      // TODO Seems to hang here when 'await' is added
       loc.updateLastKnownLocation();
       print('Done updating location');
       await update.radarOutages();
