@@ -69,9 +69,10 @@ class SplashState extends State<Splash> {
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
+      // TODO ensure hangup caused by dio connection timeout error on update.radarOutages is gone for good
       await loc.restoreLastKnownLocation();
       await loc.restorePlaces(context);
-      loc.updateLastKnownLocation();
+      await loc.updateLastKnownLocation();
       await update.radarOutages();
       try {
         if (await update.remoteImagery(context, false, false)) {

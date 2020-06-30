@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
 
@@ -32,7 +34,7 @@ restorePlaces(BuildContext context) async {
 
   } catch(e) {
     // If the load failed already because the sharedprefs did not exist yet, just set to defaults
-    print('location.restorePlaces: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
+    print('location.restorePlaces[e1]: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
     notify = [false];
@@ -66,7 +68,7 @@ restorePlaces(BuildContext context) async {
     assert(places.length == placeNames.length && placeNames.length == notify.length);
   } catch(e) {
     // If the load failed somehow based on the above test, reset to defaults
-    print('location.restorePlaces: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
+    print('location.restorePlaces[e2]: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
     notify = [false];
@@ -120,13 +122,13 @@ saveLastKnownLocation() async {
   }
 }
 
-updateLastKnownLocation() async {
-  LocationData _newLoc = await getUserLocation();
+updateLastKnownLocation({bool withRequests = false}) async {
+  LocationData _newLoc = await getUserLocation(withRequests: withRequests);
   if (_newLoc != null) {
     lastKnownLocation = new LatLng(_newLoc.latitude, _newLoc.longitude);
     saveLastKnownLocation();
   } else {
-    throw('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
+    print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
   }
 }
 
@@ -168,10 +170,15 @@ requestLocPerm() async {
   return true;
 }
 
-getUserLocation([bool _withRequests = false]) async {
+getUserLocation({Duration timeout = const Duration(seconds: 10), bool withRequests = false}) async {
   LocationData _locationData;
+  cancelCallback() {
+    print('location.getUserLocation: Didn\'t get location within timeout limit '+timeout.toString()+', cancelling update');
+    return null;
+  }
+  Timer(timeout, cancelCallback());
   if (await checkLocService() == false) {
-    if (_withRequests) {
+    if (withRequests) {
       await requestLocService();
     } else {
       return;
@@ -181,7 +188,7 @@ getUserLocation([bool _withRequests = false]) async {
     }
   }
   if (await checkLocPerm() == false) {
-    if (_withRequests) {
+    if (withRequests) {
       await requestLocPerm();
     } else {
       return;
