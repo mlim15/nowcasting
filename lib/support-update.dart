@@ -17,7 +17,7 @@ import 'package:Nowcasting/support-location.dart' as loc;
 // or if forecasts are for the stated time
 
 // Objects
-var dio = Dio(BaseOptions(connectTimeout: 1000, receiveTimeout: 3000));
+var dio = Dio(BaseOptions(connectTimeout: 1500, receiveTimeout: 3000));
 
 // Variables
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
@@ -193,13 +193,19 @@ radarOutages() async {
   // an update available after 10-11 minutes has elapsed, so this is a safe buffer
   // to ensure we are really seeing an outage. We don't know for sure that this outage is
   // due to environment canada radar outages, but we'll blame it on them anyway.
-  bool _updateAvailable = await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.0.png', io.localFile('forecast.0.png'));
-  DateTime _fileLastMod = (await io.localFile('forecast.0.png').lastModified()).toUtc();
-  if (_updateAvailable == false && DateTime.now().difference(_fileLastMod) > Duration(minutes: 22)) {
-    print('update.radarOutages: Seems to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' but difference between file modification and now is '+_fileLastMod.difference(DateTime.now()).toString());
-    loc.radarOutage = true;
-  } else {
-    print('update.radarOutages: Doesn\'t seem to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' and difference between file modification and now is '+DateTime.now().difference(_fileLastMod).toString());
+  try {
+    bool _updateAvailable = await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.0.png', io.localFile('forecast.0.png'));
+    DateTime _fileLastMod = (await io.localFile('forecast.0.png').lastModified()).toUtc();
+    if (_updateAvailable == false && DateTime.now().difference(_fileLastMod) > Duration(minutes: 22)) {
+      print('update.radarOutages: Seems to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' but difference between file modification and now is '+_fileLastMod.difference(DateTime.now()).toString());
+      loc.radarOutage = true;
+    } else {
+      print('update.radarOutages: Doesn\'t seem to be an outage. checkUpdateAvailable returned '+_updateAvailable.toString()+' and difference between file modification and now is '+DateTime.now().difference(_fileLastMod).toString());
+      loc.radarOutage = false;
+    }
+  } catch(e) {
+    print('update.radarOutages: Check timed out, cannot determine if outage or not. Defaulting to false. Error was '+e.toString());
     loc.radarOutage = false;
   }
+  
 }
