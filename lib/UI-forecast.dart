@@ -102,14 +102,17 @@ class ForecastScreenState extends State<ForecastScreen> {
         ],
       ),
       body: RefreshIndicator(
+        color: ux.darkMode(context)
+          ? Colors.white
+          : ux.nowcastingColor,
         onRefresh: () async {
             await loc.updateLastKnownLocation();
             await update.radarOutages();
             if (await update.remoteImagery(context, false, true)) {
               await update.legends();
               await update.forecasts();
-              setState( () {});
             }
+            _rebuild();
           },
           child: CustomScrollView(
             scrollDirection: Axis.vertical,
@@ -198,7 +201,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                     child: Column(
                       children: [
                         Container(padding: EdgeInsets.symmetric(vertical: 8), child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))),
-                        Container(padding: EdgeInsets.all(8), child: Text('Crunching the numbers...', style: ux.latoBlue)),
+                        Container(padding: EdgeInsets.all(8), child: Text('Crunching the numbers...', style: ux.darkMode(context) ? ux.latoWhite : ux.latoBlue)),
                       ]
                     )
                   )
@@ -229,7 +232,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   onTap: () {_addLocationPressed();},
                   child: Container(
                     margin: ux.sliverBottomMargins,
-                    child: Icon(Icons.add, color: Theme.of(context).buttonColor),
+                    child: Icon(Icons.add, color: Colors.white),
                     height: ux.sliverTinyHeight,
                     decoration: new BoxDecoration(
                       color: Colors.grey,
@@ -281,7 +284,6 @@ class ForecastSliver extends StatelessWidget {
     // preferably separate out by condition into functions that
     // return their repspective subwidget.
     // also add buttons to reorder?
-    // TODO also fix blue text on loader, add button when in dark mode
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
@@ -349,27 +351,25 @@ class ForecastSliver extends StatelessWidget {
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal, 
                                 child: Row(
-                                  children: [ for (int _i = 0, _decValue = imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i); _i<=8; _i++)
+                                  children: [ for (int _i = 0; _i <= 8; _i++)
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       child: Column(
                                         children: <Widget>[
                                           Container(
                                             padding: EdgeInsets.all(2),
-                                            child: imagery.dec2hex(_decValue) == Color(0xFF000000)
-                                              ? Icon(Icons.wb_sunny, color: Colors.white)
-                                              : imagery.dec2icon(_decValue),
+                                            child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
                                             decoration: BoxDecoration(
                                               shape: BoxShape.rectangle,
                                               borderRadius: new BorderRadius.circular(8.0),
-                                              color: imagery.dec2hex(_decValue) == Color(0xFF000000)
+                                              color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
                                               ? Color(0xFF000000)
-                                              : imagery.dec2hex(_decValue)
+                                              : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
                                             ),
                                           ),
                                           Container(
                                             child: Text(
-                                              imagery.dec2desc(_decValue), 
+                                              imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
                                               style: ux.latoWhite
                                             ), 
                                           ),
@@ -439,27 +439,25 @@ class ForecastSliver extends StatelessWidget {
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal, 
                                 child: Row(
-                                  children: [ for (int _i = 0, _decValue = imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i); _i<=8; _i++)
+                                  children: [ for (int _i = 0; _i <= 8; _i++)
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       child: Column(
                                         children: <Widget>[
                                           Container(
                                             padding: EdgeInsets.all(2),
-                                            child: imagery.dec2hex(_decValue) == Color(0xFF000000)
-                                              ? Icon(Icons.wb_sunny, color: Colors.white)
-                                              : imagery.dec2icon(_decValue),
+                                            child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
                                             decoration: BoxDecoration(
                                               shape: BoxShape.rectangle,
                                               borderRadius: new BorderRadius.circular(8.0),
-                                              color: imagery.dec2hex(_decValue) == Color(0xFF000000)
+                                              color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
                                               ? Color(0xFF000000)
-                                              : imagery.dec2hex(_decValue)
+                                              : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
                                             ),
                                           ),
                                           Container(
                                             child: Text(
-                                              imagery.dec2desc(_decValue), 
+                                              imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
                                               style: ux.latoWhite
                                             ), 
                                           ),
@@ -493,27 +491,25 @@ class ForecastSliver extends StatelessWidget {
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal, 
                               child: Row(
-                                children: [ for (int _i = 0, _decValue = imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i); _i<=8; _i++)
+                                children: [ for (int _i = 0; _i<=8; _i++)
                                   Container(
                                     padding: EdgeInsets.all(8),
                                     child: Column(
                                       children: <Widget>[
                                         Container(
                                           padding: EdgeInsets.all(2),
-                                          child: imagery.dec2hex(_decValue) == Color(0xFF000000)
-                                            ? Icon(Icons.wb_sunny, color: Colors.white)
-                                            : imagery.dec2icon(_decValue),
+                                          child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
                                           decoration: BoxDecoration(
                                             shape: BoxShape.rectangle,
                                             borderRadius: new BorderRadius.circular(8.0),
-                                            color: imagery.dec2hex(_decValue) == Color(0xFF000000)
+                                            color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
                                             ? Color(0xFF000000)
-                                            : imagery.dec2hex(_decValue)
+                                            : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
                                           ),
                                         ),
                                         Container(
                                           child: Text(
-                                            imagery.dec2desc(_decValue), 
+                                            imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
                                             style: ux.latoWhite
                                           ), 
                                         ),
