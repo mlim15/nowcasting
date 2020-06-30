@@ -102,6 +102,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Widget definition
   @override
   Widget build(BuildContext context) {
+    Duration _reverseSpeed = Duration(milliseconds: 800)-speed;
     return Scaffold(
       key: mapScaffoldKey,
       body: Stack(
@@ -218,7 +219,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             Align(
               alignment: Alignment(0,0), 
               child: Container(
-                padding: EdgeInsets.all(8),
+                padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
                 child: Column(
                   children: [
                     // Legend
@@ -243,21 +244,28 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         Container(color: _color, child: _returnSpacer())
                     ]),
                     // Speed control
-                    Align(alignment: Alignment.center, child: Text("Animation Speed")),
-                    Slider.adaptive(
-                      value: 700-speed.inMilliseconds.toDouble(),
-                      min: -700,
-                      max: 700,
-                      divisions: 14,
-                      onChanged: (newSpeed) {
-                        setState(() {
-                          speed = Duration(milliseconds: newSpeed.round()+700);
-                          if (_playing) {
-                            _togglePlaying();
-                          }
-                        });
-                      },
-                    )
+                    Container(
+                      alignment: Alignment.bottomCenter,
+                      margin: EdgeInsets.symmetric(vertical: 32, horizontal: 8),
+                      child: Column(children: <Widget>[
+                        Align(alignment: Alignment.center, child: Text("Animation Speed")),
+                        Slider.adaptive(
+                          // TODO figure out a way to reverse
+                          value: _reverseSpeed.inMilliseconds.toDouble(),
+                          min: 0,
+                          max: 800,
+                          divisions: 8,
+                          onChanged: (newSpeed) {
+                            setState(() {
+                              speed = Duration(milliseconds: newSpeed.round()+800);
+                              if (_playing) {
+                                _togglePlaying();
+                              }
+                            });
+                          },
+                        )
+                      ])
+                    ),
                   ]
                 )
               ),

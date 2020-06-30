@@ -205,7 +205,6 @@ radarOutages() async {
     }
   } catch(e) {
     print('update.radarOutages: Check timed out, cannot determine if outage or not. Defaulting to false. Error was '+e.toString());
-    loc.radarOutage = false;
   }
   
 }

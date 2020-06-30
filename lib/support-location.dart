@@ -123,12 +123,19 @@ saveLastKnownLocation() async {
 }
 
 updateLastKnownLocation({bool withRequests = false}) async {
-  LocationData _newLoc = await getUserLocation(withRequests: withRequests);
-  if (_newLoc != null) {
-    lastKnownLocation = new LatLng(_newLoc.latitude, _newLoc.longitude);
-    saveLastKnownLocation();
-  } else {
-    print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
+  try {
+    LocationData _newLoc = await getUserLocation(withRequests: withRequests);
+    if (_newLoc != null) {
+      lastKnownLocation = new LatLng(_newLoc.latitude, _newLoc.longitude);
+      await saveLastKnownLocation();
+      return;
+    } else {
+      print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
+      return;
+    }
+  } catch(e) {
+    print('loc.updateLastKnownLocation: Could not update location, update attempt yielded an error.');
+    return;
   }
 }
 
@@ -170,31 +177,31 @@ requestLocPerm() async {
   return true;
 }
 
-getUserLocation({Duration timeout = const Duration(seconds: 10), bool withRequests = false}) async {
+getUserLocation({bool withRequests = false}) async {
   LocationData _locationData;
-  cancelCallback() {
-    print('location.getUserLocation: Didn\'t get location within timeout limit '+timeout.toString()+', cancelling update');
+  bool _returnNull = false;
+  new Timer(Duration(seconds: 5), () {
+    print('location.getUserLocation: Didn\'t get location within timeout limit, cancelling update');
     return null;
-  }
-  Timer(timeout, cancelCallback());
+  });
   if (await checkLocService() == false) {
     if (withRequests) {
       await requestLocService();
     } else {
-      return;
+      return null;
     }
     if (await checkLocService() == false) {
-      return;
+      return null;
     }
   }
   if (await checkLocPerm() == false) {
     if (withRequests) {
       await requestLocPerm();
     } else {
-      return;
+      return null;
     }
     if (await checkLocPerm() == false) {
-      return;
+      return null;
     }
   }
   _locationData = await location.getLocation();
