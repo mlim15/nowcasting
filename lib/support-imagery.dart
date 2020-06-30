@@ -91,7 +91,7 @@ String dec2desc(int _dec) {
 Icon dec2icon(int _dec) {
   int _index = colorsDec.indexWhere((element) => element == _dec);
   if (_index == -1) {
-    return Icon(Icons.error, color: Colors.white);
+    return Icon(Icons.wb_sunny, color: Colors.white);
   }
   return Icon(icons[_index], color: Colors.white);
 }
