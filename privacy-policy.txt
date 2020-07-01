@@ -1,0 +1,14 @@
+Privacy Policy
+
+MAPLE Nowcasting does not collect, store, or transmit over a network any personally identifiable information.
+
+The app does use location services on your device to detect your current location. It is stored locally on your phone and is not sent anywhere else by the app. 
+
+Your coordinates are used only for the following purposes:
+- To show a three hour forecast for your current location on the forecast screen, if applicable
+- To indicate your current location on the map screen
+- To center the map screen when it is first opened so that you can quickly see upcoming precipitation near you
+
+Please note that if you feel uncomfortable with the app accessing your location, you can deny the app access to your location and manually enter coordinates for which you would like to see forecasts.
+
+Last change: June 30th 2020. Please check the history of this file to see what has changed and when.
