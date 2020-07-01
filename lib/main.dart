@@ -71,12 +71,12 @@ class SplashState extends State<Splash> {
       print('SplashState: Staying on splash for now to attempt to update images');
       await loc.restoreLastKnownLocation();
       await loc.restorePlaces(context);
-      print('Done restoring places');
+      print('SplashState: Done restoring places');
       // TODO Seems to hang here when 'await' is added
       loc.updateLastKnownLocation();
-      print('Done updating location');
+      print('SplashState: Done attempting location update');
       await update.radarOutages();
-      print('Done updating radar outage');
+      print('SplashState: Done detecting radar outage');
       try {
         if (await update.remoteImagery(context, false, false)) {
           update.forecasts();
