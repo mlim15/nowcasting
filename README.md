@@ -10,7 +10,7 @@ Put simply, [nowcasting](https://en.wikipedia.org/wiki/Nowcasting_(meteorology))
 
 Most of the planned features for the app are implemented, except for:
 - Reordering entries on the forecast screen
-- A location picker or other way to track locations without having to be there first
+- A map-based location picker to change locations without having to type in coordinates
 - On-device notifications for chosen forecast locations
 - Extra layers (e.g. temperature, wind barbs) on the map screen
 - The info/credits screen
