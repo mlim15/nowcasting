@@ -9,8 +9,9 @@ Put simply, [nowcasting](https://en.wikipedia.org/wiki/Nowcasting_(meteorology))
 ## Todo
 
 Most of the planned features for the app are implemented, except for:
-- Reordering entries on the forecast screen
+
 - A map-based location picker to change locations without having to type in coordinates
 - On-device notifications for chosen forecast locations
 - Extra layers (e.g. temperature, wind barbs) on the map screen
+- Severe weather alerts for your current and/or stored location(s)
 - The info/credits screen
