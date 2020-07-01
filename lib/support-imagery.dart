@@ -149,19 +149,8 @@ loadDecodedForecasts() async {
 
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
 geoToPixel(double lat, double lon) {
-  // Check to see if the coordinates are out of bounds.
-  double eastBound = ne.longitude;
-  double westBound = sw.longitude;
-  double northBound = ne.latitude;
-  double southBound = sw.latitude;
-  try {
-    if (!(westBound <= lon && lon <= eastBound)) {
-      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
-    } else if (!(southBound <= lat && lat <= northBound)) {
-      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
-    }
-  } catch(e) {
-    return false;
+  if (coordOutOfBounds(LatLng(lat, lon))) {
+    throw('imagery.geoToPixel: Error, passed coordinates were out of bounds');
   }
   // If not, then calculate the pixel.
   int mapWidth = imageryDimensions;
@@ -180,6 +169,24 @@ geoToPixel(double lat, double lon) {
   var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
   int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
   return [x,y];
+}
+
+bool coordOutOfBounds(LatLng coord) {
+  // Check to see if the coordinates are out of bounds.
+  double eastBound = ne.longitude;
+  double westBound = sw.longitude;
+  double northBound = ne.latitude;
+  double southBound = sw.latitude;
+  try {
+    if (!(westBound <= coord.longitude && coord.longitude <= eastBound)) {
+      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
+    } else if (!(southBound <= coord.latitude && coord.latitude <= northBound)) {
+      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
+    }
+  } catch(e) {
+    return true;
+  }
+  return false;
 }
 
 getPixelValue(int x, int y, int index) {
