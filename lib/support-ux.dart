@@ -30,6 +30,7 @@ final lightTheme = ThemeData(
     foregroundColor: Colors.white,
     backgroundColor: nowcastingColor,
   ),
+  textTheme: Typography.blackMountainView
 );
 final darkTheme = ThemeData(
   brightness: Brightness.dark, 
@@ -39,6 +40,7 @@ final darkTheme = ThemeData(
     foregroundColor: Colors.white,
     backgroundColor: nowcastingColor,
   ),
+  textTheme: Typography.whiteMountainView
 );
 // This number*160 is the actual DPI threshold.
 // At 2 we are treating devices above 320dpi as high DPI (smaller maps, etc)
