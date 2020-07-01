@@ -105,9 +105,6 @@ restoreLastKnownLocation() async {
   double _loadLon = main.prefs.getDouble('lastKnownLongitude');
   if (_loadLat != null && _loadLon != null) {
     lastKnownLocation = LatLng(_loadLat, _loadLon);
-  } else {
-    // set to safe default
-    lastKnownLocation = LatLng(45.5088, -73.5878);
   }
 }
 
@@ -179,8 +176,7 @@ requestLocPerm() async {
 
 getUserLocation({bool withRequests = false}) async {
   LocationData _locationData;
-  bool _returnNull = false;
-  new Timer(Duration(seconds: 5), () {
+  Timer timeoutTimer = Timer(Duration(seconds: 5), () {
     print('location.getUserLocation: Didn\'t get location within timeout limit, cancelling update');
     return null;
   });
@@ -206,5 +202,6 @@ getUserLocation({bool withRequests = false}) async {
   }
   _locationData = await location.getLocation();
   print('support-location: Successfully got location '+_locationData.toString());
+  timeoutTimer.cancel();
   return _locationData;
 }
