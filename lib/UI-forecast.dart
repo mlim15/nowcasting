@@ -6,10 +6,12 @@ import 'package:latlong/latlong.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:Nowcasting/main.dart';
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/support-io.dart' as io;
 
 // Widgets
 class ForecastScreen extends StatefulWidget  {
@@ -23,9 +25,9 @@ class ForecastScreenState extends State<ForecastScreen> {
   
   _addLocationPressed() async {
     setState(() {
-      if (loc.lastKnownLocation == null) {
-        loc.places.add(LatLng(45.504688, -73.574990));
-        loc.placeNames.add('New Saved Location');
+      if (loc.lastKnownLocation == null || imagery.coordOutOfBounds(loc.lastKnownLocation)) {
+        loc.places.add(LatLng(0, 0));
+        loc.placeNames.add('New Location');
         loc.notify.add(false);
         loc.savePlaces();
       } else {
@@ -155,12 +157,12 @@ class ForecastScreenState extends State<ForecastScreen> {
                   child: Container(),
                 )
                 // If decodedForecasts isn't empty, we can safely build.
-                : loc.lastKnownLocation != null 
+                : loc.lastKnownLocation != null
                   // If current location is available
                   ? SliverPadding(
                     padding: const EdgeInsets.symmetric(vertical: 0.0),
                     sliver: SliverFixedExtentList(
-                      delegate: imagery.geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude) != false 
+                      delegate: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
                         // geoToPixel returns false if location is outside bbox. 
                         // If geoToPixel doesn't return false, build the forecast sliver:
                         ? SliverChildBuilderDelegate(
@@ -172,7 +174,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                           (context, index) => new WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
                           childCount: 1,
                         ),
-                      itemExtent: imagery.geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude) != false 
+                      itemExtent: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
                         ? _editing
                           ? ux.sliverHeightExpanded
                           : ux.sliverHeight
@@ -191,7 +193,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                     ),
                   ),
               // Slivers for stored locations
-              imagery.decodedForecasts.isEmpty
+              imagery.decodedForecasts.isEmpty //TODO || DateTime.parse(prefs.getString('lastDecoded')).isBefore(DateTime.parse(prefs.getString('lastLegendGen')))
                 ? SliverToBoxAdapter(
                   child: Container(
                     margin: ux.sliverMargins,
@@ -262,11 +264,19 @@ class ForecastSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    // Infer whether notifications are on/off based on passed value and
+    // store locally as boolean
     bool _notify = false;
     _index != -1
       ? _notify = loc.notify[_index] 
       : _notify = loc.notifyLoc;
-    TextEditingController _textController = new TextEditingController.fromValue(TextEditingValue(text: _locName));
+    
+    // Keys and controllers for later use
+    final _formKey = GlobalKey<FormState>();
+    TextEditingController _nameTextController = new TextEditingController.fromValue(TextEditingValue(text: _locName));
+    
+    // Button press methods
     _notifyPressed([bool currentLoc = false]) async {
       // Toggle notify.
       _notify
@@ -280,10 +290,14 @@ class ForecastSliver extends StatelessWidget {
       }
       loc.savePlaces();
     }
+
+    // Main widget return of the build for the sliver
     // TODO this now needs a big pass for readability.
     // preferably separate out by condition into functions that
-    // return their repspective subwidget.
-    // also add buttons to reorder?
+    // return their repspective subwidget, e.g. a method that returns the widget
+    // to build when editing and another method when not
+    //
+    // also add buttons to reorder items
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
@@ -325,7 +339,7 @@ class ForecastSliver extends StatelessWidget {
                                   IconButton(
                                     padding: EdgeInsets.all(6),
                                     icon: Icon(Icons.refresh, color: Colors.white), 
-                                    onPressed: () async {loc.updateLastKnownLocation();},
+                                    onPressed: () async {loc.updateLastKnownLocation();Timer(Duration(seconds: 8), () {rebuildCallback();});},
                                     //padding: EdgeInsets.all(2)
                                   ),
                                   Flexible( 
@@ -363,8 +377,8 @@ class ForecastSliver extends StatelessWidget {
                                               shape: BoxShape.rectangle,
                                               borderRadius: new BorderRadius.circular(8.0),
                                               color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                                              ? Color(0xFF000000)
-                                              : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
+                                                ? Color(0xFF000000)
+                                                : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
                                             ),
                                           ),
                                           Container(
@@ -392,6 +406,56 @@ class ForecastSliver extends StatelessWidget {
                   : Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
+                      Column(
+                        children: <Widget>[
+                          Spacer(),
+                          IconButton(
+                            color: Colors.white,
+                            disabledColor: Colors.white.withAlpha(90),
+                            icon: Icon(Icons.arrow_upward),
+                            onPressed: _index == 0
+                              ? null
+                              : () {
+                                LatLng thisPlace = loc.places[_index];
+                                String thisPlaceName = loc.placeNames[_index];
+                                bool thisPlaceNot = loc.notify[_index];
+                                LatLng swapPlace = loc.places[_index-1];
+                                String swapPlaceName = loc.placeNames[_index-1];
+                                bool swapPlaceNot = loc.notify[_index-1];
+                                loc.places[_index] = swapPlace;
+                                loc.placeNames[_index] = swapPlaceName;
+                                loc.notify[_index] = swapPlaceNot;
+                                loc.places[_index-1] = thisPlace;
+                                loc.placeNames[_index-1] = thisPlaceName;
+                                loc.notify[_index-1] = thisPlaceNot;
+                                rebuildCallback();
+                              },
+                          ),
+                          IconButton(
+                            color: Colors.white,
+                            disabledColor: Colors.white.withAlpha(90),
+                            icon: Icon(Icons.arrow_downward), 
+                            onPressed: _index == loc.places.length-1
+                              ? null
+                              : () {
+                                LatLng thisPlace = loc.places[_index];
+                                String thisPlaceName = loc.placeNames[_index];
+                                bool thisPlaceNot = loc.notify[_index];
+                                LatLng swapPlace = loc.places[_index+1];
+                                String swapPlaceName = loc.placeNames[_index+1];
+                                bool swapPlaceNot = loc.notify[_index+1];
+                                loc.places[_index] = swapPlace;
+                                loc.placeNames[_index] = swapPlaceName;
+                                loc.notify[_index] = swapPlaceNot;
+                                loc.places[_index+1] = thisPlace;
+                                loc.placeNames[_index+1] = thisPlaceName;
+                                loc.notify[_index+1] = thisPlaceNot;
+                                rebuildCallback();
+                              },
+                          ),
+                          Spacer(),
+                        ],
+                      ),
                       Expanded(
                         child: Align(
                           alignment: Alignment(0,0), 
@@ -403,13 +467,97 @@ class ForecastSliver extends StatelessWidget {
                                     padding: EdgeInsets.all(6),
                                     icon: Icon(Icons.edit, color: Colors.white), 
                                     onPressed: () {
-                                      // TODO call location picker here and update sliver's location
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          // Popup dialogue with form when edit button is pressed
+                                          return AlertDialog(
+                                            title: Text("Coordinates for '"+_locName+"'"),
+                                            content: SingleChildScrollView( 
+                                              scrollDirection: Axis.vertical,
+                                              child: Form(
+                                                key: _formKey,
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: <Widget>[
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: TextFormField(
+                                                        initialValue: loc.places[_index].latitude.toString(),
+                                                        decoration: new InputDecoration(labelText: "Latitude"),
+                                                        keyboardType: TextInputType.number,
+                                                        onSaved: (newValue) {
+                                                          loc.places[_index].latitude = double.parse(newValue);
+                                                        },
+                                                        validator: (newValue) {
+                                                          if (double.tryParse(newValue) == null) {
+                                                            return 'This is not a valid latitude.';
+                                                          } else if (!(imagery.sw.latitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.latitude.toDouble())) {
+                                                            return "Latitude out of service range.";
+                                                          }
+                                                          return null;
+                                                        },
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: EdgeInsets.all(8.0),
+                                                      child: TextFormField(
+                                                        initialValue: loc.places[_index].longitude.toString(),
+                                                        decoration: new InputDecoration(labelText: "Longitude"),
+                                                        keyboardType: TextInputType.number,
+                                                        onSaved: (newValue) {
+                                                          loc.places[_index].longitude = double.parse(newValue);
+                                                        },
+                                                        validator: (newValue) {
+                                                          if (double.tryParse(newValue) == null) {
+                                                            return 'This is not a valid longitude.';
+                                                          } else if (!(imagery.sw.longitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.longitude.toDouble())) {
+                                                            return "Longitude out of service range.";
+                                                          }
+                                                          return null;
+                                                        },
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Row(
+                                                        children: <Widget>[
+                                                          FlatButton(
+                                                            child: Text("Cancel"), 
+                                                            onPressed: () {
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                          ),
+                                                          Spacer(),
+                                                          RaisedButton(
+                                                            child: Text("Save"),
+                                                            color: ux.nowcastingColor,
+                                                            textColor: Colors.white,
+                                                            onPressed: () {
+                                                              if (_formKey.currentState.validate()) {
+                                                                _formKey.currentState.save();
+                                                                loc.savePlaces();
+                                                                rebuildCallback();
+                                                                Navigator.of(context).pop();
+                                                              }
+                                                            },
+                                                          ),
+                                                        ],
+                                                      )
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            elevation: 24.0,
+                                          );
+                                        }
+                                      );
                                     } ,
-                                    //padding: EdgeInsets.all(2)
                                   ),
                                   Flexible( 
                                     child: TextFormField(
-                                      controller: _textController,
+                                      controller: _nameTextController,
                                       style: ux.latoWhite,
                                       onChanged: (_content) {loc.placeNames[_index] = _content;},
                                     )
@@ -436,10 +584,70 @@ class ForecastSliver extends StatelessWidget {
                                   ),
                                 ]
                               ),
-                              SingleChildScrollView(
+                              imagery.coordOutOfBounds(_location)
+                                // If coordinates of the location are out of service range, display a message
+                                ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
+                                // Otherwise read the forecast images
+                                : SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal, 
+                                  child: Row(
+                                    children: [ for (int _i = 0; _i <= 8; _i++)
+                                      Container(
+                                        padding: EdgeInsets.all(8),
+                                        child: Column(
+                                          children: <Widget>[
+                                            Container(
+                                              padding: EdgeInsets.all(2),
+                                              child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.rectangle,
+                                                borderRadius: new BorderRadius.circular(8.0),
+                                                color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
+                                                ? Color(0xFF000000)
+                                                : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
+                                              ),
+                                            ),
+                                            Container(
+                                              child: Text(
+                                                imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
+                                                style: ux.latoWhite
+                                              ), 
+                                            ),
+                                            Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                                            Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                                          ]
+                                        )
+                                      )
+                                    ],
+                                  ) 
+                                )
+                            ]
+                          )
+                        )
+                      )
+                    ],
+                  )
+                // If not editing for either card
+                : Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment(0,0), 
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8), 
+                              child: new Text(_locName, textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis),
+                            ),
+                            imagery.coordOutOfBounds(_location)
+                              // If coordinates of the location are out of service range, display a message
+                              ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
+                              // Otherwise read the forecast images
+                              : SingleChildScrollView(
                                 scrollDirection: Axis.horizontal, 
                                 child: Row(
-                                  children: [ for (int _i = 0; _i <= 8; _i++)
+                                  children: [ for (int _i = 0; _i<=8; _i++)
                                     Container(
                                       padding: EdgeInsets.all(8),
                                       child: Column(
@@ -469,58 +677,6 @@ class ForecastSliver extends StatelessWidget {
                                   ],
                                 ) 
                               )
-                            ]
-                          )
-                        )
-                      )
-                    ],
-                  )
-                // If not editing for either card
-                : Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment(0,0), 
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8), 
-                              child: new Text(_locName, textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis),
-                            ),
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal, 
-                              child: Row(
-                                children: [ for (int _i = 0; _i<=8; _i++)
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    child: Column(
-                                      children: <Widget>[
-                                        Container(
-                                          padding: EdgeInsets.all(2),
-                                          child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.rectangle,
-                                            borderRadius: new BorderRadius.circular(8.0),
-                                            color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                                            ? Color(0xFF000000)
-                                            : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
-                                          ),
-                                        ),
-                                        Container(
-                                          child: Text(
-                                            imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
-                                            style: ux.latoWhite
-                                          ), 
-                                        ),
-                                        Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                        Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                      ]
-                                    )
-                                  )
-                                ],
-                              ) 
-                            )
                           ]
                         )
                       )
