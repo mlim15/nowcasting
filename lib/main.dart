@@ -61,10 +61,36 @@ class Splash extends StatefulWidget {
 }
 
 class SplashState extends State<Splash> {
+  String _splashText = "";
+  bool _logoVisible = false;
+  bool _textVisible = false;
+  _changeSplashText(String newText) {
+    setState(() {
+      _textVisible = false;
+    });
+    Timer(Duration(milliseconds: 300), () {setState(() {
+      _splashText = newText;
+      _logoVisible = true;
+      _textVisible = true;
+    });});
+  }
+  _setTextVisible(bool visibility) {
+    setState(() {
+      _textVisible = visibility;
+    });
+  }
+  _setLogoVisible(bool visibility) {
+    setState(() {
+      _logoVisible = visibility;
+    });
+  }
   Future _checkFirstSeen() async {
     // Test the 'seen' SharedPreference which says whether
     // onboarding has been completed or not.
     if (prefs.getBool('obComplete') ?? false) {
+      _setTextVisible(false);
+      _setLogoVisible(false);
+      _changeSplashText("Loading...");
       // Onboarding is not necessary.
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
@@ -78,9 +104,12 @@ class SplashState extends State<Splash> {
       await update.radarOutages();
       print('SplashState: Done detecting radar outage');
       try {
+        _changeSplashText('Checking for Updates...');
         if (await update.remoteImagery(context, false, false)) {
+          _setTextVisible(false);
           update.forecasts();
         } else {
+          _setTextVisible(false);
           await imagery.loadDecodedForecasts();
         }
         await update.legends();
@@ -113,8 +142,11 @@ class SplashState extends State<Splash> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light, statusBarColor: Colors.transparent));
     return new Scaffold(
       backgroundColor: ux.nowcastingColor,
-      body: new Center(
-        child: Image.asset("assets/launcher/logo.png"),
+      body: new Stack(
+        children: <Widget>[
+          AnimatedOpacity(opacity: _logoVisible ? 1.0 : 0.0, duration: Duration(milliseconds: 150), child: Center(child: Image.asset("assets/launcher/logo.png"))),
+          AnimatedOpacity(opacity: _textVisible ? 1.0 : 0.0, duration: Duration(milliseconds: 300), child: Container(alignment: Alignment.center, margin: EdgeInsets.only(top: 256), child: Text(_splashText, style: ux.latoWhite))),
+        ],
       ),
     );
   }
