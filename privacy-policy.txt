@@ -2,13 +2,19 @@ Privacy Policy
 
 MAPLE Nowcasting does not collect, store, or transmit over a network any personally identifiable information.
 
-The app does use location services on your device to detect your current location. It is stored locally on your phone and is not sent anywhere else by the app. 
+The app does use location services on your device to detect your current location. It is stored locally on your phone and is not sent anywhere else by the app. However, as with any app that uses location services, this app does not have any control over how your phone itself detects its location and when/where this location data is transmitted when it is being detected. If you are uncomfortable with this I recommend you do not enable location services on your phone. 
 
-Your coordinates are used only for the following purposes:
+Your coordinates are used by the app only for the following purposes:
 - To show a three hour forecast for your current location on the forecast screen, if applicable
 - To indicate your current location on the map screen
 - To center the map screen when it is first opened so that you can quickly see upcoming precipitation near you
 
 Please note that if you feel uncomfortable with the app accessing your location, you can deny the app access to your location and manually enter coordinates for which you would like to see forecasts.
+
+The app accesses the internet only for the following purposes:
+- Checking to see if new data is available from McGill's Nowcasting service
+- Downloading new data from the Nowcasting service when it is available
+
+Please note that these checks and downloads, as when accessing any website, may be logged by the web server when information is requested from it. The app itself has no control over this process.
 
 Last change: June 30th 2020. Please check the history of this file to see what has changed and when.
