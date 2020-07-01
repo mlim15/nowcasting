@@ -31,7 +31,7 @@ class ForecastScreenState extends State<ForecastScreen> {
         loc.notify.add(false);
         loc.savePlaces();
       } else {
-        loc.places.add(loc.lastKnownLocation);
+        loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
         loc.placeNames.add('Copy of Current Location');
         loc.notify.add(false);
         loc.savePlaces();
