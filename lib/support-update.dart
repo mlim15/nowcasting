@@ -12,6 +12,7 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/main.dart';
 
 // TODO figure out for sure if the legends need 20 min added to their duration
 // or if forecasts are for the stated time
@@ -142,6 +143,9 @@ forecasts() async {
   }
   imagery.decodedForecasts = await compute(bgForecasts, _forecastImages);
   await imagery.saveDecodedForecasts(imagery.decodedForecasts);
+  // TODO This was to be used as a secondary method to determine when to show loading indicator on forecast screen
+  // Otherwise refreshing on map screen and swapping to forecast can show old forecast with new legend
+  //prefs.setString('lastDecoded', DateTime.now().toUtc().toString());
 }
 
 legends() async {
@@ -154,6 +158,9 @@ legends() async {
     }
   }
   imagery.legends = await compute(bgLegends, _filesLastMod);
+  // TODO This was to be used as a secondary method to determine when to show loading indicator on forecast screen
+  // Otherwise refreshing on map screen and swapping to forecast can show old forecast with new legend
+  //prefs.setString('lastLegendGen', DateTime.now().toUtc().toString());
 }
 
 // Local product update isolate helper functions (for backgrounding)
