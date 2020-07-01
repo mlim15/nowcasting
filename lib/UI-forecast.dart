@@ -484,16 +484,16 @@ class ForecastSliver extends StatelessWidget {
                                                       padding: EdgeInsets.all(8.0),
                                                       child: TextFormField(
                                                         initialValue: loc.places[_index].latitude.toString(),
-                                                        decoration: new InputDecoration(labelText: "Latitude"),
+                                                        decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
                                                         keyboardType: TextInputType.number,
                                                         onSaved: (newValue) {
                                                           loc.places[_index].latitude = double.parse(newValue);
                                                         },
                                                         validator: (newValue) {
                                                           if (double.tryParse(newValue) == null) {
-                                                            return 'This is not a valid latitude.';
+                                                            return 'Invalid latitude.';
                                                           } else if (!(imagery.sw.latitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.latitude.toDouble())) {
-                                                            return "Latitude out of service range.";
+                                                            return "Out of service range.";
                                                           }
                                                           return null;
                                                         },
@@ -503,16 +503,16 @@ class ForecastSliver extends StatelessWidget {
                                                       padding: EdgeInsets.all(8.0),
                                                       child: TextFormField(
                                                         initialValue: loc.places[_index].longitude.toString(),
-                                                        decoration: new InputDecoration(labelText: "Longitude"),
+                                                        decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
                                                         keyboardType: TextInputType.number,
                                                         onSaved: (newValue) {
                                                           loc.places[_index].longitude = double.parse(newValue);
                                                         },
                                                         validator: (newValue) {
                                                           if (double.tryParse(newValue) == null) {
-                                                            return 'This is not a valid longitude.';
+                                                            return 'Invalid longitude.';
                                                           } else if (!(imagery.sw.longitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.longitude.toDouble())) {
-                                                            return "Longitude out of service range.";
+                                                            return "Out of service range.";
                                                           }
                                                           return null;
                                                         },
