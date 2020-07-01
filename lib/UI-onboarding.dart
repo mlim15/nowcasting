@@ -90,7 +90,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           ),
           PageViewModel(
               title: "Location Permissions",
-              body:  "Giving access to your location will enable the app to provide local forecasts. For notifications, you will need to grant access even in the background.",
+              body:  "Giving access to your location will enable the app to provide local forecasts.", //TODO For notifications, you will need to grant access even in the background.",
               image: _buildImage('manypixels-iso-navigation'),
               decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
               footer: new ProgressButton(
