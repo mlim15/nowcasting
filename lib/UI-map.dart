@@ -29,6 +29,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   int _count = 0;
   bool _playing = false;
   Icon _playPauseIcon = Icon(Icons.play_arrow);
+  double _nowcastOpacity = 0.6;
 
   // flutter_map and user_location variables
   MapController mapController = MapController();
@@ -72,7 +73,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
-    await loc.updateLastKnownLocation();
     await update.radarOutages();
     if (await update.remoteImagery(context, false, true)) {
       await update.legends();
@@ -102,7 +102,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Widget definition
   @override
   Widget build(BuildContext context) {
-    Duration _reverseSpeed = Duration(milliseconds: 800)-speed;
     return Scaffold(
       key: mapScaffoldKey,
       body: Stack(
@@ -121,7 +120,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               TileLayerOptions(
                 tileProvider: AssetTileProvider(),
                 urlTemplate: ux.darkMode(context) 
-                  ? "assets/jawg-matrix/{z}/{x}/{y}.png" 
+                  ? "assets/jawg-dark/{z}/{x}/{y}.png" 
                   : "assets/jawg-sunny/{z}/{x}/{y}.png",
                 minNativeZoom: 5,
                 maxNativeZoom: 9,
@@ -139,7 +138,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     bounds: LatLngBounds(
                       imagery.sw, imagery.ne
                     ),
-                    opacity: 0.6,
+                    opacity: _nowcastOpacity,
                     imageProvider: io.localFile('forecast.$_count.png').existsSync() 
                       ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) 
                       : AssetImage('assets/launcher/logo.png'),
@@ -162,7 +161,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 shape: BoxShape.circle,
                 color: Theme.of(context).canvasColor,
                 boxShadow: [
-                  BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5),)
+                  BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5))
                 ],
               ),
               child: CircularPercentIndicator(
@@ -212,7 +211,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           ],
         )
       ),
-      // TODO Rest of drawer: speed and opacity settings, possibly other layers e.g. barbs and composite, make proper legend with hex colors in support-imagery
+      // TODO possibly other layers e.g. barbs and temperature
       drawer: Drawer(
         child: ListView(
           children: <Widget>[
@@ -223,44 +222,81 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 child: Column(
                   children: [
                     // Legend
-                    Align(alignment: Alignment.center, child: Text("Legend")),
-                    Container(child: Row(children: [Text("Rain"), Spacer(), Text('Hail')]), margin: EdgeInsets.all(8),), 
+                    Align(alignment: Alignment.center, child: Text("Legend", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color))),
+                    Container(child: Row(children: [Text("Rain", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), Spacer(), Text('Hail', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),), 
                     Row(children: [ 
                       for (int _i=0; _i<1; _i++) 
                         _returnSpacer(),
                       for (Color _color in imagery.colorsHex.sublist(0,12))
                         Container(color: _color, child: _returnSpacer())
                     ]),
-                    Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition")), margin: EdgeInsets.all(8),),
+                    Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
                     Row(children: [ 
                       for (int _i=0; _i<1; _i++) 
                         _returnSpacer(),
                       for (Color _color in imagery.colorsHex.sublist(12,17))
                         Container(color: _color, child: _returnSpacer())
                     ]),
-                    Container(child: Row(children: [Text("Snow"), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow')]), margin: EdgeInsets.all(8),),
+                    Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
                     Row(children: [ 
                       for (Color _color in imagery.colorsHex.sublist(18))
                         Container(color: _color, child: _returnSpacer())
                     ]),
+                    Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
                     // Speed control
                     Container(
                       alignment: Alignment.bottomCenter,
-                      margin: EdgeInsets.symmetric(vertical: 32, horizontal: 8),
+                      margin: EdgeInsets.all(8),
                       child: Column(children: <Widget>[
-                        Align(alignment: Alignment.center, child: Text("Animation Speed")),
+                        Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
                         Slider.adaptive(
-                          // TODO figure out a way to reverse
-                          value: _reverseSpeed.inMilliseconds.toDouble(),
+                          // possibly the dumbest way to implement this but it works.
+                          // maybe come back and clean up later without having to hard-code values in.
+                          value: speed.inMilliseconds.toInt() == 800
+                            ? 4
+                            : speed.inMilliseconds.toInt() == 1000
+                              ? 3
+                              : speed.inMilliseconds.toInt() == 1200
+                                ? 2
+                                : speed.inMilliseconds.toInt() == 1400
+                                  ? 1
+                                  : speed.inMilliseconds.toInt() == 1600
+                                    ? 0
+                                    : 0,
                           min: 0,
-                          max: 800,
-                          divisions: 8,
+                          max: 4,
+                          divisions: 4,
                           onChanged: (newSpeed) {
                             setState(() {
-                              speed = Duration(milliseconds: newSpeed.round()+800);
-                              if (_playing) {
-                                _togglePlaying();
+                              switch(newSpeed.toInt()) {
+                                case 0: {speed = Duration(milliseconds: 1600);} break;
+                                case 1: {speed = Duration(milliseconds: 1400);} break;
+                                case 2: {speed = Duration(milliseconds: 1200);} break;
+                                case 3: {speed = Duration(milliseconds: 1000);} break;
+                                case 4: {speed = Duration(milliseconds: 800);} break;
                               }
+                              if (_playing) {
+                                // stop and start so speed change occurs
+                                _togglePlaying();_togglePlaying();
+                              }
+                            });
+                          },
+                        )
+                      ])
+                    ),
+                    // Opacity control
+                    Container(
+                      alignment: Alignment.bottomCenter,
+                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      child: Column(children: <Widget>[
+                        Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
+                        Slider.adaptive(
+                          value: _nowcastOpacity,
+                          min: 0.1,
+                          max: 0.9,
+                          onChanged: (newOpacity) {
+                            setState(() {
+                              _nowcastOpacity = newOpacity;
                             });
                           },
                         )
