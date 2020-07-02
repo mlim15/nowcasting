@@ -4,7 +4,7 @@
 This repository contains a Flutter app for Android and iOS that facilitates access to [nowcasting data](https://radar.mcgill.ca/imagery/nowcasting.html) provided by [McGill University](https://mcgill.ca/)'s J.S. Marshall Radar Observatory.
 
 ## Screenshots
-| <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/forecast.png" width="256" height="512" /> | <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/lightmap.png" width="288" height="512" /> | <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/darkmap.png" width="288" height="512" />
+<img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/forecast.png" width="256" height="512" /> <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/lightmap.png" width="288" height="512" /> <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/darkmap.png" width="288" height="512" />
 
 
 ## What is Nowcasting
