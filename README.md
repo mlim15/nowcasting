@@ -14,4 +14,3 @@ Most of the planned features for the app are implemented, except for:
 - On-device notifications for chosen forecast locations
 - Extra layers (e.g. temperature, wind barbs) on the map screen
 - Severe weather alerts for your current and/or stored location(s)
-- The info/credits screen

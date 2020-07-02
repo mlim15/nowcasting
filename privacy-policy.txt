@@ -14,7 +14,8 @@ Please note that if you feel uncomfortable with the app accessing your location,
 The app accesses the internet only for the following purposes:
 - Checking to see if new data is available from McGill's Nowcasting service
 - Downloading new data from the Nowcasting service when it is available
+- Downloading basemap tiles from Jawg.io, the app's basemap provider
 
-Please note that these checks and downloads, as when accessing any website, may be logged by the web server when information is requested from it. The app itself has no control over this process.
+Please note that these checks and downloads, as when accessing any website, may be logged by the web server when information is requested from it. The app itself has no control over this process. Jawg does generate some anonymized statistics about which areas of the map are most requested by users, for example.
 
-Last change: June 30th 2020. Please check the history of this file to see what has changed and when.
+Last change: July 1st 2020. Please check the history of this file to see what has changed and when.
