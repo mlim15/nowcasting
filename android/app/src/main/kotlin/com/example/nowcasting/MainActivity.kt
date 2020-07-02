@@ -1,4 +1,4 @@
-package com.example.nowcasting
+package com.github.the_salami.nowcasting
 
 import io.flutter.embedding.android.FlutterActivity
 
