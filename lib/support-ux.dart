@@ -1,5 +1,6 @@
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -94,10 +95,11 @@ final sliverShadow = const BoxShadow(
   blurRadius: 10.0,
   offset: Offset(0.0, 10.0),
 );
+final double sliverHeightExpanded = 164;
 final double sliverHeight = 148;
 final double sliverThinHeight = 96;
+final double sliverHalfThinHeight = 64;
 final double sliverTinyHeight = 32;
-final double sliverHeightExpanded = 164;
 
 // Warning levels and styling for slivers
 enum WarningLevel {
@@ -115,6 +117,15 @@ final alertIcon = Icon(Icons.warning, color: Colors.white);
 // Fonts
 final latoWhite = GoogleFonts.lato(fontWeight: FontWeight.w600, color: Color(0xFFFFFFFF));
 final latoBlue = GoogleFonts.lato(fontWeight: FontWeight.w600, color: nowcastingColor);
+final latoBlack = GoogleFonts.lato(fontWeight: FontWeight.w600, color: Colors.black);
+
+TextStyle latoForeground(BuildContext context) {
+  if (darkMode(context)) {
+    return latoWhite;
+  } else {
+    return latoBlack;
+  }
+}
 
 // Helper functions to get info about device theming and properties
 bool darkMode(BuildContext context) {
@@ -187,4 +198,135 @@ Widget locMarker(BuildContext context) {
       ]
     ),
   );
+}
+
+// Multi-use sliver definitions
+class WarningSliver extends StatelessWidget {
+  final String _warningText;
+  final WarningLevel _warningLevel;
+  final String url;
+  final VoidCallback onTap;
+  WarningSliver(this._warningText, this._warningLevel, {this.url, this.onTap});
+
+  _launchURL() async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      margin: sliverMargins,
+      child: new GestureDetector(
+        onTap: url != null
+          ? () {
+            _launchURL();
+          } 
+          : () {
+            onTap();
+          },
+        child: Stack(
+          children: <Widget>[
+            new Container(
+              decoration: new BoxDecoration(
+                color: _warningLevel == WarningLevel.alert
+                  ? alertColor
+                  : _warningLevel == WarningLevel.warning 
+                    ? warningColor
+                    : noticeColor, // else it's a notice
+                shape: BoxShape.rectangle,
+                borderRadius: new BorderRadius.circular(8.0),
+                boxShadow: [sliverShadow],
+              ),
+              child: new Row(
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment(0,0), 
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6), 
+                            child: _warningLevel == WarningLevel.alert
+                              ? alertIcon
+                              : _warningLevel == WarningLevel.warning 
+                                ? warningIcon
+                                : noticeIcon, // else it's a notice
+                          ),
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.all(6), 
+                              child: Text(_warningText, style: latoWhite)
+                            )
+                          ),
+                        ]
+                      )
+                    ),
+                  )
+                ],
+              ),  
+            ),
+          ],
+        )
+      )
+    );
+  }
+}
+
+class IconTextSliver extends StatelessWidget {
+  final String _text;
+  final Icon _icon;
+  final Color _color;
+  final VoidCallback onTap;
+  IconTextSliver(this._text, this._icon, this._color, this.onTap);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      margin: sliverMargins,
+      child: new GestureDetector(
+        onTap: () {
+          onTap();
+        },
+        child: Stack(
+          children: <Widget>[
+            new Container(
+              decoration: new BoxDecoration(
+                color: _color,
+                shape: BoxShape.rectangle,
+                borderRadius: new BorderRadius.circular(8.0),
+                boxShadow: [sliverShadow],
+              ),
+              child: new Row(
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment(0,0), 
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6), 
+                            child: _icon, // else it's a notice
+                          ),
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.all(6), 
+                              child: Text(_text, style: latoWhite)
+                            )
+                          ),
+                        ]
+                      )
+                    ),
+                  )
+                ],
+              ),  
+            ),
+          ],
+        )
+      )
+    );
+  }
 }
