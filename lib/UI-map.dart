@@ -15,6 +15,11 @@ import 'package:Nowcasting/support-location.dart' as loc;
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
 
+// API Keys (aren't committed for obvious reasons, if you want to build the app yourself you'll
+// need to fill these in with your own)
+String lightKey = '**REMOVED**';
+String darkKey = '**REMOVED**';
+
 class MapScreen extends StatefulWidget {
   @override
   MapScreenState createState() => new MapScreenState();
@@ -118,10 +123,10 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             layers: [
               TileLayerOptions(
-                tileProvider: AssetTileProvider(),
+                tileProvider: AssetTileProvider(), //CachedNetworkTileProvider(),
                 urlTemplate: ux.darkMode(context) 
-                  ? "assets/jawg-dark/{z}/{x}/{y}.png" 
-                  : "assets/jawg-sunny/{z}/{x}/{y}.png",
+                  ? "assets/jawg-dark/{z}/{x}/{y}.png" //"https://tile.jawg.io/5c69b784-52bc-408b-8d03-66e426232e15/{z}/{x}/{y}.png?access-token=$darkKey"
+                  : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey", 
                 minNativeZoom: 5,
                 maxNativeZoom: 9,
                 backgroundColor: ux.darkMode(context) 
