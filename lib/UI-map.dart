@@ -251,7 +251,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     // Speed control
                     Container(
                       alignment: Alignment.bottomCenter,
-                      margin: EdgeInsets.all(8),
+                      margin: EdgeInsets.symmetric(vertical: 8),
                       child: Column(children: <Widget>[
                         Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
                         Slider.adaptive(
@@ -292,7 +292,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     // Opacity control
                     Container(
                       alignment: Alignment.bottomCenter,
-                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      margin: EdgeInsets.symmetric(vertical: 8),
                       child: Column(children: <Widget>[
                         Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
                         Slider.adaptive(
