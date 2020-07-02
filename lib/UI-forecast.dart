@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:latlong/latlong.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import 'package:Nowcasting/main.dart';
+//import 'package:Nowcasting/main.dart'; // Would be needed for sharedpref
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
-import 'package:Nowcasting/support-io.dart' as io;
 
 // Widgets
 class ForecastScreen extends StatefulWidget  {
@@ -126,7 +124,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new WarningSliver(loc.radarOutageText, ux.WarningLevel.notice, loc.radarOutageUrl),
+                      (context, index) => new ux.WarningSliver(loc.radarOutageText, ux.WarningLevel.notice, url: loc.radarOutageUrl),
                       childCount: loc.radarOutage ? 1 : 0,
                     ),
                   ),
@@ -141,7 +139,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new WarningSliver(loc.alertText, ux.WarningLevel.alert, loc.alertUrl),
+                      (context, index) => new ux.WarningSliver(loc.alertText, ux.WarningLevel.alert, url: loc.alertUrl),
                       childCount: 1, //TODO loc.alerts.length? store in array for multiple location alerts?
                     ),
                   ),
@@ -171,7 +169,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                         )
                         // Otherwise, display a notice that tells the user they are out of coverage.
                         : SliverChildBuilderDelegate(
-                          (context, index) => new WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
+                          (context, index) => new ux.WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
                           childCount: 1,
                         ),
                       itemExtent: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
@@ -187,7 +185,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                     sliver: SliverFixedExtentList(
                       itemExtent: ux.sliverThinHeight,
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) => new WarningSliver("Could not detect current location.", ux.WarningLevel.notice),
+                        (context, index) => new ux.WarningSliver("Could not detect current location.", ux.WarningLevel.notice),
                         childCount: 1,
                       ),
                     ),
@@ -690,76 +688,3 @@ class ForecastSliver extends StatelessWidget {
   }
 }
 
-class WarningSliver extends StatelessWidget {
-  final String _warningText;
-  final ux.WarningLevel _warningLevel;
-  final String _url;
-  WarningSliver(this._warningText, this._warningLevel, [this._url]);
-
-  _launchURL() async {
-    if (await canLaunch(_url)) {
-      await launch(_url);
-    } else {
-      throw 'Could not launch $_url';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return new Container(
-      margin: ux.sliverMargins,
-      child: new GestureDetector(
-        onTap: _url != null
-          ? () {
-            _launchURL();
-          } 
-          : () {
-            // Do nothing if _url is null
-          },
-        child: Stack(
-          children: <Widget>[
-            new Container(
-              decoration: new BoxDecoration(
-                color: _warningLevel == ux.WarningLevel.alert
-                  ? ux.alertColor
-                  : _warningLevel == ux.WarningLevel.warning 
-                    ? ux.warningColor
-                    : ux.noticeColor, // else it's a notice
-                shape: BoxShape.rectangle,
-                borderRadius: new BorderRadius.circular(8.0),
-                boxShadow: [ux.sliverShadow],
-              ),
-              child: new Row(
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment(0,0), 
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(6), 
-                            child: _warningLevel == ux.WarningLevel.alert
-                              ? ux.alertIcon
-                              : _warningLevel == ux.WarningLevel.warning 
-                                ? ux.warningIcon
-                                : ux.noticeIcon, // else it's a notice
-                          ),
-                          Flexible(
-                            child: Container(
-                              padding: EdgeInsets.all(6), 
-                              child: Text(_warningText, style: ux.latoWhite)
-                            )
-                          ),
-                        ]
-                      )
-                    ),
-                  )
-                ],
-              ),  
-            ),
-          ],
-        )
-      )
-    );
-  }
-}
