@@ -60,6 +60,7 @@ flutter:
     - assets/google_fonts/
     - assets/pal_prec_nowcasting.png
     - assets/launcher/logo.png
+    - assets/launcher/icon_android.png
     - assets/manypixels-iso-navigation.png
     - assets/manypixels-iso-weather.png
     - assets/manypixels-iso-digital_nomad.png
