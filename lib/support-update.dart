@@ -12,7 +12,6 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
-import 'package:Nowcasting/main.dart';
 
 // TODO figure out for sure if the legends need 20 min added to their duration
 // or if forecasts are for the stated time
