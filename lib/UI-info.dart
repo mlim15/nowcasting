@@ -129,7 +129,7 @@ class InfoScreen extends StatelessWidget  {
                       builder: (BuildContext context) {
                         // Popup dialogue with form when edit button is pressed
                         return AlertDialog(
-                          title: Text("About the Algorithm"),
+                          title: Text("About Radar Anomalies"),
                           content: SingleChildScrollView( 
                             scrollDirection: Axis.vertical,
                             child: Column(
