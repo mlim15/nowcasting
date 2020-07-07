@@ -61,7 +61,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           ),
           PageViewModel(
             title: "Initial Download",
-            body: "Ensure you are connected to the internet to download ~1MB of initial weather data.",
+            body: "To get started, we need to download ~1MB of initial weather data.",
             image: _buildImage('manypixels-iso-digital_nomad'),
             decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
             footer: new ProgressButton(
@@ -124,7 +124,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             bodyWidget: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Text("I hope you find the app useful!"),
+                Text("We hope you find the app useful!"),
               ],
             ),
             image: _buildImage('manypixels-iso-camping'),
