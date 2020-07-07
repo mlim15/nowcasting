@@ -144,7 +144,7 @@ class SplashState extends State<Splash> {
       backgroundColor: ux.nowcastingColor,
       body: new Stack(
         children: <Widget>[
-          AnimatedOpacity(opacity: _logoVisible ? 1.0 : 0.0, duration: Duration(milliseconds: 300), child: Center(child: Image.asset("assets/launcher/logo.png"))),
+          AnimatedOpacity(opacity: _logoVisible ? 1.0 : 0.0, duration: Duration(milliseconds: 300), child: Center(child: Image.asset("assets/launcher/logo.png", width: 320, height: 320))),
           AnimatedOpacity(opacity: _textVisible ? 1.0 : 0.0, duration: Duration(milliseconds: 300), child: Container(alignment: Alignment.center, margin: EdgeInsets.only(top: 256), child: Text(_splashText, style: ux.latoWhite))),
         ],
       ),
