@@ -1,4 +1,6 @@
 PODS:
+  - device_info (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
@@ -30,6 +32,7 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - device_info (from `.symlinks/plugins/device_info/ios`)
   - Flutter (from `Flutter`)
   - location (from `.symlinks/plugins/location/ios`)
   - location_web (from `.symlinks/plugins/location_web/ios`)
@@ -49,6 +52,8 @@ SPEC REPOS:
     - FMDB
 
 EXTERNAL SOURCES:
+  device_info:
+    :path: ".symlinks/plugins/device_info/ios"
   Flutter:
     :path: Flutter
   location:
@@ -77,6 +82,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_web/ios"
 
 SPEC CHECKSUMS:
+  device_info: d7d233b645a32c40dfdc212de5cf646ca482f175
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   location: 3a2eed4dd2fab25e7b7baf2a9efefe82b512d740
