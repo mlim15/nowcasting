@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter_progress_button/flutter_progress_button.dart';
@@ -44,6 +46,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool _showLocationsPage = Platform.isIOS || (Platform.isAndroid && main.androidInfo.version.sdkInt >= 23);
     ux.updateStatusBarBrightness(context,true,false);
     return Scaffold (
       key: _obScaffoldKey,
@@ -88,7 +91,9 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
           ),
-          PageViewModel(
+          // Only show permissions page on android if version supports runtime permissions
+          if (_showLocationsPage)
+            PageViewModel(
               title: "Location Permissions",
               body:  "Giving access to your location will enable the app to provide local forecasts.", //TODO For notifications, you will need to grant access even in the background.",
               image: _buildImage('manypixels-iso-navigation'),
@@ -107,7 +112,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                   }; 
                 },
               ),
-          ),
+            ),
           //PageViewModel(
           //  title: "Notifications",
           //  body: "Another beautiful body text for this example onboarding",
