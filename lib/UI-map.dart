@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -102,6 +103,100 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
   Widget _returnSpacer() {
     return Text('      ');
+  }
+
+  Widget _returnDrawerItems() {
+    return Align(
+      alignment: Alignment(0,0), 
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+        child: Column(
+          children: [
+            // Legend
+            Align(alignment: Alignment.center, child: Text("Legend", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color))),
+            Container(child: Row(children: [Text("Rain", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), Spacer(), Text('Hail', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),), 
+            Row(children: [ 
+              for (int _i=0; _i<1; _i++) 
+                _returnSpacer(),
+              for (Color _color in imagery.colorsHex.sublist(0,12))
+                Container(color: _color, child: _returnSpacer())
+            ]),
+            Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
+            Row(children: [ 
+              for (int _i=0; _i<1; _i++) 
+                _returnSpacer(),
+              for (Color _color in imagery.colorsHex.sublist(12,17))
+                Container(color: _color, child: _returnSpacer())
+            ]),
+            Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
+            Row(children: [ 
+              for (Color _color in imagery.colorsHex.sublist(18))
+                Container(color: _color, child: _returnSpacer())
+            ]),
+            Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
+            // Speed control
+            Container(
+              alignment: Alignment.bottomCenter,
+              margin: EdgeInsets.symmetric(vertical: 8),
+              child: Column(children: <Widget>[
+                Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
+                Slider.adaptive(
+                  // possibly the dumbest way to implement this but it works.
+                  // maybe come back and clean up later without having to hard-code values in.
+                  value: speed.inMilliseconds.toInt() == 800
+                    ? 4
+                    : speed.inMilliseconds.toInt() == 1000
+                      ? 3
+                      : speed.inMilliseconds.toInt() == 1200
+                        ? 2
+                        : speed.inMilliseconds.toInt() == 1400
+                          ? 1
+                          : speed.inMilliseconds.toInt() == 1600
+                            ? 0
+                            : 0,
+                  min: 0,
+                  max: 4,
+                  divisions: 4,
+                  onChanged: (newSpeed) {
+                    setState(() {
+                      switch(newSpeed.toInt()) {
+                        case 0: {speed = Duration(milliseconds: 1600);} break;
+                        case 1: {speed = Duration(milliseconds: 1400);} break;
+                        case 2: {speed = Duration(milliseconds: 1200);} break;
+                        case 3: {speed = Duration(milliseconds: 1000);} break;
+                        case 4: {speed = Duration(milliseconds: 800);} break;
+                      }
+                      if (_playing) {
+                        // stop and start so speed change occurs
+                        _togglePlaying();_togglePlaying();
+                      }
+                    });
+                  },
+                )
+              ])
+            ),
+            // Opacity control
+            Container(
+              alignment: Alignment.bottomCenter,
+              margin: EdgeInsets.symmetric(vertical: 8),
+              child: Column(children: <Widget>[
+                Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
+                Slider.adaptive(
+                  value: _nowcastOpacity,
+                  min: 0.1,
+                  max: 0.9,
+                  onChanged: (newOpacity) {
+                    setState(() {
+                      _nowcastOpacity = newOpacity;
+                    });
+                  },
+                )
+              ])
+            ),
+          ]
+        )
+      ),
+    );
   }
 
   // Widget definition
@@ -217,103 +312,20 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         )
       ),
       // TODO possibly other layers e.g. barbs and temperature
-      drawer: Drawer(
-        child: ListView(
-          children: <Widget>[
-            Align(
-              alignment: Alignment(0,0), 
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-                child: Column(
-                  children: [
-                    // Legend
-                    Align(alignment: Alignment.center, child: Text("Legend", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color))),
-                    Container(child: Row(children: [Text("Rain", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), Spacer(), Text('Hail', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),), 
-                    Row(children: [ 
-                      for (int _i=0; _i<1; _i++) 
-                        _returnSpacer(),
-                      for (Color _color in imagery.colorsHex.sublist(0,12))
-                        Container(color: _color, child: _returnSpacer())
-                    ]),
-                    Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
-                    Row(children: [ 
-                      for (int _i=0; _i<1; _i++) 
-                        _returnSpacer(),
-                      for (Color _color in imagery.colorsHex.sublist(12,17))
-                        Container(color: _color, child: _returnSpacer())
-                    ]),
-                    Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
-                    Row(children: [ 
-                      for (Color _color in imagery.colorsHex.sublist(18))
-                        Container(color: _color, child: _returnSpacer())
-                    ]),
-                    Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
-                    // Speed control
-                    Container(
-                      alignment: Alignment.bottomCenter,
-                      margin: EdgeInsets.symmetric(vertical: 8),
-                      child: Column(children: <Widget>[
-                        Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
-                        Slider.adaptive(
-                          // possibly the dumbest way to implement this but it works.
-                          // maybe come back and clean up later without having to hard-code values in.
-                          value: speed.inMilliseconds.toInt() == 800
-                            ? 4
-                            : speed.inMilliseconds.toInt() == 1000
-                              ? 3
-                              : speed.inMilliseconds.toInt() == 1200
-                                ? 2
-                                : speed.inMilliseconds.toInt() == 1400
-                                  ? 1
-                                  : speed.inMilliseconds.toInt() == 1600
-                                    ? 0
-                                    : 0,
-                          min: 0,
-                          max: 4,
-                          divisions: 4,
-                          onChanged: (newSpeed) {
-                            setState(() {
-                              switch(newSpeed.toInt()) {
-                                case 0: {speed = Duration(milliseconds: 1600);} break;
-                                case 1: {speed = Duration(milliseconds: 1400);} break;
-                                case 2: {speed = Duration(milliseconds: 1200);} break;
-                                case 3: {speed = Duration(milliseconds: 1000);} break;
-                                case 4: {speed = Duration(milliseconds: 800);} break;
-                              }
-                              if (_playing) {
-                                // stop and start so speed change occurs
-                                _togglePlaying();_togglePlaying();
-                              }
-                            });
-                          },
-                        )
-                      ])
-                    ),
-                    // Opacity control
-                    Container(
-                      alignment: Alignment.bottomCenter,
-                      margin: EdgeInsets.symmetric(vertical: 8),
-                      child: Column(children: <Widget>[
-                        Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
-                        Slider.adaptive(
-                          value: _nowcastOpacity,
-                          min: 0.1,
-                          max: 0.9,
-                          onChanged: (newOpacity) {
-                            setState(() {
-                              _nowcastOpacity = newOpacity;
-                            });
-                          },
-                        )
-                      ])
-                    ),
-                  ]
-                )
-              ),
-            ),
-          ],
-        )
-      ),
+      drawer: Platform.isIOS 
+        ? SizedBox(
+          width: 342, 
+          child: Drawer(
+            child: ListView(
+              children: [_returnDrawerItems()]
+            )
+          ),
+        ) 
+        : Drawer(
+          child: ListView(
+            children: [_returnDrawerItems()]
+          )
+        ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.my_location),
         onPressed: () {_locatePressed();},
