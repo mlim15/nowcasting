@@ -12,10 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   #cupertino_icons: ^0.1.3
-  flutter_map: #^0.9.0
-    git:
-      url: https://github.com/johnpryan/flutter_map.git
-      ref: b41932100ba8af15326560384d6667b4bd087c35
+  flutter_map: ^0.10.0
   dio: ^3.0.9
   location: ^3.0.2
   image: any
