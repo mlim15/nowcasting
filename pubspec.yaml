@@ -25,12 +25,6 @@ dependencies:
   material_design_icons_flutter: 4.0.5345
   device_info: '>=0.4.2+4 <2.0.0'
 
-dependency_overrides:
-  flutter_map:
-    git:
-      url: https://github.com/johnpryan/flutter_map.git
-      ref: b41932100ba8af15326560384d6667b4bd087c35
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

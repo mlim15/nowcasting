@@ -150,11 +150,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: b41932100ba8af15326560384d6667b4bd087c35
-      resolved-ref: b41932100ba8af15326560384d6667b4bd087c35
-      url: "https://github.com/johnpryan/flutter_map.git"
+      ref: HEAD
+      resolved-ref: "5898f0099e21d5d87e37fb7ef83fe9927d50334a"
+      url: "https://github.com/fleaflet/flutter_map.git"
     source: git
-    version: "0.9.0"
+    version: "0.10.0"
   flutter_native_splash:
     dependency: "direct dev"
     description:
