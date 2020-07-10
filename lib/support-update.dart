@@ -163,6 +163,10 @@ legends() async {
 }
 
 // Local product update isolate helper functions (for backgrounding)
+// TODO see if we can decode and save each image one at a time
+// to reduce memory pressure on low-performance devices
+// as well as hopefully allow resumption of the process when the app is
+// relaunched
 FutureOr<List<imglib.Image>> bgForecasts(List<File> _files) async {
   List<imglib.Image> _forecasts = [];
   imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
