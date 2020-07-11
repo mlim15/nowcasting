@@ -76,6 +76,7 @@ final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcon
 
 // Arrays storing local products derived from nowcasting data
 List<imglib.Image> decodedForecasts = [];
+// TODO add separate legends array for forecast screen that is updated only as images are decoded to prevent mismatched legend/data on forecast screen
 List<String> legends = [];
 
 // Functions that take decimal AABBGGRR values queried from the data products
