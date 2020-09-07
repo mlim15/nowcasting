@@ -58,7 +58,8 @@ class InfoScreen extends StatelessWidget  {
                 child: Center(child: Container(child: Text('FAQ', style: ux.latoForeground(context).copyWith(fontSize: 24)))),
               )
             ),
-            
+            // TODO add info about 20 min windows and missing shorter downpours when storm is moving fast, advise users to look at map screen
+            // perhaps add some kind of "rain in your area" info to forecast screen to account for this
             SliverPadding(
               padding: const EdgeInsets.only(bottom: 8.0),
               sliver: SliverFixedExtentList(
