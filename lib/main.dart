@@ -204,15 +204,15 @@ class AppState extends State<AppContents> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.wb_sunny),
-            title: Text('Forecast'),
+            label: 'Forecast',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
-            title: Text('Map'),
+            label: 'Map',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
-            title: Text('About'),
+            label: 'About',
           ),
         ],
         currentIndex: _selectedIndex,
