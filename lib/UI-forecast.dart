@@ -291,13 +291,47 @@ class ForecastSliver extends StatelessWidget {
       loc.savePlaces();
     }
 
+    Widget populateForecast() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal, 
+        child: Row(
+          children: [ for (int _i = 0; _i <= 8; _i++)
+            Container(
+              padding: EdgeInsets.all(8),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.all(2),
+                    child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: new BorderRadius.circular(8.0),
+                      color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
+                        ? Color(0xFF000000)
+                        : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
+                    ),
+                  ),
+                  Container(
+                    child: Text(
+                      imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
+                      style: ux.latoWhite
+                    ), 
+                  ),
+                  Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                  Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                ]
+              )
+            )
+          ],
+        ) 
+      );
+    }
+
     // Main widget return of the build for the sliver
     // TODO this now needs a big pass for readability.
     // preferably separate out by condition into functions that
     // return their repspective subwidget, e.g. a method that returns the widget
     // to build when editing and another method when not
-    //
-    // also add buttons to reorder items
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
@@ -362,39 +396,7 @@ class ForecastSliver extends StatelessWidget {
                                   //),
                                 ]
                               ),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal, 
-                                child: Row(
-                                  children: [ for (int _i = 0; _i <= 8; _i++)
-                                    Container(
-                                      padding: EdgeInsets.all(8),
-                                      child: Column(
-                                        children: <Widget>[
-                                          Container(
-                                            padding: EdgeInsets.all(2),
-                                            child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.rectangle,
-                                              borderRadius: new BorderRadius.circular(8.0),
-                                              color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                                                ? Color(0xFF000000)
-                                                : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
-                                            ),
-                                          ),
-                                          Container(
-                                            child: Text(
-                                              imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
-                                              style: ux.latoWhite
-                                            ), 
-                                          ),
-                                          Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                          Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                        ]
-                                      )
-                                    )
-                                  ],
-                                ) 
-                              )
+                              populateForecast(),
                             ]
                           )
                         )
@@ -588,39 +590,7 @@ class ForecastSliver extends StatelessWidget {
                                 // If coordinates of the location are out of service range, display a message
                                 ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                                 // Otherwise read the forecast images
-                                : SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal, 
-                                  child: Row(
-                                    children: [ for (int _i = 0; _i <= 8; _i++)
-                                      Container(
-                                        padding: EdgeInsets.all(8),
-                                        child: Column(
-                                          children: <Widget>[
-                                            Container(
-                                              padding: EdgeInsets.all(2),
-                                              child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.rectangle,
-                                                borderRadius: new BorderRadius.circular(8.0),
-                                                color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                                                ? Color(0xFF000000)
-                                                : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
-                                              ),
-                                            ),
-                                            Container(
-                                              child: Text(
-                                                imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
-                                                style: ux.latoWhite
-                                              ), 
-                                            ),
-                                            Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                            Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                          ]
-                                        )
-                                      )
-                                    ],
-                                  ) 
-                                )
+                                : populateForecast(),
                             ]
                           )
                         )
@@ -644,39 +614,7 @@ class ForecastSliver extends StatelessWidget {
                               // If coordinates of the location are out of service range, display a message
                               ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                               // Otherwise read the forecast images
-                              : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal, 
-                                child: Row(
-                                  children: [ for (int _i = 0; _i<=8; _i++)
-                                    Container(
-                                      padding: EdgeInsets.all(8),
-                                      child: Column(
-                                        children: <Widget>[
-                                          Container(
-                                            padding: EdgeInsets.all(2),
-                                            child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.rectangle,
-                                              borderRadius: new BorderRadius.circular(8.0),
-                                              color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                                              ? Color(0xFF000000)
-                                              : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
-                                            ),
-                                          ),
-                                          Container(
-                                            child: Text(
-                                              imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
-                                              style: ux.latoWhite
-                                            ), 
-                                          ),
-                                          Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                          Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                                        ]
-                                      )
-                                    )
-                                  ],
-                                ) 
-                              )
+                              : populateForecast(),
                           ]
                         )
                       )
