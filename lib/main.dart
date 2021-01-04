@@ -19,6 +19,7 @@ import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 
 // TODO animate splash screen
+// TODO localization including map images... maybe generate/redownload with localized per-region names?
 
 SharedPreferences prefs;
 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
