@@ -125,14 +125,14 @@ updateLastKnownLocation({bool withRequests = false}) async {
     if (_newLoc != null) {
       lastKnownLocation = new LatLng(_newLoc.latitude, _newLoc.longitude);
       await saveLastKnownLocation();
-      return;
+      return true;
     } else {
       print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
-      return;
+      return false;
     }
   } catch(e) {
     print('loc.updateLastKnownLocation: Could not update location, update attempt yielded an error.');
-    return;
+    return false;
   }
 }
 
