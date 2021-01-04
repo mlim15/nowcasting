@@ -179,6 +179,55 @@ class InfoScreen extends StatelessWidget  {
               ),
             ),
             SliverPadding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              sliver: SliverFixedExtentList(
+                itemExtent: ux.sliverHalfThinHeight,
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => new ux.IconTextSliver("Will the forecast show all precipitation events?", ux.noticeIcon, ux.nowcastingColor, () async {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        // Popup dialogue with form when edit button is pressed
+                        return AlertDialog(
+                          title: Text("Does the forecast screen show every precipitation event?"),
+                          content: SingleChildScrollView( 
+                            scrollDirection: Axis.vertical,
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Text('No! Because the forecasts are only available in 20 minute intervals, a fast moving storm could pass over in between two predictions of no precipitation. Looking at the images yourself on the map screen will be more accurate.'),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Spacer(),
+                                        RaisedButton(
+                                          child: Text("OK"),
+                                          color: ux.nowcastingColor,
+                                          textColor: Colors.white,
+                                          onPressed: () async {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    )
+                                  )
+                                ],
+                            ),
+                          ),
+                          elevation: 24.0,
+                        );
+                      }
+                    );
+                  }),
+                  childCount: 1,
+                ),
+              ),
+            ),
+            SliverPadding(
               padding:  const EdgeInsets.symmetric(vertical: 8.0),
               sliver: SliverToBoxAdapter(
                 child: Center(child: Container(child: Text('Credits', style: ux.latoForeground(context).copyWith(fontSize: 24)))),
