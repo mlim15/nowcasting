@@ -20,7 +20,6 @@ class ForecastScreen extends StatefulWidget  {
 }
 
 class ForecastScreenState extends State<ForecastScreen> {
-  Timer _forceRebuildTimer;
   bool _editing = false;
   
   _addLocationPressed() async {
