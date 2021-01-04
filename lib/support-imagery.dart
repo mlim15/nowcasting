@@ -186,7 +186,6 @@ loadDecodedForecast(int _i) async {
   } catch (e) {
     print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
     // If encountering an error, trigger the decoding of the pngs all over again.
-    // TODO await?
     update.forecast(_i);
     return;
   }

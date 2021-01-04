@@ -11,8 +11,6 @@ import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
 
-// TODO add an indication that users can view the map screen while they wait for decoding
-
 // Widgets
 class ForecastScreen extends StatefulWidget  {
   @override

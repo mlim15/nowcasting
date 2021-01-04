@@ -195,9 +195,6 @@ forecast(int _i) async {
   }
 }
 
-// TODO change legends to come from decoded forecast file mod times instead. Doing this currently breaks something somewhere,
-// so the original functionality has been left here for now. However, the current solution means that legends and displayed forecasts
-// could be mismatched.
 legends() async {
   List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
