@@ -291,6 +291,93 @@ class ForecastSliver extends StatelessWidget {
       loc.savePlaces();
     }
 
+    // TODO location picker with a map instead of typing coordinates
+    AlertDialog editPopup() {
+      return AlertDialog(
+        title: Text("Coordinates for '"+_locName+"'"),
+        content: SingleChildScrollView( 
+          scrollDirection: Axis.vertical,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    initialValue: loc.places[_index].latitude.toString(),
+                    decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
+                    keyboardType: TextInputType.number,
+                    onSaved: (newValue) {
+                      loc.places[_index].latitude = double.parse(newValue);
+                    },
+                    validator: (newValue) {
+                      if (double.tryParse(newValue) == null) {
+                        return 'Invalid latitude.';
+                      } else if (!(imagery.sw.latitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.latitude.toDouble())) {
+                        return "Out of service range.";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    initialValue: loc.places[_index].longitude.toString(),
+                    decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
+                    keyboardType: TextInputType.number,
+                    onSaved: (newValue) {
+                      loc.places[_index].longitude = double.parse(newValue);
+                    },
+                    validator: (newValue) {
+                      if (double.tryParse(newValue) == null) {
+                        return 'Invalid longitude.';
+                      } else if (!(imagery.sw.longitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.longitude.toDouble())) {
+                        return "Out of service range.";
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text("Cancel"), 
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      Spacer(),
+                      RaisedButton(
+                        child: Text("Save"),
+                        color: ux.nowcastingColor,
+                        textColor: Colors.white,
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            _formKey.currentState.save();
+                            loc.savePlaces();
+                            rebuildCallback();
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    ],
+                  )
+                )
+              ],
+            ),
+          ),
+        ),
+        elevation: 24.0,
+      );
+    }
+
+    // Builds the inset horizontal scroll view with the actual forecast for each sliver
+    // TODO garbage collect between each item decoding to minimize peak ram usage,
+    // currently this is causing crashes on low ram devices
     Widget populateForecast() {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal, 
@@ -328,10 +415,6 @@ class ForecastSliver extends StatelessWidget {
     }
 
     // Main widget return of the build for the sliver
-    // TODO this now needs a big pass for readability.
-    // preferably separate out by condition into functions that
-    // return their repspective subwidget, e.g. a method that returns the widget
-    // to build when editing and another method when not
     return new Container(
       height: _editing
         ? ux.sliverHeightExpanded
@@ -357,247 +440,132 @@ class ForecastSliver extends StatelessWidget {
             child: new Container(
               child: _editing
                 // If editing
-                ? _index == -1
-                  // If card is for current location
-                  // and we are editing
-                  ? Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment(0,0), 
-                          child: Column(
-                            children: [
-                              Row( 
-                                children: [
-                                  IconButton(
-                                    padding: EdgeInsets.all(6),
-                                    icon: Icon(Icons.refresh, color: Colors.white), 
-                                    onPressed: () async {loc.updateLastKnownLocation();Timer(Duration(seconds: 8), () {rebuildCallback();});},
-                                    //padding: EdgeInsets.all(2)
-                                  ),
-                                  Flexible( 
-                                    child: Text(
-                                      _locName,
-                                      style: TextStyle(fontSize: 16).merge(ux.latoWhite),
-                                    )
-                                  ),
-                                  Spacer(),
-                                  // TODO implement notifications and uncomment this button.
-                                  // it already works to toggle the boolean.
-                                  //IconButton(
-                                  //  icon: _notify
-                                  //    ? Icon(Icons.notifications_active, color: Colors.white)
-                                  //    : Icon(Icons.notifications_off, color: Colors.white),
-                                  //  onPressed: () {
-                                  //    _notifyPressed(true);
-                                  //   rebuildCallback();
-                                  //  },
-                                  //),
-                                ]
-                              ),
-                              populateForecast(),
-                            ]
-                          )
-                        )
-                      )
-                    ],
-                  )
-                  // If card is not for current location
-                  // and we are editing
-                  : Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Column(
-                        children: <Widget>[
-                          Spacer(),
-                          IconButton(
-                            color: Colors.white,
-                            disabledColor: Colors.white.withAlpha(90),
-                            icon: Icon(Icons.arrow_upward),
-                            onPressed: _index == 0
-                              ? null
-                              : () {
-                                LatLng thisPlace = loc.places[_index];
-                                String thisPlaceName = loc.placeNames[_index];
-                                bool thisPlaceNot = loc.notify[_index];
-                                LatLng swapPlace = loc.places[_index-1];
-                                String swapPlaceName = loc.placeNames[_index-1];
-                                bool swapPlaceNot = loc.notify[_index-1];
-                                loc.places[_index] = swapPlace;
-                                loc.placeNames[_index] = swapPlaceName;
-                                loc.notify[_index] = swapPlaceNot;
-                                loc.places[_index-1] = thisPlace;
-                                loc.placeNames[_index-1] = thisPlaceName;
-                                loc.notify[_index-1] = thisPlaceNot;
-                                rebuildCallback();
-                              },
-                          ),
-                          IconButton(
-                            color: Colors.white,
-                            disabledColor: Colors.white.withAlpha(90),
-                            icon: Icon(Icons.arrow_downward), 
-                            onPressed: _index == loc.places.length-1
-                              ? null
-                              : () {
-                                LatLng thisPlace = loc.places[_index];
-                                String thisPlaceName = loc.placeNames[_index];
-                                bool thisPlaceNot = loc.notify[_index];
-                                LatLng swapPlace = loc.places[_index+1];
-                                String swapPlaceName = loc.placeNames[_index+1];
-                                bool swapPlaceNot = loc.notify[_index+1];
-                                loc.places[_index] = swapPlace;
-                                loc.placeNames[_index] = swapPlaceName;
-                                loc.notify[_index] = swapPlaceNot;
-                                loc.places[_index+1] = thisPlace;
-                                loc.placeNames[_index+1] = thisPlaceName;
-                                loc.notify[_index+1] = thisPlaceNot;
-                                rebuildCallback();
-                              },
-                          ),
-                          Spacer(),
-                        ],
-                      ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment(0,0), 
-                          child: Column(
-                            children: [
-                              Row( 
-                                children: [
-                                  IconButton(
-                                    padding: EdgeInsets.all(6),
-                                    icon: Icon(Icons.edit, color: Colors.white), 
-                                    onPressed: () {
+                ? Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Column(
+                      children: <Widget>[
+                        Spacer(),
+                        IconButton(
+                          color: Colors.white,
+                          disabledColor: Colors.white.withAlpha(90),
+                          icon: Icon(Icons.arrow_upward),
+                          onPressed: _index == 0 || _index == -1
+                            ? null // Disable the "up" button if it's first in the list or the current location box
+                            : () {
+                              LatLng thisPlace = loc.places[_index];
+                              String thisPlaceName = loc.placeNames[_index];
+                              bool thisPlaceNot = loc.notify[_index];
+                              LatLng swapPlace = loc.places[_index-1];
+                              String swapPlaceName = loc.placeNames[_index-1];
+                              bool swapPlaceNot = loc.notify[_index-1];
+                              loc.places[_index] = swapPlace;
+                              loc.placeNames[_index] = swapPlaceName;
+                              loc.notify[_index] = swapPlaceNot;
+                              loc.places[_index-1] = thisPlace;
+                              loc.placeNames[_index-1] = thisPlaceName;
+                              loc.notify[_index-1] = thisPlaceNot;
+                              rebuildCallback();
+                            },
+                        ),
+                        IconButton(
+                          color: Colors.white,
+                          disabledColor: Colors.white.withAlpha(90),
+                          icon: Icon(Icons.arrow_downward), 
+                          onPressed: _index == loc.places.length-1 || _index == -1
+                            ? null // Disable the "down" button if it's the last in the list  or the current location box
+                            : () {
+                              LatLng thisPlace = loc.places[_index];
+                              String thisPlaceName = loc.placeNames[_index];
+                              bool thisPlaceNot = loc.notify[_index];
+                              LatLng swapPlace = loc.places[_index+1];
+                              String swapPlaceName = loc.placeNames[_index+1];
+                              bool swapPlaceNot = loc.notify[_index+1];
+                              loc.places[_index] = swapPlace;
+                              loc.placeNames[_index] = swapPlaceName;
+                              loc.notify[_index] = swapPlaceNot;
+                              loc.places[_index+1] = thisPlace;
+                              loc.placeNames[_index+1] = thisPlaceName;
+                              loc.notify[_index+1] = thisPlaceNot;
+                              rebuildCallback();
+                            },
+                        ),
+                        Spacer(),
+                      ],
+                    ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment(0,0), 
+                        child: Column(
+                          children: [
+                            Row( 
+                              children: [
+                                IconButton(
+                                  padding: EdgeInsets.all(6),
+                                  icon: _index == -1
+                                    ? Icon(Icons.location_searching, color: Colors.white)
+                                    : Icon(Icons.edit, color: Colors.white), 
+                                  onPressed: _index == -1 
+                                    // Update location when button pressed for the current location sliver
+                                    ? () async {
+                                      await loc.updateLastKnownLocation()
+                                        ? Timer(Duration(seconds: 8), () {rebuildCallback();})
+                                        : () {};
+                                    }
+                                    // Popup dialogue with form when edit button is pressed on other slivers
+                                    : () {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
-                                          // Popup dialogue with form when edit button is pressed
-                                          return AlertDialog(
-                                            title: Text("Coordinates for '"+_locName+"'"),
-                                            content: SingleChildScrollView( 
-                                              scrollDirection: Axis.vertical,
-                                              child: Form(
-                                                key: _formKey,
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: <Widget>[
-                                                    Padding(
-                                                      padding: EdgeInsets.all(8.0),
-                                                      child: TextFormField(
-                                                        initialValue: loc.places[_index].latitude.toString(),
-                                                        decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
-                                                        keyboardType: TextInputType.number,
-                                                        onSaved: (newValue) {
-                                                          loc.places[_index].latitude = double.parse(newValue);
-                                                        },
-                                                        validator: (newValue) {
-                                                          if (double.tryParse(newValue) == null) {
-                                                            return 'Invalid latitude.';
-                                                          } else if (!(imagery.sw.latitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.latitude.toDouble())) {
-                                                            return "Out of service range.";
-                                                          }
-                                                          return null;
-                                                        },
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding: EdgeInsets.all(8.0),
-                                                      child: TextFormField(
-                                                        initialValue: loc.places[_index].longitude.toString(),
-                                                        decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
-                                                        keyboardType: TextInputType.number,
-                                                        onSaved: (newValue) {
-                                                          loc.places[_index].longitude = double.parse(newValue);
-                                                        },
-                                                        validator: (newValue) {
-                                                          if (double.tryParse(newValue) == null) {
-                                                            return 'Invalid longitude.';
-                                                          } else if (!(imagery.sw.longitude.toDouble() <= double.parse(newValue)) || !(double.parse(newValue) <= imagery.ne.longitude.toDouble())) {
-                                                            return "Out of service range.";
-                                                          }
-                                                          return null;
-                                                        },
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: Row(
-                                                        children: <Widget>[
-                                                          FlatButton(
-                                                            child: Text("Cancel"), 
-                                                            onPressed: () {
-                                                              Navigator.of(context).pop();
-                                                            },
-                                                          ),
-                                                          Spacer(),
-                                                          RaisedButton(
-                                                            child: Text("Save"),
-                                                            color: ux.nowcastingColor,
-                                                            textColor: Colors.white,
-                                                            onPressed: () {
-                                                              if (_formKey.currentState.validate()) {
-                                                                _formKey.currentState.save();
-                                                                loc.savePlaces();
-                                                                rebuildCallback();
-                                                                Navigator.of(context).pop();
-                                                              }
-                                                            },
-                                                          ),
-                                                        ],
-                                                      )
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            elevation: 24.0,
-                                          );
+                                          
+                                          return editPopup();
                                         }
                                       );
                                     } ,
-                                  ),
-                                  Flexible( 
-                                    child: TextFormField(
-                                      controller: _nameTextController,
-                                      style: ux.latoWhite,
-                                      onChanged: (_content) {loc.placeNames[_index] = _content;},
-                                    )
-                                  ),
-                                  // TODO implement notifications and uncomment this button.
-                                  // it already works to toggle the boolean.
-                                  //IconButton(
-                                  //  icon: loc.notify[_index]
-                                  //    ? Icon(Icons.notifications_active, color: Colors.white)
-                                  //    : Icon(Icons.notifications_off, color: Colors.white),
-                                  //  onPressed: () {
-                                  //    _notifyPressed();
-                                  //    rebuildCallback();
-                                  //  },
-                                  //),
-                                  IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.white),
-                                    onPressed: () {
-                                      loc.places.removeAt(_index);
-                                      loc.placeNames.removeAt(_index);
-                                      loc.notify.removeAt(_index);
-                                      rebuildCallback();
-                                    },
-                                  ),
-                                ]
-                              ),
-                              imagery.coordOutOfBounds(_location)
-                                // If coordinates of the location are out of service range, display a message
-                                ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
-                                // Otherwise read the forecast images
-                                : populateForecast(),
-                            ]
-                          )
+                                ),
+                                _index == -1
+                                ? Expanded(child: Text("Current Location", textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis))
+                                : Flexible( 
+                                  child: TextFormField(
+                                    controller: _nameTextController,
+                                    style: ux.latoWhite,
+                                    onChanged: (_content) {loc.placeNames[_index] = _content;},
+                                  )
+                                ),
+                                // TODO implement notifications and uncomment this button.
+                                // it already works to toggle the boolean.
+                                //IconButton(
+                                //  icon: loc.notify[_index]
+                                //    ? Icon(Icons.notifications_active, color: Colors.white)
+                                //    : Icon(Icons.notifications_off, color: Colors.white),
+                                //  onPressed: () {
+                                //    _notifyPressed();
+                                //    rebuildCallback();
+                                //  },
+                                //),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.white),
+                                  onPressed: () {
+                                    loc.places.removeAt(_index);
+                                    loc.placeNames.removeAt(_index);
+                                    loc.notify.removeAt(_index);
+                                    rebuildCallback();
+                                  },
+                                ),
+                              ]
+                            ),
+                            imagery.coordOutOfBounds(_location)
+                              // If coordinates of the location are out of service range, display a message
+                              ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
+                              // Otherwise read the forecast images
+                              : populateForecast(),
+                          ]
                         )
                       )
-                    ],
-                  )
-                // If not editing for either card
+                    )
+                  ],
+                )
+                // If not editing
                 : Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
