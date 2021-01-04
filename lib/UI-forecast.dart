@@ -292,7 +292,7 @@ class ForecastSliver extends StatelessWidget {
     }
 
     // TODO location picker with a map instead of typing coordinates
-    AlertDialog editPopup() {
+    AlertDialog editPopup(bool _isEditable) {
       return AlertDialog(
         title: Text("Coordinates for '"+_locName+"'"),
         content: SingleChildScrollView( 
@@ -305,7 +305,9 @@ class ForecastSliver extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.all(8.0),
                   child: TextFormField(
-                    initialValue: loc.places[_index].latitude.toString(),
+                    initialValue: _isEditable
+                      ? loc.places[_index].latitude.toString()
+                      : loc.lastKnownLocation.latitude.toString(),
                     decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) {
@@ -319,12 +321,15 @@ class ForecastSliver extends StatelessWidget {
                       }
                       return null;
                     },
+                    readOnly: !_isEditable,
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.all(8.0),
                   child: TextFormField(
-                    initialValue: loc.places[_index].longitude.toString(),
+                    initialValue: _isEditable
+                      ? loc.places[_index].longitude.toString()
+                      : loc.lastKnownLocation.longitude.toString(),
                     decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) {
@@ -338,6 +343,7 @@ class ForecastSliver extends StatelessWidget {
                       }
                       return null;
                     },
+                    readOnly: !_isEditable,
                   ),
                 ),
                 Padding(
@@ -345,24 +351,38 @@ class ForecastSliver extends StatelessWidget {
                   child: Row(
                     children: <Widget>[
                       FlatButton(
-                        child: Text("Cancel"), 
+                        child: _isEditable
+                          ? Text("Cancel")
+                          : Text("Close"), 
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
                       ),
                       Spacer(),
                       RaisedButton(
-                        child: Text("Save"),
+                        child: _isEditable
+                          ? Text("Save")
+                          : Text("Update"),
                         color: ux.nowcastingColor,
                         textColor: Colors.white,
-                        onPressed: () {
-                          if (_formKey.currentState.validate()) {
-                            _formKey.currentState.save();
-                            loc.savePlaces();
+                        onPressed: _isEditable
+                          ? () {
+                            if (_formKey.currentState.validate()) {
+                              _formKey.currentState.save();
+                              loc.savePlaces();
+                              rebuildCallback();
+                              Navigator.of(context).pop();
+                            }
+                          }
+                          : () async {
+                            ux.showSnackBarIf(true, ux.updatingLocationSnack,context);
+                            bool _updateSucceeded = await loc.updateLastKnownLocation();
                             rebuildCallback();
                             Navigator.of(context).pop();
-                          }
-                        },
+                            _updateSucceeded
+                              ? ux.showSnackBarIf(true, ux.locationUpdatedSnack,context)
+                              : ux.showSnackBarIf(true, ux.locationOffSnack,context);
+                          },
                       ),
                     ],
                   )
@@ -500,58 +520,65 @@ class ForecastSliver extends StatelessWidget {
                           children: [
                             Row( 
                               children: [
-                                IconButton(
-                                  padding: EdgeInsets.all(6),
-                                  icon: _index == -1
-                                    ? Icon(Icons.location_searching, color: Colors.white)
-                                    : Icon(Icons.edit, color: Colors.white), 
-                                  onPressed: _index == -1 
-                                    // Update location when button pressed for the current location sliver
-                                    ? () async {
-                                      await loc.updateLastKnownLocation()
-                                        ? Timer(Duration(seconds: 8), () {rebuildCallback();})
-                                        : () {};
-                                    }
-                                    // Popup dialogue with form when edit button is pressed on other slivers
-                                    : () {
+                                _index == -1
+                                  ? IconButton(
+                                      icon: Icon(Icons.info, color: Colors.white),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return editPopup(false);
+                                          }
+                                        );
+                                      }
+                                    )
+                                  : IconButton(
+                                    padding: EdgeInsets.all(6),
+                                    icon: Icon(Icons.edit, color: Colors.white), 
+                                    onPressed: () {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
-                                          
-                                          return editPopup();
+                                          return editPopup(true);
                                         }
                                       );
                                     } ,
-                                ),
+                                  ),
                                 _index == -1
-                                ? Expanded(child: Text("Current Location", textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis))
-                                : Flexible( 
-                                  child: TextFormField(
-                                    controller: _nameTextController,
-                                    style: ux.latoWhite,
-                                    onChanged: (_content) {loc.placeNames[_index] = _content;},
-                                  )
-                                ),
+                                  ? Expanded(child: Text("Current Location", textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis))
+                                  : Flexible( 
+                                    child: TextFormField(
+                                      controller: _nameTextController,
+                                      style: ux.latoWhite,
+                                      onChanged: (_content) {loc.placeNames[_index] = _content;},
+                                    )
+                                  ),
                                 // TODO implement notifications and uncomment this button.
                                 // it already works to toggle the boolean.
-                                //IconButton(
-                                //  icon: loc.notify[_index]
-                                //    ? Icon(Icons.notifications_active, color: Colors.white)
-                                //    : Icon(Icons.notifications_off, color: Colors.white),
-                                //  onPressed: () {
-                                //    _notifyPressed();
-                                //    rebuildCallback();
-                                //  },
-                                //),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.white),
-                                  onPressed: () {
-                                    loc.places.removeAt(_index);
-                                    loc.placeNames.removeAt(_index);
-                                    loc.notify.removeAt(_index);
-                                    rebuildCallback();
-                                  },
-                                ),
+                                // IconButton(
+                                //     icon: _index == -1
+                                //        ? loc.notifyLoc
+                                //          ? Icon(Icons.notifications_active, color: Colors.white)
+                                //          : Icon(Icons.notifications_off, color: Colors.white),
+                                //        : loc.notify[_index]
+                                //          ? Icon(Icons.notifications_active, color: Colors.white)
+                                //          : Icon(Icons.notifications_off, color: Colors.white),
+                                //     onPressed: () {
+                                //       _notifyPressed();
+                                //       rebuildCallback();
+                                //     },
+                                // ),
+                                _index == -1
+                                  ? Spacer()
+                                  : IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.white),
+                                    onPressed: () {
+                                      loc.places.removeAt(_index);
+                                      loc.placeNames.removeAt(_index);
+                                      loc.notify.removeAt(_index);
+                                      rebuildCallback();
+                                    },
+                                  ),
                               ]
                             ),
                             imagery.coordOutOfBounds(_location)
