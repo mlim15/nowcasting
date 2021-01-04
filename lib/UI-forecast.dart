@@ -60,40 +60,13 @@ class ForecastScreenState extends State<ForecastScreen> {
       }
     });
   }
-
-  @override
-  void initState() {
-    super.initState();
-    // If initializing the screen with loading indicator, trigger
-    // a rebuild every 2 seconds until actual data is available
-    // and the screen can properly initialize. When this check occurs,
-    // ensure that we stop further refreshes if needed.
-    _forceRebuildTimer = Timer.periodic(Duration(seconds: 2), (time) {
-      print('forecast.ForecastScreenState.initState: decodedForecasts is empty, trying rebuild in 2 seconds');
-      setState(() {
-        if (imagery.decodedForecasts.isEmpty == false) {
-          if (_forceRebuildTimer != null) {
-            print('forecast.ForecastScreenState.initState: Successfully built. No need for rebuild timer, stopping.');
-            _forceRebuildTimer.cancel();
-          }
-        }
-      });
-    });
-    if (imagery.decodedForecasts.isEmpty == false) {
-      if (_forceRebuildTimer != null) {
-        print('forecast.ForecastScreenState.initState: Successfully built. No need for rebuild timer, stopping.');
-        _forceRebuildTimer.cancel();
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Forecast'),
         actions: <Widget>[
-          loc.places.isNotEmpty && imagery.decodedForecasts.isNotEmpty
+          loc.places.isNotEmpty
             ? IconButton(
               icon: _editing
                 ? Icon(Icons.done)
@@ -150,14 +123,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   child: Container(),
                 ),
               // Current location sliver
-              imagery.decodedForecasts.isEmpty
-                // Don't display anything if decodedForecasts is empty.
-                // This would cause a build error.
-                ? SliverToBoxAdapter( 
-                  child: Container(),
-                )
-                // If decodedForecasts isn't empty, we can safely build.
-                : loc.lastKnownLocation != null
+              loc.lastKnownLocation != null
                   // If current location is available
                   ? SliverPadding(
                     padding: const EdgeInsets.symmetric(vertical: 0.0),
@@ -193,58 +159,39 @@ class ForecastScreenState extends State<ForecastScreen> {
                     ),
                   ),
               // Slivers for stored locations
-              imagery.decodedForecasts.isEmpty //TODO || DateTime.parse(prefs.getString('lastDecoded')).isBefore(DateTime.parse(prefs.getString('lastLegendGen')))
-                ? SliverToBoxAdapter(
-                  child: Container(
-                    margin: ux.sliverMargins,
-                    height: ux.sliverHeight,
-                    width: 64,
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        Container(padding: EdgeInsets.symmetric(vertical: 8), child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor))),
-                        Container(padding: EdgeInsets.all(8), child: Text('Crunching the numbers...', style: ux.darkMode(context) ? ux.latoWhite : ux.latoBlue)),
-                      ]
-                    )
-                  )
-                )
-                : loc.places.isNotEmpty
-                  ? SliverPadding(
-                    padding: const EdgeInsets.symmetric(vertical: 0.0),
-                    sliver: SliverFixedExtentList(
-                      itemExtent: _editing
-                        ? ux.sliverHeightExpanded
-                        : ux.sliverHeight,
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => new ForecastSliver(loc.places[index], loc.placeNames[index], index, _editing, () {_rebuild();}),
-                        childCount: loc.places.length,
-                      ),
+              loc.places.isNotEmpty
+                ? SliverPadding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0),
+                  sliver: SliverFixedExtentList(
+                    itemExtent: _editing
+                      ? ux.sliverHeightExpanded
+                      : ux.sliverHeight,
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => new ForecastSliver(loc.places[index], loc.placeNames[index], index, _editing, () {_rebuild();}),
+                      childCount: loc.places.length,
                     ),
-                  )
-                  : SliverToBoxAdapter( 
-                    child: Container(),
                   ),
-              // Add location sliver
-              imagery.decodedForecasts.isEmpty
-                ? SliverToBoxAdapter( 
-                  child: Container(),
                 )
                 : SliverToBoxAdapter( 
-                child: GestureDetector(
-                  onTap: () {_addLocationPressed();},
-                  child: Container(
-                    margin: ux.sliverBottomMargins,
-                    child: Icon(Icons.add, color: Colors.white),
-                    height: ux.sliverTinyHeight,
-                    decoration: new BoxDecoration(
-                      color: Colors.grey,
-                      shape: BoxShape.rectangle,
-                      borderRadius: new BorderRadius.circular(8.0),
-                      boxShadow: [ux.sliverShadow],
-                    ),
+                  child: Container(),
+                ),
+              // Add location sliver
+              SliverToBoxAdapter( 
+              child: GestureDetector(
+                onTap: () {_addLocationPressed();},
+                child: Container(
+                  margin: ux.sliverBottomMargins,
+                  child: Icon(Icons.add, color: Colors.white),
+                  height: ux.sliverTinyHeight,
+                  decoration: new BoxDecoration(
+                    color: Colors.grey,
+                    shape: BoxShape.rectangle,
+                    borderRadius: new BorderRadius.circular(8.0),
+                    boxShadow: [ux.sliverShadow],
                   ),
-                )
+                ),
               )
+            )
             ],
           ),
         )
@@ -396,41 +343,62 @@ class ForecastSliver extends StatelessWidget {
     }
 
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
-    // TODO garbage collect between each item decoding to minimize peak ram usage,
-    // currently this is causing crashes on low ram devices
-    Widget populateForecast() {
+    Future<Widget> populateForecast() async {
+      List<int> _pixelValues = [];
+      List<int> _latLng = imagery.geoToPixel(_location.latitude, _location.longitude);
+      int _x = _latLng[0];
+      int _y = _latLng[1];
+      for (int _i = 0; _i <= 8; _i++) {
+        _pixelValues.add(await imagery.getPixelValue(_x, _y, _i));
+      }
+      if (_pixelValues.contains(null)) {
+        return Text("Error, decoding timed out.");
+      }
       return SingleChildScrollView(
-        scrollDirection: Axis.horizontal, 
-        child: Row(
-          children: [ for (int _i = 0; _i <= 8; _i++)
-            Container(
-              padding: EdgeInsets.all(8),
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    child: imagery.dec2icon(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: new BorderRadius.circular(8.0),
-                      color: imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)).opacity == 0
-                        ? Color(0xFF000000)
-                        : imagery.dec2hex(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i))
-                    ),
+      scrollDirection: Axis.horizontal, 
+      child: Row(
+        children: [ for (int _i = 0; _i <= 8; _i++)
+          Container(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.all(2),
+                  child: imagery.dec2icon(_pixelValues[_i]),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    borderRadius: new BorderRadius.circular(8.0),
+                    color: imagery.dec2hex(_pixelValues[_i]).opacity == 0 
+                      ? Color(0xFF000000)
+                      : imagery.dec2hex(_pixelValues[_i])
                   ),
-                  Container(
-                    child: Text(
-                      imagery.dec2desc(imagery.getPixelValue(imagery.geoToPixel(_location.latitude, _location.longitude)[0], imagery.geoToPixel(_location.latitude, _location.longitude)[1], _i)), 
-                      style: ux.latoWhite
-                    ), 
-                  ),
-                  Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                  Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                ]
-              )
+                ),
+                Container(
+                  child: Text(
+                    imagery.dec2desc(_pixelValues[_i]), 
+                    style: ux.latoWhite
+                  ), 
+                ),
+                Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+              ]
             )
-          ],
-        ) 
+          )
+        ],
+      ) 
+    );
+    }
+
+    Widget futureBuilder() {
+      return FutureBuilder<Widget>(
+        future: populateForecast(), 
+        builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white));
+          } else {
+            return snapshot.data; 
+          }
+        },
       );
     }
 
@@ -585,7 +553,7 @@ class ForecastSliver extends StatelessWidget {
                               // If coordinates of the location are out of service range, display a message
                               ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                               // Otherwise read the forecast images
-                              : populateForecast(),
+                              : futureBuilder()
                           ]
                         )
                       )
@@ -609,7 +577,7 @@ class ForecastSliver extends StatelessWidget {
                               // If coordinates of the location are out of service range, display a message
                               ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                               // Otherwise read the forecast images
-                              : populateForecast(),
+                              : futureBuilder()
                           ]
                         )
                       )

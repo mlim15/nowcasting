@@ -93,6 +93,7 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   }
 }
 
+// TODO find a way to parallelize and still keep track of when all jobs are done
 remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   ux.showSnackBarIf(notSilent, ux.checkingSnack, context, 'update.remoteImagery: Starting image update process');
   if (forceRefresh) {
@@ -132,21 +133,71 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
 
 // Local product updates
 forecasts() async {
-  List<File> _forecastImages = [];
-  for (int i = 0; i <= 8; i++) {
-    if (await io.localFile('forecast.$i.png').exists()) {
-      _forecastImages.add(io.localFile('forecast.$i.png'));
-    } else {
-      throw('update.forecasts: Expected file forecast.$i.png does not exist. Stopping');
-    }
+  for (int _i = 0; _i <= 8; _i++) {
+    // Check if the local png is newer than the decoded image
+    // Need to check if file exists before doing this
+    //DateTime pngLastModified = (await io.localFile('forecast.$_i.png').lastModified()).toUtc();
+    //DateTime rawLastModified = (await io.localFile('decodedForecast.$_i.raw').lastModified()).toUtc();
+    //bool updateAvailable = rawLastModified.isBefore(pngLastModified);
+    forecast(_i);
   }
-  imagery.decodedForecasts = await compute(bgForecasts, _forecastImages);
-  await imagery.saveDecodedForecasts(imagery.decodedForecasts);
-  // TODO This was to be used as a secondary method to determine when to show loading indicator on forecast screen
-  // Otherwise refreshing on map screen and swapping to forecast can show old forecast with new legend
-  //prefs.setString('lastDecoded', DateTime.now().toUtc().toString());
 }
 
+forecast(int _i) async {
+  // First set it to null while it decodes. This lets the future builder know
+  // that the image isn't ready yet if it's trying to build.
+  if (_i == 0) {
+    imagery.decoded0 = null; 
+  } else if (_i == 1) {
+    imagery.decoded1 = null; 
+  } else if (_i == 2) {
+    imagery.decoded2 = null; 
+  } else if (_i == 3) {
+    imagery.decoded3 = null; 
+  } else if (_i == 4) {
+    imagery.decoded4 = null; 
+  } else if (_i == 5) {
+    imagery.decoded5 = null; 
+  } else if (_i == 6) {
+    imagery.decoded6 = null; 
+  } else if (_i == 7) {
+    imagery.decoded7 = null; 
+  } else if (_i == 8) {
+    imagery.decoded8 = null; 
+  }
+  // Then update the decoded image as long as the corresponding png exists to decode.
+  // Once the image is decoded, save it to disk as a raw file.
+  // Then update its corresponding legend based on the update time.
+  if (await io.localFile('forecast.$_i.png').exists()) {
+    imglib.Image decodedSingleForecast = await compute(bgForecast, io.localFile('forecast.$_i.png'));
+    if (_i == 0) {
+      imagery.decoded0 = decodedSingleForecast; 
+    } else if (_i == 1) {
+      imagery.decoded1 = decodedSingleForecast; 
+    } else if (_i == 2) {
+      imagery.decoded2 = decodedSingleForecast; 
+    } else if (_i == 3) {
+      imagery.decoded3 = decodedSingleForecast; 
+    } else if (_i == 4) {
+      imagery.decoded4 = decodedSingleForecast; 
+    } else if (_i == 5) {
+      imagery.decoded5 = decodedSingleForecast; 
+    } else if (_i == 6) {
+      imagery.decoded6 = decodedSingleForecast; 
+    } else if (_i == 7) {
+      imagery.decoded7 = decodedSingleForecast; 
+    } else if (_i == 8) {
+      imagery.decoded8 = decodedSingleForecast; 
+    }    
+    await imagery.saveDecodedForecast(decodedSingleForecast, _i);
+  } else {
+    throw('update.forecast: Expected file forecast.$_i.png does not exist. Stopping');
+  }
+}
+
+// TODO change legends to come from decoded forecast file mod times instead. Doing this currently breaks something somewhere,
+// so the original functionality has been left here for now. However, the current solution means that legends and displayed forecasts
+// could be mismatched.
 legends() async {
   List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
@@ -157,26 +208,16 @@ legends() async {
     }
   }
   imagery.legends = await compute(bgLegends, _filesLastMod);
-  // TODO This was to be used as a secondary method to determine when to show loading indicator on forecast screen
-  // Otherwise refreshing on map screen and swapping to forecast can show old forecast with new legend
-  //prefs.setString('lastLegendGen', DateTime.now().toUtc().toString());
 }
 
 // Local product update isolate helper functions (for backgrounding)
-// TODO see if we can decode and save each image one at a time
-// to reduce memory pressure on low-performance devices
-// as well as hopefully allow resumption of the process when the app is
-// relaunched
-FutureOr<List<imglib.Image>> bgForecasts(List<File> _files) async {
-  List<imglib.Image> _forecasts = [];
+FutureOr<imglib.Image> bgForecast(File _file) async {
+  imglib.Image _forecast;
   imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-  print('update.forecasts: Starting update process');
-  for (int i = 0; i <= 8; i++) {
-    print('update.forecasts: decoding image $i of 9');
-    _forecasts.add(pngDecoder.decodeImage(await _files[i].readAsBytes()));
-  }
-  print('update.forecasts: Done decoding images');
-  return _forecasts;
+  print('update.forecasts: Decoding image '+_file.path);
+  _forecast = pngDecoder.decodeImage(await _file.readAsBytes());
+  print('update.forecasts: Done decoding image '+_file.path);
+  return _forecast;
 }
 
 FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {

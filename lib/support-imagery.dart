@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
@@ -77,8 +78,16 @@ final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Ra
 final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
 
 // Arrays storing local products derived from nowcasting data
-List<imglib.Image> decodedForecasts = [];
-// TODO add separate legends array for forecast screen that is updated only as images are decoded to prevent mismatched legend/data on forecast screen
+// These decoded images are very big so we don't use an array, that would require all to be in memory even when we only need one
+imglib.Image decoded0;
+imglib.Image decoded1;
+imglib.Image decoded2;
+imglib.Image decoded3;
+imglib.Image decoded4;
+imglib.Image decoded5;
+imglib.Image decoded6;
+imglib.Image decoded7;
+imglib.Image decoded8;
 List<String> legends = [];
 
 // Functions that take decimal AABBGGRR values queried from the data products
@@ -112,40 +121,80 @@ Color dec2hex(int _dec) {
 // taking up to a minute on slower devices. This saves loading time and battery when compared
 // with decoding the png on every launch, in exchange for eating up what is probably 
 // an unreasonable amount of disk space.
-saveDecodedForecasts(List<imglib.Image> _decodedForecasts) async {
+saveDecodedForecasts() async {
   for (int i = 0; i <= 8; i++) {
     print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
-    File _file = io.localFile('decodedForecast.$i.raw');
-    _file.writeAsBytes(_decodedForecasts[i].getBytes());
+    i == 0
+      ? saveDecodedForecast(decoded0, i)
+      : i == 1
+        ? saveDecodedForecast(decoded1, i)
+        : i == 2
+          ? saveDecodedForecast(decoded2, i)
+          : i == 3
+            ? saveDecodedForecast(decoded3, i)
+            : i == 4
+              ? saveDecodedForecast(decoded4, i)
+              : i == 5
+                ? saveDecodedForecast(decoded5, i)
+                : i == 6
+                  ? saveDecodedForecast(decoded6, i)
+                  : i == 7
+                    ? saveDecodedForecast(decoded7, i)
+                    : i == 8
+                      ? saveDecodedForecast(decoded8, i)
+                      : () {};
   }
   print('imagery.saveDecodedForecasts: Finished saving decoded images');
 }
 
-loadDecodedForecasts() async {
-  List<imglib.Image> _decodedForecasts = [];
+saveDecodedForecast(imglib.Image _decodedForecast, int _index) async {
+  File _file = io.localFile('decodedForecast.$_index.raw');
+  _file.writeAsBytes(_decodedForecast.getBytes());
+}
+
+loadDecodedForecast(int _i) async {
   try {
-    // First check to make sure none of the local images are newer than the local
-    // decoded images. This could happen if the user closes the app while the images are decoding,
+    // First check to make sure the local image is newer than the local
+    // decoded image. This could happen if the user closes the app while the images are decoding,
     // or while the decoded images are being saved.
-    for (int i = 0; i <= 8; i++) {
-      DateTime _forecastLastMod = io.localFile('forecast.$i.png').lastModifiedSync();
-      DateTime _decodedLastMod = io.localFile('decodedForecast.$i.raw').lastModifiedSync();
-      if (_decodedLastMod.isBefore(_forecastLastMod)) {
-        throw('imagery.loadDecodedForecasts: locally cached decoded images are outdated compared to local pngs');
-      }
+    DateTime _forecastLastMod = io.localFile('forecast.$_i.png').lastModifiedSync();
+    DateTime _decodedLastMod = io.localFile('decodedForecast.$_i.raw').lastModifiedSync();
+    if (_decodedLastMod.isBefore(_forecastLastMod)) {
+      throw('imagery.loadDecodedForecast: locally cached decoded image $_i is outdated compared to local png');
     }
-    // If none of them are outdated, load them from disk
-    for (int i = 0; i <= 8; i++) {
-      print('imagery.loadDecodedForecasts: Loading previously decoded image $i (9 total)');
-      File _file = io.localFile('decodedForecast.$i.raw');
-      _decodedForecasts.add(imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync()));
-    }
-    decodedForecasts = _decodedForecasts;
+    // If it's not outdated, load it from disk
+    File _file = io.localFile('decodedForecast.$_i.raw');
+    _i == 0
+      ? decoded0 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+      : _i == 1
+        ? decoded1 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+        : _i == 2
+          ? decoded2 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+          : _i == 3
+            ? decoded3 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+            : _i == 4
+              ? decoded4 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+              : _i == 5
+                ? decoded5 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+                : _i == 6
+                  ? decoded6 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+                  : _i == 7
+                    ? decoded7 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+                    : _i == 8
+                      ? decoded8 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
+                      : () {};
   } catch (e) {
-    print('imagery.loadDecodedForecasts: Error loading previously decoded images, triggering full refresh: '+e.toString());
+    print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
     // If encountering an error, trigger the decoding of the pngs all over again.
-    update.forecasts();
+    // TODO await?
+    update.forecast(_i);
     return;
+  }
+}
+
+loadDecodedForecasts() async {
+  for (int i = 0; i <= 8; i++) {
+    loadDecodedForecast(i);
   }
   print('imagery.loadDecodedForecasts: Finished loading previously decoded images');
 }
@@ -191,7 +240,31 @@ bool coordOutOfBounds(LatLng coord) {
   }
   return false;
 }
-
-getPixelValue(int x, int y, int index) {
-  return decodedForecasts[index].getPixelSafe(x, y);
+Future<int> getPixelValue(int x, int y, int index, {int maxRetries = 30, int retryCount = 0}) async {
+  if (retryCount >= maxRetries) {
+    return null;
+  }
+  // Make sure decoded$index is non-null
+  if (index == 0 && decoded0 != null) {
+    return decoded0.getPixelSafe(x, y);
+  } else if (index == 1 && decoded1 != null) {
+    return decoded1.getPixelSafe(x, y);
+  } else if (index == 2 && decoded2 != null) {
+    return decoded2.getPixelSafe(x, y);
+  } else if (index == 3 && decoded3 != null) {
+    return decoded3.getPixelSafe(x, y);
+  } else if (index == 4 && decoded4 != null) {
+    return decoded4.getPixelSafe(x, y);
+  } else if (index == 5 && decoded5 != null) {
+    return decoded5.getPixelSafe(x, y);
+  } else if (index == 6 && decoded6 != null) {
+    return decoded6.getPixelSafe(x, y);
+  } else if (index == 7 && decoded7 != null) {
+    return decoded7.getPixelSafe(x, y);
+  } else if (index == 8 && decoded8 != null) {
+    return decoded8.getPixelSafe(x, y);
+  } else {
+    await Future.delayed(const Duration(milliseconds: 500));
+    return getPixelValue(x, y, index, retryCount: retryCount+1);
+  }
 }
