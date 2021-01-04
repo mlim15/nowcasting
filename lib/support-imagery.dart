@@ -124,25 +124,25 @@ Color dec2hex(int _dec) {
 saveDecodedForecasts() async {
   for (int i = 0; i <= 8; i++) {
     print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
-    i == 0
-      ? saveDecodedForecast(decoded0, i)
-      : i == 1
-        ? saveDecodedForecast(decoded1, i)
-        : i == 2
-          ? saveDecodedForecast(decoded2, i)
-          : i == 3
-            ? saveDecodedForecast(decoded3, i)
-            : i == 4
-              ? saveDecodedForecast(decoded4, i)
-              : i == 5
-                ? saveDecodedForecast(decoded5, i)
-                : i == 6
-                  ? saveDecodedForecast(decoded6, i)
-                  : i == 7
-                    ? saveDecodedForecast(decoded7, i)
-                    : i == 8
-                      ? saveDecodedForecast(decoded8, i)
-                      : () {};
+    if (i == 0) {
+      saveDecodedForecast(decoded0, i);
+    } else if (i == 1) {
+      saveDecodedForecast(decoded1, i);
+    } else if (i == 2) {
+      saveDecodedForecast(decoded2, i);
+    } else if (i == 3) {
+      saveDecodedForecast(decoded3, i);
+    } else if (i == 4) {
+      saveDecodedForecast(decoded4, i);
+    } else if (i == 5) {
+      saveDecodedForecast(decoded5, i);
+    } else if (i == 6) {
+      saveDecodedForecast(decoded6, i);
+    } else if (i == 7) {
+      saveDecodedForecast(decoded7, i);
+    } else if (i == 8) {
+      saveDecodedForecast(decoded8, i);
+    }
   }
   print('imagery.saveDecodedForecasts: Finished saving decoded images');
 }
@@ -164,25 +164,25 @@ loadDecodedForecast(int _i) async {
     }
     // If it's not outdated, load it from disk
     File _file = io.localFile('decodedForecast.$_i.raw');
-    _i == 0
-      ? decoded0 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-      : _i == 1
-        ? decoded1 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-        : _i == 2
-          ? decoded2 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-          : _i == 3
-            ? decoded3 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-            : _i == 4
-              ? decoded4 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-              : _i == 5
-                ? decoded5 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-                : _i == 6
-                  ? decoded6 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-                  : _i == 7
-                    ? decoded7 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-                    : _i == 8
-                      ? decoded8 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync())
-                      : () {};
+    if (_i == 0) {
+      decoded0 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 1) {
+      decoded1 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 2) {
+      decoded2 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 3) {
+      decoded3 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 4) {
+      decoded4 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 5) {
+      decoded5 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 6) {
+      decoded6 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 7) {
+      decoded7 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    } else if (_i == 8) {
+      decoded8 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
+    }
   } catch (e) {
     print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
     // If encountering an error, trigger the decoding of the pngs all over again.
