@@ -15,7 +15,6 @@ dependencies:
   flutter_map: ^0.10.0
   dio: ^3.0.9
   location: ^3.0.2
-  image: any
   introduction_screen: ^1.0.7
   shared_preferences: '>=0.5.7+3'
   flutter_progress_button: '^0.6.4'

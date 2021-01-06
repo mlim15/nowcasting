@@ -3,12 +3,10 @@ import 'dart:math';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as imglib;
 import 'package:latlong/latlong.dart';
 
 import 'package:Nowcasting/main.dart';
 import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-update.dart' as update;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Details relevant to nowcasting imagery products - pixel dimensions
