@@ -1,7 +1,7 @@
 # MAPLE Nowcasting
 <img src="https://github.com/the-salami/nowcasting/raw/master/assets/launcher/icon_android.png" width="128" height="128" />
 
-This repository contains a Flutter app for Android and iOS that facilitates access to [precipitation nowcasting data](https://radar.mcgill.ca/imagery/nowcasting.html) provided by [McGill University](https://mcgill.ca/)'s J.S. Marshall Radar Observatory.
+This repository contains a Flutter app for Android that facilitates access to [precipitation nowcasting data](https://radar.mcgill.ca/imagery/nowcasting.html) provided by [McGill University](https://mcgill.ca/)'s J.S. Marshall Radar Observatory.
 
 <a href="https://play.google.com/store/apps/details?id=com.github.the_salami.nowcasting">
     <img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" 
