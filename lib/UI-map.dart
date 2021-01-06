@@ -273,7 +273,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 lineWidth: 4.0,
                 circularStrokeCap: CircularStrokeCap.round,
                 percent: _count/8,
-                center: imagery.legends.length == 9 
+                center: (!imagery.legends.contains(null))
                   ? Text(imagery.legends[_count].substring(imagery.legends[_count].length - 12, imagery.legends[_count].length - 7), style: ux.latoWhite.merge(TextStyle(color: Theme.of(context).textTheme.bodyText1.color))) 
                   : Text("...", style: ux.latoWhite),
                 progressColor: Theme.of(context).accentColor,

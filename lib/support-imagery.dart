@@ -88,7 +88,7 @@ imglib.Image decoded5;
 imglib.Image decoded6;
 imglib.Image decoded7;
 imglib.Image decoded8;
-List<String> legends = [];
+List<String> legends = new List(9);
 
 // Functions that take decimal AABBGGRR values queried from the data products
 // and provide the corresponding hex color, icon, or text description
@@ -149,7 +149,13 @@ saveDecodedForecasts() async {
 
 saveDecodedForecast(imglib.Image _decodedForecast, int _index) async {
   File _file = io.localFile('decodedForecast.$_index.raw');
-  _file.writeAsBytes(_decodedForecast.getBytes());
+  try {
+    _file.writeAsBytes(_decodedForecast.getBytes());
+  } catch(e) {
+    print('imagery.saveDecodedForecast: failed to save forecast $_index due to error: $e');
+    return;
+  }
+  print('imagery.saveDecodedForecast: saved forecast $_index successfully.');
 }
 
 loadDecodedForecast(int _i) async {
@@ -185,7 +191,7 @@ loadDecodedForecast(int _i) async {
     }
   } catch (e) {
     print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
-    // If encountering an error, trigger the decoding of the pngs all over again.
+    // If encountering an error, trigger the decoding of the png all over again.
     update.forecast(_i);
     return;
   }
@@ -243,27 +249,35 @@ Future<int> getPixelValue(int x, int y, int index, {int maxRetries = 30, int ret
   if (retryCount >= maxRetries) {
     return null;
   }
-  // Make sure decoded$index is non-null
-  if (index == 0 && decoded0 != null) {
-    return decoded0.getPixelSafe(x, y);
-  } else if (index == 1 && decoded1 != null) {
-    return decoded1.getPixelSafe(x, y);
-  } else if (index == 2 && decoded2 != null) {
-    return decoded2.getPixelSafe(x, y);
-  } else if (index == 3 && decoded3 != null) {
-    return decoded3.getPixelSafe(x, y);
-  } else if (index == 4 && decoded4 != null) {
-    return decoded4.getPixelSafe(x, y);
-  } else if (index == 5 && decoded5 != null) {
-    return decoded5.getPixelSafe(x, y);
-  } else if (index == 6 && decoded6 != null) {
-    return decoded6.getPixelSafe(x, y);
-  } else if (index == 7 && decoded7 != null) {
-    return decoded7.getPixelSafe(x, y);
-  } else if (index == 8 && decoded8 != null) {
-    return decoded8.getPixelSafe(x, y);
-  } else {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return getPixelValue(x, y, index, retryCount: retryCount+1);
+  try {
+    if (index == 0 && decoded0 != null) {
+      return decoded0.getPixelSafe(x, y);
+    } else if (index == 1 && decoded1 != null) {
+      return decoded1.getPixelSafe(x, y);
+    } else if (index == 2 && decoded2 != null) {
+      return decoded2.getPixelSafe(x, y);
+    } else if (index == 3 && decoded3 != null) {
+      return decoded3.getPixelSafe(x, y);
+    } else if (index == 4 && decoded4 != null) {
+      return decoded4.getPixelSafe(x, y);
+    } else if (index == 5 && decoded5 != null) {
+      return decoded5.getPixelSafe(x, y);
+    } else if (index == 6 && decoded6 != null) {
+      return decoded6.getPixelSafe(x, y);
+    } else if (index == 7 && decoded7 != null) {
+      return decoded7.getPixelSafe(x, y);
+    } else if (index == 8 && decoded8 != null) {
+      return decoded8.getPixelSafe(x, y);
+    } else {
+      await Future.delayed(const Duration(milliseconds: 500));
+      return getPixelValue(x, y, index, retryCount: retryCount+1);
+    }
+  } catch(e) {
+    print('update.getPixelValue: Encountered error $e. Returning 0');
+    return 0;
+    //await update.forecast(index);
+    //return getPixelValue(x, y, index, retryCount: retryCount+1);
   }
+  
+
 }

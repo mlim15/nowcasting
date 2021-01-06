@@ -93,7 +93,6 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   }
 }
 
-// TODO find a way to parallelize and still keep track of when all jobs are done
 remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   ux.showSnackBarIf(notSilent, ux.checkingSnack, context, 'update.remoteImagery: Starting image update process');
   if (forceRefresh) {
@@ -131,21 +130,128 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
   }
 }
 
-// Local product updates
+remoteImage(bool forceRefresh, int i) async {
+  try {
+    if (forceRefresh || await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFile('forecast.$i.png'))) {
+      await downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFilePath('forecast.$i.png'));
+    } else {
+      return false;
+    }
+  } catch(e) {
+    return false;
+  }
+  return true;
+}
+
+// Global array and enum definition used to track status of jobs for each image
+enum completionStatus {
+  success,
+  unnecessary,
+  failure,
+  inProgress
+}
+List<completionStatus> imageUpdateStatus = new List(9);
+
+bool isSuccess(dynamic element) {
+  if (element == completionStatus.success) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool isUnnecessary(dynamic element) {
+  if (element == completionStatus.unnecessary) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool isComplete(dynamic element) {
+  if (element == completionStatus.success || element == completionStatus.unnecessary) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// Full local product generation from start to finish
+completeUpdate(BuildContext context, bool forceRefresh, bool notSilent) async {
+  // The actual update process
+  print('update.completeUpdate: Starting update process.');
+  for (int _i = 0; _i <= 8; _i++) {
+    completeUpdateSingleImage(_i);
+  }
+  // All the garbage we use to determine when the job is actually done
+  // and give feedback to the user.
+  int _counter = 0;
+  int _maxTries = 30;
+  while(true) {
+    // Every 500 ms proceed to check to see if any ending condition is true.
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Check to see if we have exceeded the max waiting time.
+    if (_counter >= _maxTries) {
+      ux.showSnackBarIf(notSilent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
+      return false;
+    }
+    if (imageUpdateStatus.every(isSuccess)) {
+        // Then the update has fully succeeded.
+        // Display success snackbar and return true
+        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+        return true;
+      } else if (imageUpdateStatus.contains(completionStatus.failure)) {
+        // Then we know the update has failed somewhere.
+        ux.showSnackBarIf(notSilent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
+        return false;
+      } else if (imageUpdateStatus.every(isUnnecessary)) {
+        // Then the update was not necessary. Tell the user so.
+        ux.showSnackBarIf(notSilent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
+        return false;
+      } else if (imageUpdateStatus.every(isComplete)) {
+        // Perhaps we have a mix of only success and unnecessary. In this case, just display to the user as a success.
+        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+        return true;
+      } else {
+        // Otherwise continue to wait until any of the above situations is true,
+        // or we time out.
+        _counter += 1;
+      }
+  }
+}
+
+completeUpdateSingleImage(int index) async {
+  imageUpdateStatus[index] = completionStatus.inProgress;
+  try {
+    // First check for remote update for the image and download it if necessary.
+    if (await remoteImage(false, index)) {
+      // If an update occurred, then also update its legend and forecast.
+      legend(index);
+      await forecast(index);
+      imageUpdateStatus[index] = completionStatus.success;
+      return true;
+    } else {
+      // No update was needed for the image.
+      imageUpdateStatus[index] = completionStatus.unnecessary;
+      return false;
+    }
+  } catch(e) {
+    print('update.completeUpdateSingleImage: Error updating image $index: '+e.toString());
+    imageUpdateStatus[index] = completionStatus.failure;
+    return false;
+  }
+}
+
+// Local product update helper functions
 forecasts() async {
   for (int _i = 0; _i <= 8; _i++) {
-    // Check if the local png is newer than the decoded image
-    // Need to check if file exists before doing this
-    //DateTime pngLastModified = (await io.localFile('forecast.$_i.png').lastModified()).toUtc();
-    //DateTime rawLastModified = (await io.localFile('decodedForecast.$_i.raw').lastModified()).toUtc();
-    //bool updateAvailable = rawLastModified.isBefore(pngLastModified);
     forecast(_i);
   }
 }
 
 forecast(int _i) async {
-  // First set it to null while it decodes. This lets the future builder know
-  // that the image isn't ready yet if it's trying to build.
+  // First set it to null while it decodes. This lets the future builder on the forecast screen 
+  // know that the image isn't ready yet if it's trying to build.
   if (_i == 0) {
     imagery.decoded0 = null; 
   } else if (_i == 1) {
@@ -195,6 +301,18 @@ forecast(int _i) async {
   }
 }
 
+legend(int i) async {
+  DateTime _fileLastMod;
+  if (await io.localFile('forecast.$i.png').exists()) {
+    _fileLastMod = io.localFile('forecast.$i.png').lastModifiedSync();
+  } else {
+    throw('update.legends: Expected file forecast.$i.png does not exist. Stopping');
+  }
+  String _newLegend = _fileLastMod.toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString();
+  imagery.legends[i] = _newLegend;
+  print("update.legend: Legend "+_newLegend+" inferred from file forecast.$i.png last modified date");
+}
+
 legends() async {
   List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
@@ -208,9 +326,9 @@ legends() async {
 }
 
 // Local product update isolate helper functions (for backgrounding)
+imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
 FutureOr<imglib.Image> bgForecast(File _file) async {
   imglib.Image _forecast;
-  imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
   print('update.forecasts: Decoding image '+_file.path);
   _forecast = pngDecoder.decodeImage(await _file.readAsBytes());
   print('update.forecasts: Done decoding image '+_file.path);
