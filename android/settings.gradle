@@ -1,4 +1,4 @@
-include ':app'
+include ':app', ':pngj-2.1.1'
 
 def flutterProjectRoot = rootProject.projectDir.parentFile.toPath()
 

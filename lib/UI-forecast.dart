@@ -82,7 +82,6 @@ class ForecastScreenState extends State<ForecastScreen> {
             await update.radarOutages();
             if (await update.remoteImagery(context, false, true)) {
               await update.legends();
-              await update.forecasts();
             }
             _rebuild();
           },
@@ -346,7 +345,7 @@ class ForecastSliver extends StatelessWidget {
       int _x = _latLng[0];
       int _y = _latLng[1];
       for (int _i = 0; _i <= 8; _i++) {
-        _pixelValues.add(await imagery.getPixelValue(_x, _y, _i));
+        _pixelValues.add(await imagery.getPixel(_x, _y, _i));
       }
       if (_pixelValues.contains(null)) {
         return Text("Error, decoding timed out.");

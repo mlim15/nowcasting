@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:latlong/latlong.dart';
 
+import 'package:Nowcasting/main.dart';
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -77,17 +78,6 @@ final colorsDec = [l1dec, l2dec, l3dec, l4dec, l5dec, l6dec, l7dec, l8dec, l9dec
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Light Snow", "Snow", "Snow", "Heavy Snow", "Blizzard", "Wet Blizzard"];
 final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
 
-// Arrays storing local products derived from nowcasting data
-// These decoded images are very big so we don't use an array, that would require all to be in memory even when we only need one
-imglib.Image decoded0;
-imglib.Image decoded1;
-imglib.Image decoded2;
-imglib.Image decoded3;
-imglib.Image decoded4;
-imglib.Image decoded5;
-imglib.Image decoded6;
-imglib.Image decoded7;
-imglib.Image decoded8;
 List<String> legends = [];
 
 // Functions that take decimal AABBGGRR values queried from the data products
@@ -114,88 +104,6 @@ Color dec2hex(int _dec) {
   _aabbggrr = _aabbggrr.padRight(8,'0');
   String _aarrggbb = _aabbggrr.substring(0,2)+_aabbggrr.substring(6,8)+_aabbggrr.substring(4,6)+_aabbggrr.substring(2,4);
   return Color(int.parse(_aarrggbb, radix: 16));
-}
-
-// Saving and loading raw decoded AABBGGRR images to/from disk.
-// Decompressing and decoding AARRGGBB png to uncompressed AABBGGRR is computationally expensive,
-// taking up to a minute on slower devices. This saves loading time and battery when compared
-// with decoding the png on every launch, in exchange for eating up what is probably 
-// an unreasonable amount of disk space.
-saveDecodedForecasts() async {
-  for (int i = 0; i <= 8; i++) {
-    print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
-    if (i == 0) {
-      saveDecodedForecast(decoded0, i);
-    } else if (i == 1) {
-      saveDecodedForecast(decoded1, i);
-    } else if (i == 2) {
-      saveDecodedForecast(decoded2, i);
-    } else if (i == 3) {
-      saveDecodedForecast(decoded3, i);
-    } else if (i == 4) {
-      saveDecodedForecast(decoded4, i);
-    } else if (i == 5) {
-      saveDecodedForecast(decoded5, i);
-    } else if (i == 6) {
-      saveDecodedForecast(decoded6, i);
-    } else if (i == 7) {
-      saveDecodedForecast(decoded7, i);
-    } else if (i == 8) {
-      saveDecodedForecast(decoded8, i);
-    }
-  }
-  print('imagery.saveDecodedForecasts: Finished saving decoded images');
-}
-
-saveDecodedForecast(imglib.Image _decodedForecast, int _index) async {
-  File _file = io.localFile('decodedForecast.$_index.raw');
-  _file.writeAsBytes(_decodedForecast.getBytes());
-}
-
-loadDecodedForecast(int _i) async {
-  try {
-    // First check to make sure the local image is newer than the local
-    // decoded image. This could happen if the user closes the app while the images are decoding,
-    // or while the decoded images are being saved.
-    DateTime _forecastLastMod = io.localFile('forecast.$_i.png').lastModifiedSync();
-    DateTime _decodedLastMod = io.localFile('decodedForecast.$_i.raw').lastModifiedSync();
-    if (_decodedLastMod.isBefore(_forecastLastMod)) {
-      throw('imagery.loadDecodedForecast: locally cached decoded image $_i is outdated compared to local png');
-    }
-    // If it's not outdated, load it from disk
-    File _file = io.localFile('decodedForecast.$_i.raw');
-    if (_i == 0) {
-      decoded0 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 1) {
-      decoded1 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 2) {
-      decoded2 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 3) {
-      decoded3 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 4) {
-      decoded4 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 5) {
-      decoded5 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 6) {
-      decoded6 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 7) {
-      decoded7 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 8) {
-      decoded8 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    }
-  } catch (e) {
-    print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
-    // If encountering an error, trigger the decoding of the pngs all over again.
-    update.forecast(_i);
-    return;
-  }
-}
-
-loadDecodedForecasts() async {
-  for (int i = 0; i <= 8; i++) {
-    loadDecodedForecast(i);
-  }
-  print('imagery.loadDecodedForecasts: Finished loading previously decoded images');
 }
 
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
@@ -239,31 +147,18 @@ bool coordOutOfBounds(LatLng coord) {
   }
   return false;
 }
-Future<int> getPixelValue(int x, int y, int index, {int maxRetries = 30, int retryCount = 0}) async {
-  if (retryCount >= maxRetries) {
-    return null;
+
+Future<int> getPixel(int _x, int _y, int _index) async {
+    int _result;
+    File _file = io.localFile('forecast.$_index.png');
+    try {
+      _result = await platform.invokeMethod('getPixel', <String, dynamic>{
+        "fileName": _file.path.toString(), 
+        "xCoord": _x, 
+        "ycoord": _y,
+      });
+    } catch (e) {
+      print(e);
+    }
+    return _result;
   }
-  // Make sure decoded$index is non-null
-  if (index == 0 && decoded0 != null) {
-    return decoded0.getPixelSafe(x, y);
-  } else if (index == 1 && decoded1 != null) {
-    return decoded1.getPixelSafe(x, y);
-  } else if (index == 2 && decoded2 != null) {
-    return decoded2.getPixelSafe(x, y);
-  } else if (index == 3 && decoded3 != null) {
-    return decoded3.getPixelSafe(x, y);
-  } else if (index == 4 && decoded4 != null) {
-    return decoded4.getPixelSafe(x, y);
-  } else if (index == 5 && decoded5 != null) {
-    return decoded5.getPixelSafe(x, y);
-  } else if (index == 6 && decoded6 != null) {
-    return decoded6.getPixelSafe(x, y);
-  } else if (index == 7 && decoded7 != null) {
-    return decoded7.getPixelSafe(x, y);
-  } else if (index == 8 && decoded8 != null) {
-    return decoded8.getPixelSafe(x, y);
-  } else {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return getPixelValue(x, y, index, retryCount: retryCount+1);
-  }
-}

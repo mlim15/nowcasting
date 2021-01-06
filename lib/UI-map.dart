@@ -90,7 +90,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         imageCache.clear();
         imageCache.clearLiveImages();
       });
-      update.forecasts();
     }
   }
   _locatePressed() async {

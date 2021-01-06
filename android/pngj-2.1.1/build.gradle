@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('pngj-2.1.1.jar'))
