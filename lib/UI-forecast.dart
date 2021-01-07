@@ -554,11 +554,54 @@ class ForecastSliver extends StatelessWidget {
                                   : IconButton(
                                     icon: Icon(Icons.delete, color: Colors.white),
                                     onPressed: () {
-                                      // TODO add confirmation popup
-                                      loc.places.removeAt(_index);
-                                      loc.placeNames.removeAt(_index);
-                                      loc.notify.removeAt(_index);
-                                      rebuildCallback();
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text("Confirm"),
+                                            content: SingleChildScrollView( 
+                                              scrollDirection: Axis.vertical,
+                                              child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: <Widget>[
+                                                    Padding(
+                                                      padding: EdgeInsets.all(2.0),
+                                                      child: Text("Delete '"+loc.placeNames[_index]+"'?")
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Row(
+                                                        children: <Widget>[
+                                                          FlatButton(
+                                                            child: Text("Cancel"),
+                                                            onPressed: () async {
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                          ),
+                                                          Spacer(),
+                                                          RaisedButton(
+                                                            child: Text("Delete"),
+                                                            color: ux.nowcastingColor,
+                                                            textColor: Colors.white,
+                                                            onPressed: () async {
+                                                              loc.places.removeAt(_index);
+                                                              loc.placeNames.removeAt(_index);
+                                                              loc.notify.removeAt(_index);
+                                                              rebuildCallback();
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                          ),
+                                                        ],
+                                                      )
+                                                    )
+                                                  ],
+                                              ),
+                                            ),
+                                            elevation: 24.0,
+                                          );
+                                        }
+                                      );
+
                                     },
                                   ),
                               ]
