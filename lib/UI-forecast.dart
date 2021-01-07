@@ -80,9 +80,7 @@ class ForecastScreenState extends State<ForecastScreen> {
         onRefresh: () async {
             await loc.updateLastKnownLocation();
             await update.radarOutages();
-            if (await update.remoteImagery(context, false, true)) {
-              await update.legends();
-            }
+            await update.completeUpdate(context, false, true);
             _rebuild();
           },
           child: CustomScrollView(
@@ -348,39 +346,40 @@ class ForecastSliver extends StatelessWidget {
         _pixelValues.add(await imagery.getPixel(_x, _y, _i));
       }
       if (_pixelValues.contains(null)) {
+        // TODO failed/loading UI refinement
         return Text("Error, decoding timed out.");
       }
       return SingleChildScrollView(
-      scrollDirection: Axis.horizontal, 
-      child: Row(
-        children: [ for (int _i = 0; _i <= 8; _i++)
-          Container(
-            padding: EdgeInsets.all(8),
-            child: Column(
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.all(2),
-                  child: imagery.hex2icon(_pixelValues[_i]),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    borderRadius: new BorderRadius.circular(8.0),
-                    color: imagery.hex2color(_pixelValues[_i])
+        scrollDirection: Axis.horizontal, 
+        child: Row(
+          children: [ for (int _i = 0; _i <= 8; _i++)
+            Container(
+              padding: EdgeInsets.all(8),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.all(2),
+                    child: imagery.hex2icon(_pixelValues[_i]),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.rectangle,
+                      borderRadius: new BorderRadius.circular(8.0),
+                      color: imagery.hex2color(_pixelValues[_i])
+                    ),
                   ),
-                ),
-                Container(
-                  child: Text(
-                    imagery.hex2desc(_pixelValues[_i]),
-                    style: ux.latoWhite
-                  ), 
-                ),
-                Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-              ]
+                  Container(
+                    child: Text(
+                      imagery.hex2desc(_pixelValues[_i]),
+                      style: ux.latoWhite
+                    ), 
+                  ),
+                  Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                  Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                ]
+              )
             )
-          )
-        ],
-      ) 
-    );
+          ] 
+        )
+      );
     }
 
     Widget futureBuilder() {

@@ -157,6 +157,8 @@ cachePixel(int _x, int _y, int _index, String _result) {
     // Add it to the cache.
     forecastCache["$_index,$_x,$_y"] = _result;
   }
+  
+
 }
 
 saveForecastCache() async {

@@ -11,6 +11,7 @@ final noRefreshSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Te
 final errorRefreshSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error refreshing.'));
 final refreshedSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Done refreshing.'));
 final refreshingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Refreshing...'));
+final refreshTimedOutSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error: Refresh timed out.'));
 final updatingLocationSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Updating location...'));
 final locationUpdatedSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Location updated.'));
 // Snack bars for onboarding
