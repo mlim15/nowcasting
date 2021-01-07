@@ -347,7 +347,12 @@ class ForecastSliver extends StatelessWidget {
       }
       if (_pixelValues.contains(null)) {
         // TODO failed/loading UI refinement
-        return Text("Error, decoding timed out.");
+        return Column(
+          children: [
+            Padding(child: Icon(Icons.warning), padding: EdgeInsets.only(top: 16)),
+            Padding(child: Text("Error: Decoding failed. Pull to refresh.", style: ux.latoWhite), padding: EdgeInsets.all(4))
+          ]
+        );
       }
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal, 
@@ -387,7 +392,7 @@ class ForecastSliver extends StatelessWidget {
         future: populateForecast(), 
         builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white));
+            return Padding(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)), padding: EdgeInsets.only(top: 16));
           } else {
             return snapshot.data; 
           }
