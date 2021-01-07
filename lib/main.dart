@@ -106,12 +106,12 @@ class SplashState extends State<Splash> {
       print('SplashState: Done detecting radar outage');
       try {
         _changeSplashText('Checking for Updates...');
-        if (await update.remoteImagery(context, false, false)) {
+        if (await update.completeUpdate(context, false, false)) {
           _setTextVisible(false);
         } else {
           _setTextVisible(false);
+          await io.loadForecastCaches();
         }
-        // TODO load cache
         await update.legends();
         print('SplashState: Done attempting to update images');
       } catch (e) {

@@ -79,9 +79,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
-    await update.radarOutages();
-    if (await update.remoteImagery(context, false, true)) {
-      await update.legends();
+    if (await update.completeUpdate(context, false, true)) {
       setState( () {
         if (_playing) {
           _togglePlaying();
