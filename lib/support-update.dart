@@ -92,43 +92,6 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   }
 }
 
-remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
-  ux.showSnackBarIf(notSilent, ux.checkingSnack, context, 'update.remoteImagery: Starting image update process');
-  if (forceRefresh) {
-    print('update.remoteImagery: This refresh will be forced, ignoring last modified headers');
-  }
-  bool notYetShownStartSnack = true;
-  // Download all the images using our downloadFile method.
-  // The HTTP last modified header is individually checked for each file before downloading.
-  for (int i = 0; i <= 8; i++) {
-    try {
-      if (forceRefresh || await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFile('forecast.$i.png'))) {
-        if (notYetShownStartSnack) {ux.showSnackBarIf(notSilent, ux.refreshingSnack, context, 'update.remoteImagery: An image was found that needs updating, starting update');notYetShownStartSnack=false;}
-        try {
-          await downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFilePath('forecast.$i.png'));
-        } catch(e) {
-          ux.showSnackBarIf(notSilent, ux.errorRefreshSnack, context, 'update.remoteImagery: Error updating image number $i, stopping');
-          return false;
-        }
-      }
-    } catch(e) {
-      ux.showSnackBarIf(notSilent, ux.errorRefreshSnack, context, 'update.remoteImagery: Error updating image number $i, stopping');
-      return false;
-    }
-  }
-  if (notYetShownStartSnack) {
-    // If no files needed updating, the start snack will never have been shown.
-    // We aren't refreshing because no files needed refreshing.
-    // Show a notification saying so and return.
-    ux.showSnackBarIf(notSilent, ux.noRefreshSnack, context, 'update.remoteImagery: No images needed updating');
-    return false;
-  } else {
-    // Show a notification saying we successfully refreshed.
-    ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.remoteImagery: Image update successful');
-    return true;
-  }
-}
-
 remoteImage(bool forceRefresh, int i) async {
   try {
     if (forceRefresh || await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFile('forecast.$i.png'))) {
@@ -147,7 +110,8 @@ enum completionStatus {
   success,
   unnecessary,
   failure,
-  inProgress
+  inProgress,
+  notStarted
 }
 List<completionStatus> imageUpdateStatus = new List(9);
 
@@ -176,11 +140,24 @@ bool isComplete(dynamic element) {
 }
 
 // Full local product generation from start to finish
-completeUpdate(BuildContext context, bool forceRefresh, bool notSilent) async {
+completeUpdate(BuildContext context, bool forceRefresh, bool notSilent, {bool parallel = false}) async {
   // The actual update process
   print('update.completeUpdate: Starting update process.');
+  await radarOutages();
   for (int _i = 0; _i <= 8; _i++) {
-    completeUpdateSingleImage(_i);
+    imageUpdateStatus[_i] = completionStatus.notStarted;
+  }
+  // Running all the requests at the same time could theoretically
+  // speed up the process, but it unfortunately often results in
+  // failed requests and breaks things.
+  if (parallel) {
+    for (int _i = 0; _i <= 8; _i++) {
+      completeUpdateSingleImage(_i, forceRefresh);
+    }
+  } else {
+    for (int _i = 0; _i <= 8; _i++) {
+      await completeUpdateSingleImage(_i, forceRefresh);
+    }
   }
   // All the garbage we use to determine when the job is actually done
   // and give feedback to the user.
@@ -219,12 +196,13 @@ completeUpdate(BuildContext context, bool forceRefresh, bool notSilent) async {
   }
 }
 
-completeUpdateSingleImage(int index) async {
+completeUpdateSingleImage(int index, bool forceRefresh) async {
   imageUpdateStatus[index] = completionStatus.inProgress;
   try {
     // First check for remote update for the image and download it if necessary.
-    if (await remoteImage(false, index)) {
-      // If an update occurred, then also update its legend and forecast.
+    if (await remoteImage(forceRefresh, index)) {
+      // If an update occurred, then also update its legend and clear its cache.
+      imagery.forecastCache[index].clear();
       legend(index);
       imageUpdateStatus[index] = completionStatus.success;
       return true;
@@ -289,6 +267,11 @@ radarOutages() async {
   // an update available after 10-11 minutes has elapsed, so this is a safe buffer
   // to ensure we are really seeing an outage. We don't know for sure that this outage is
   // due to environment canada radar outages, but we'll blame it on them anyway.
+  //
+  // First of all, if the files don't exist then just return.
+  if (!io.localFile('forecast.0.png').existsSync()) {
+    return;
+  }
   try {
     bool _updateAvailable = await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.0.png', io.localFile('forecast.0.png'));
     DateTime _fileLastMod = (await io.localFile('forecast.0.png').lastModified()).toUtc();
