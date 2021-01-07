@@ -78,7 +78,7 @@ final colorsObj = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Light Snow", "Snow", "Snow", "Heavy Snow", "Blizzard", "Wet Blizzard"];
 final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
 List<String> legends = new List(9);
-List<Map<String, String>> forecastCache = new List.generate(9, (i) {return {};}, growable: false);
+List<Map<String, dynamic>> forecastCache = new List.generate(9, (i) {return {};}, growable: false);
 
 // Functions that take decimal AABBGGRR values queried from the data products
 // and provide the corresponding hex color, icon, or text description
@@ -156,15 +156,9 @@ cachePixel(int _x, int _y, int _index, String _result) {
   } else {
     // Add it to the cache.
     forecastCache[_index]["$_x,$_y"] = _result;
+    // Save the cache to disk.
+    io.saveForecastCache(_index);
   }
-}
-
-saveForecastCache() async {
-  
-}
-
-loadForecastCache() async {
-
 }
 
 Future<String> getPixel(int _x, int _y, int _index) async {
