@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
-import 'package:image/image.dart' as imglib;
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
@@ -145,15 +144,6 @@ legends() async {
 }
 
 // Local product update isolate helper functions (for backgrounding)
-FutureOr<imglib.Image> bgForecast(File _file) async {
-  imglib.Image _forecast;
-  imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-  print('update.forecasts: Decoding image '+_file.path);
-  _forecast = pngDecoder.decodeImage(await _file.readAsBytes());
-  print('update.forecasts: Done decoding image '+_file.path);
-  return _forecast;
-}
-
 FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
   List<String> _legends = [];
   print('update.legends: Starting update process');

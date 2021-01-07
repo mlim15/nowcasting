@@ -27,12 +27,26 @@ public class MainActivity extends FlutterActivity {
                         final String _fileName = call.argument("fileName");
                         final int _x = call.argument("xCoord");
                         final int _y = call.argument("ycoord");
-                        int _pixelValue = 0;
+                        String _pixelValue = "";
                         try {
                             File _sourceFile = new File(_fileName);
                             PngReaderInt _pngReader = new PngReaderInt(_sourceFile);
-                            ImageLineInt _pixelRow = ((ImageLineInt) _pngReader.readRow(_x));
-                            _pixelValue = _pixelRow.getElem(_y);
+                            ImageLineInt _pixelRow = ((ImageLineInt) _pngReader.readRow(_y));
+                            int _pixelValueA = _pixelRow.getElem(_x*4-1);
+                            // If the pixel is transparent there is no point in continuing.
+                            if (_pixelValueA == 0) {
+                                _pngReader.close();
+                                result.success("0000FF00");
+                                return;
+                            }
+                            int _pixelValueR = _pixelRow.getElem(_x*4);
+                            int _pixelValueG = _pixelRow.getElem(_x*4+1);
+                            int _pixelValueB = _pixelRow.getElem(_x*4+2);
+                            String _pixelValueAStr = String.format("%02X", _pixelValueA);
+                            String _pixelValueRStr = String.format("%02X", _pixelValueR);
+                            String _pixelValueGStr = String.format("%02X", _pixelValueG);
+                            String _pixelValueBStr = String.format("%02X", _pixelValueB);
+                            _pixelValue = _pixelValueAStr+_pixelValueRStr+_pixelValueGStr+_pixelValueBStr;
                             _pngReader.close();
                         } catch(Error e) {
                             System.out.println(e.toString());

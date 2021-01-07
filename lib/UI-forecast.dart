@@ -340,7 +340,7 @@ class ForecastSliver extends StatelessWidget {
 
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
-      List<int> _pixelValues = [];
+      List<String> _pixelValues = [];
       List<int> _latLng = imagery.geoToPixel(_location.latitude, _location.longitude);
       int _x = _latLng[0];
       int _y = _latLng[1];
@@ -360,18 +360,16 @@ class ForecastSliver extends StatelessWidget {
               children: <Widget>[
                 Container(
                   padding: EdgeInsets.all(2),
-                  child: imagery.dec2icon(_pixelValues[_i]),
+                  child: imagery.hex2icon(_pixelValues[_i]),
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     borderRadius: new BorderRadius.circular(8.0),
-                    color: imagery.dec2hex(_pixelValues[_i]).opacity == 0 
-                      ? Color(0xFF000000)
-                      : imagery.dec2hex(_pixelValues[_i])
+                    color: imagery.hex2color(_pixelValues[_i])
                   ),
                 ),
                 Container(
                   child: Text(
-                    imagery.dec2desc(_pixelValues[_i]), 
+                    imagery.hex2desc(_pixelValues[_i]),
                     style: ux.latoWhite
                   ), 
                 ),
