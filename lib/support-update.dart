@@ -16,7 +16,7 @@ import 'package:Nowcasting/support-location.dart' as loc;
 // or if forecasts are for the stated time
 
 // Objects
-var dio = Dio(BaseOptions(connectTimeout: 1500, receiveTimeout: 3000));
+var dio = Dio(BaseOptions()); //connectTimeout: 3000, receiveTimeout: 6000));
 
 // Variables
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
@@ -66,7 +66,7 @@ Future<bool> checkUpdateAvailable(String url, File file) async {
   return updateAvailable;
 }
 
-Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetries=0]) async {
+Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetries=2]) async {
   try {
     Response response = await dio.get(
       url,
@@ -80,11 +80,11 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
     raf.writeFromSync(response.data);
     await raf.close();
   } catch (e) {
-    // Retry up to the retryLimit after waiting 2 seconds
+    // Retry up to the retryLimit after waiting 1 second
     if (retryCount < maxRetries) {
       int newRetryCount = retryCount+1;
       print('update.downloadFile: Failed $url - retrying time $newRetryCount');
-      Timer(Duration(seconds: 2), () {downloadFile(url, savePath, newRetryCount, maxRetries);});
+      Timer(Duration(seconds: 1), () {downloadFile(url, savePath, newRetryCount, maxRetries);});
     } else {
       // When we have reached max retries just return an error
       throw('update.downloadFile: Failed to download $url with $maxRetries retries.');
