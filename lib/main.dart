@@ -39,6 +39,25 @@ void main() async {
   if (Platform.isIOS) {
     iosInfo = await deviceInfo.iosInfo;
   }
+  // FOR DEBUG PURPOSES
+  // Shows normal error boxes in profile and release modes
+  //ErrorWidget.builder = (FlutterErrorDetails details) {
+  //  bool inDebug = false;
+  //  assert(() { inDebug = true; return true; }());
+  //  // In debug mode, use the normal error widget which shows
+  //  // the error message:
+  //  if (inDebug)
+  //    return ErrorWidget(details.exception);
+  //  // In release builds, you can build an alternative instead:
+  //  return Container(
+  //    alignment: Alignment.center,
+  //    child: Text(
+  //     'Error! ${details.exception}',
+  //      style: TextStyle(color: Colors.red),
+  //      textDirection: TextDirection.ltr,
+  //    ),
+  //  );
+  //};
   runApp(MyApp());
 }
 
@@ -101,9 +120,6 @@ class SplashState extends State<Splash> {
       print('SplashState: Done restoring places');
       // TODO Seems to hang here when 'await' is added
       loc.updateLastKnownLocation();
-      print('SplashState: Done attempting location update');
-      await update.radarOutages();
-      print('SplashState: Done detecting radar outage');
       try {
         _changeSplashText('Checking for Updates...');
         if (await update.completeUpdate(context, false, false)) {
