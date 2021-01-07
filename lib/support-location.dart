@@ -31,51 +31,69 @@ restorePlaces(BuildContext context) async {
     _loadNames = main.prefs.getStringList('placeNames');
     _loadNotify = main.prefs.getStringList('notify');
     notifyLoc = main.prefs.getBool('notifyLoc');
-
   } catch(e) {
-    // If the load failed already because the sharedprefs did not exist yet, just set to defaults
-    print('location.restorePlaces[e1]: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
+    // If the load failed somehow already, use defaults.
+    print('location.restorePlaces[e1]: Error loading SharedPreference stored values. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
     notify = [false];
+    notifyLoc = false;
+    return;
+  }
+  // Check for nulls first and just return in that case
+  if (_loadPlaces == null || _loadNames == null || _loadNotify == null || notifyLoc == null) {
+    print('location.restorePlaces[e2]: Tried to restore but SharedPreferences were null. Using defaults.');
     notifyLoc = false;
     return;
   }
   List<double> _loadPlacesDouble = [];
   List<LatLng> _loadPlacesLatLng = [];
   List<bool> _loadNotifyBool = [];
-  if (_loadPlaces != null && _loadPlaces.isNotEmpty) {
+  if (_loadPlaces.isNotEmpty) {
     for (String _s in _loadPlaces) {
       _loadPlacesDouble.add(double.parse(_s));
     }
     for (int i = 0; i < _loadPlaces.length; i+=2) {
       _loadPlacesLatLng.add(LatLng(_loadPlacesDouble[i], _loadPlacesDouble[i+1]));
     }
-    places = _loadPlacesLatLng;
+    if (_loadPlacesLatLng != null) {
+      places = _loadPlacesLatLng;
+    }
   } else {
     places = [];
   }
-  placeNames = _loadNames;
-  if (_loadNotify != null && _loadNotify.isNotEmpty) {
+  if (_loadNames.isNotEmpty) {
+    placeNames = _loadNames;
+  } else {
+    placeNames = [];
+  }
+  if (_loadNotify.isNotEmpty) {
     for (String _s in _loadNotify) {
       _loadNotifyBool.add(bool.fromEnvironment(_s));
     }
-    notify = _loadNotifyBool;
+    if (_loadNotifyBool != null) {
+      notify = _loadNotifyBool;
+    }
   } else {
     notify = [];
   }
   try {
-    assert(places.length == placeNames.length && placeNames.length == notify.length);
+    // Flutter does not evaluate assertions in profile or release mode.
+    if (!(places != null && placeNames != null && notify != null)) {
+      throw('location.restorePlaces: Loaded arrays generated null results. Reverting to defaults.');
+    } else if (!(places.length == placeNames.length && placeNames.length == notify.length)) {
+      throw('location.restorePlaces: Loaded arrays were not equal in length. Reverting to defaults.');
+    } 
   } catch(e) {
     // If the load failed somehow based on the above test, reset to defaults
-    print('location.restorePlaces[e2]: Arrays did not match in length. Reverting to defaults. Error was '+e.toString());
+    print('location.restorePlaces[e3]: Restore seemed to succeed but failed final sanity check. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
     notify = [false];
     notifyLoc = false;
     return;
   }
-  print('location.restorePlaces: Successfully restored locations');
+  print('location.restorePlaces: Successfully restored locations: $placeNames');
 }
 
 savePlaces() async {

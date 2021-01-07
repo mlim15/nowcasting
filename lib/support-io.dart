@@ -33,10 +33,14 @@ saveForecastCache(int _index) async {
 }
 
 loadForecastCaches() async {
+  Map<String, dynamic> _json;
   for (int i = 0; i <= 8; i++) {
     File _file = localFile('forecast.$i.cache');
     if (_file.existsSync()) {
-      imagery.forecastCache[i] = json.decode(_file.readAsStringSync());
+      _json = json.decode(_file.readAsStringSync());
+      if(_json != null && _json.isNotEmpty) {
+        imagery.forecastCache[i] = _json;
+      } 
     }
   }
   print('imagery.loadForecastCache: Finished loading cached image values');

@@ -59,6 +59,10 @@ class ForecastScreenState extends State<ForecastScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    // This build should be checked more for null safety, probably
+    // when the feature becomes available. It depends on a lot of different
+    // variables that do have defaults, but are manipulated by loading/restore
+    // methods on the splash screen that could leave them with nulls.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Forecast'),
@@ -118,42 +122,42 @@ class ForecastScreenState extends State<ForecastScreen> {
                 ),
               // Current location sliver
               loc.lastKnownLocation != null
-                  // If current location is available
-                  ? SliverPadding(
-                    padding: const EdgeInsets.symmetric(vertical: 0.0),
-                    sliver: SliverFixedExtentList(
-                      delegate: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
-                        // geoToPixel returns false if location is outside bbox. 
-                        // If geoToPixel doesn't return false, build the forecast sliver:
-                        ? SliverChildBuilderDelegate(
-                          (context, index) => new ForecastSliver(loc.lastKnownLocation, "Current Location", -1, _editing, () {_rebuild();}),
-                          childCount: 1,
-                        )
-                        // Otherwise, display a notice that tells the user they are out of coverage.
-                        : SliverChildBuilderDelegate(
-                          (context, index) => new ux.WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
-                          childCount: 1,
-                        ),
-                      itemExtent: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
-                        ? _editing
-                          ? ux.sliverHeightExpanded
-                          : ux.sliverHeight
-                        : ux.sliverThinHeight,
-                    ),
-                  )
-                  // If current location is unavailable
-                  : SliverPadding(
-                    padding: const EdgeInsets.symmetric(vertical: 0.0),
-                    sliver: SliverFixedExtentList(
-                      itemExtent: ux.sliverThinHeight,
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => new ux.WarningSliver("Could not detect current location.", ux.WarningLevel.notice),
+                // If current location is available
+                ? SliverPadding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0),
+                  sliver: SliverFixedExtentList(
+                    delegate: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
+                      // geoToPixel returns false if location is outside bbox. 
+                      // If geoToPixel doesn't return false, build the forecast sliver:
+                      ? SliverChildBuilderDelegate(
+                        (context, index) => new ForecastSliver(loc.lastKnownLocation, "Current Location", -1, _editing, () {_rebuild();}),
+                        childCount: 1,
+                      )
+                      // Otherwise, display a notice that tells the user they are out of coverage.
+                      : SliverChildBuilderDelegate(
+                        (context, index) => new ux.WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
                         childCount: 1,
                       ),
+                    itemExtent: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
+                      ? _editing
+                        ? ux.sliverHeightExpanded
+                        : ux.sliverHeight
+                      : ux.sliverThinHeight,
+                  ),
+                )
+                // If current location is unavailable
+                : SliverPadding(
+                  padding: const EdgeInsets.symmetric(vertical: 0.0),
+                  sliver: SliverFixedExtentList(
+                    itemExtent: ux.sliverThinHeight,
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => new ux.WarningSliver("Could not detect current location.", ux.WarningLevel.notice),
+                      childCount: 1,
                     ),
                   ),
+                ),
               // Slivers for stored locations
-              loc.places.isNotEmpty
+              (loc.places.isNotEmpty && loc.places.every((item) {return item != null;}))
                 ? SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0),
                   sliver: SliverFixedExtentList(
@@ -166,26 +170,37 @@ class ForecastScreenState extends State<ForecastScreen> {
                     ),
                   ),
                 )
-                : SliverToBoxAdapter( 
-                  child: Container(),
-                ),
+                : loc.places.isEmpty 
+                  ? SliverToBoxAdapter( 
+                    child: Container(),
+                  )
+                  : SliverPadding(
+                    padding: const EdgeInsets.symmetric(vertical: 0.0),
+                    sliver: SliverFixedExtentList(
+                      itemExtent: ux.sliverThinHeight,
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => new ux.WarningSliver("There was an error loading your stored locations.", ux.WarningLevel.alert),
+                        childCount: 1,
+                      ),
+                    ),
+                  ),
               // Add location sliver
               SliverToBoxAdapter( 
-              child: GestureDetector(
-                onTap: () {_addLocationPressed();},
-                child: Container(
-                  margin: ux.sliverBottomMargins,
-                  child: Icon(Icons.add, color: Colors.white),
-                  height: ux.sliverTinyHeight,
-                  decoration: new BoxDecoration(
-                    color: Colors.grey,
-                    shape: BoxShape.rectangle,
-                    borderRadius: new BorderRadius.circular(8.0),
-                    boxShadow: [ux.sliverShadow],
+                child: GestureDetector(
+                  onTap: () {_addLocationPressed();},
+                  child: Container(
+                    margin: ux.sliverBottomMargins,
+                    child: Icon(Icons.add, color: Colors.white),
+                    height: ux.sliverTinyHeight,
+                    decoration: new BoxDecoration(
+                      color: Colors.grey,
+                      shape: BoxShape.rectangle,
+                      borderRadius: new BorderRadius.circular(8.0),
+                      boxShadow: [ux.sliverShadow],
+                    ),
                   ),
-                ),
+                )
               )
-            )
             ],
           ),
         )

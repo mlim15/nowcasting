@@ -165,8 +165,14 @@ Future<String> getPixel(int _x, int _y, int _index) async {
     String _result;
     // First check to see if the result is in the cache
     // and return that if we can. This is less expensive.
-    if (forecastCache[_index].containsKey("$_x,$_y")) {
-      return forecastCache[_index]["$_x,$_y"];
+    if (forecastCache[_index] != null) {
+      if (forecastCache[_index].containsKey("$_x,$_y")) {
+        return forecastCache[_index]["$_x,$_y"];
+      }
+    } else {
+      // If the forecast cache was not initialized (e.g. bad load)
+      // just clear it.
+      forecastCache[_index] = {};
     }
     // If not then run the platform code to decode the image and
     // retrieve the pixel value.
