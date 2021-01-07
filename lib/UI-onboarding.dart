@@ -74,6 +74,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               onPressed: () async {
                 bool doNotProceed = false;
                 try {
+                  // TODO if I make the forecast screen a little more flexible
+                  // these awaits and the entire page here can be removed
                   await update.remoteImagery(context, true, false);
                   await update.legends();
                 } catch(e) {
