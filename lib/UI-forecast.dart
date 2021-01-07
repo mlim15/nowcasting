@@ -536,21 +536,25 @@ class ForecastSliver extends StatelessWidget {
                                   ),
                                 // TODO implement notifications and uncomment this button.
                                 // it already works to toggle the boolean.
-                                // IconButton(
-                                //     icon: _index == -1
-                                //        ? loc.notifyLoc
-                                //          ? Icon(Icons.notifications_active, color: Colors.white)
-                                //          : Icon(Icons.notifications_off, color: Colors.white),
-                                //        : loc.notify[_index]
-                                //          ? Icon(Icons.notifications_active, color: Colors.white)
-                                //          : Icon(Icons.notifications_off, color: Colors.white),
-                                //     onPressed: () {
-                                //       _notifyPressed();
-                                //       rebuildCallback();
-                                //     },
-                                // ),
+                                //IconButton(
+                                //  icon: _index == -1
+                                //      ? loc.notifyLoc
+                                //        ? Icon(Icons.notifications_active, color: Colors.white)
+                                //        : Icon(Icons.notifications_off, color: Colors.white)
+                                //      : loc.notify[_index]
+                                //        ? Icon(Icons.notifications_active, color: Colors.white)
+                                //        : Icon(Icons.notifications_off, color: Colors.white),
+                                //  onPressed: () {
+                                //    if (_index == -1) {
+                                //      _notifyPressed(true);
+                                //    } else {
+                                //      _notifyPressed();
+                                //    }
+                                //    rebuildCallback();
+                                //  },
+                                //),
                                 _index == -1
-                                  ? Spacer()
+                                  ? Container()
                                   : IconButton(
                                     icon: Icon(Icons.delete, color: Colors.white),
                                     onPressed: () {
