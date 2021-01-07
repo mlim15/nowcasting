@@ -539,6 +539,7 @@ class ForecastSliver extends StatelessWidget {
                                   : IconButton(
                                     icon: Icon(Icons.delete, color: Colors.white),
                                     onPressed: () {
+                                      // TODO add confirmation popup
                                       loc.places.removeAt(_index);
                                       loc.placeNames.removeAt(_index);
                                       loc.notify.removeAt(_index);
