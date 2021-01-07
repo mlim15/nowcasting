@@ -72,16 +72,16 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               borderRadius: ux.progressButtonBorderRadius,
               color: ux.progressButtonColor,
               onPressed: () async {
-                bool doNotProceed = false;
+                bool doNotProceed = true;
                 try {
                   // TODO if I make the forecast screen a little more flexible
-                  // these awaits and the entire page here can be removed
-                  await update.remoteImagery(context, true, false);
-                  await update.legends();
+                  // the entire onboarding page here can be removed
+                  if (await update.completeUpdate(context, true, false)) {
+                    doNotProceed = false;
+                  }
                 } catch(e) {
                   print('onboarding.OnboardingScreenState: Could not get initial images');
                   _obScaffoldKey.currentState.showSnackBar(ux.onboardErrorSnack);
-                  doNotProceed = true;
                 }
                 return () {
                   if (doNotProceed == false) {
