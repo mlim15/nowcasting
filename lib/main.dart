@@ -111,6 +111,7 @@ class SplashState extends State<Splash> {
         } else {
           _setTextVisible(false);
         }
+        // TODO load cache
         await update.legends();
         print('SplashState: Done attempting to update images');
       } catch (e) {
