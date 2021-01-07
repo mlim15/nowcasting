@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
-import 'package:image/image.dart' as imglib;
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
@@ -132,69 +131,6 @@ remoteImagery(BuildContext context, bool forceRefresh, bool notSilent) async {
 }
 
 // Local product updates
-forecasts() async {
-  for (int _i = 0; _i <= 8; _i++) {
-    // Check if the local png is newer than the decoded image
-    // Need to check if file exists before doing this
-    //DateTime pngLastModified = (await io.localFile('forecast.$_i.png').lastModified()).toUtc();
-    //DateTime rawLastModified = (await io.localFile('decodedForecast.$_i.raw').lastModified()).toUtc();
-    //bool updateAvailable = rawLastModified.isBefore(pngLastModified);
-    forecast(_i);
-  }
-}
-
-forecast(int _i) async {
-  // First set it to null while it decodes. This lets the future builder know
-  // that the image isn't ready yet if it's trying to build.
-  if (_i == 0) {
-    imagery.decoded0 = null; 
-  } else if (_i == 1) {
-    imagery.decoded1 = null; 
-  } else if (_i == 2) {
-    imagery.decoded2 = null; 
-  } else if (_i == 3) {
-    imagery.decoded3 = null; 
-  } else if (_i == 4) {
-    imagery.decoded4 = null; 
-  } else if (_i == 5) {
-    imagery.decoded5 = null; 
-  } else if (_i == 6) {
-    imagery.decoded6 = null; 
-  } else if (_i == 7) {
-    imagery.decoded7 = null; 
-  } else if (_i == 8) {
-    imagery.decoded8 = null; 
-  }
-  // Then update the decoded image as long as the corresponding png exists to decode.
-  // Once the image is decoded, save it to disk as a raw file.
-  // Then update its corresponding legend based on the update time.
-  if (await io.localFile('forecast.$_i.png').exists()) {
-    imglib.Image decodedSingleForecast = await compute(bgForecast, io.localFile('forecast.$_i.png'));
-    if (_i == 0) {
-      imagery.decoded0 = decodedSingleForecast; 
-    } else if (_i == 1) {
-      imagery.decoded1 = decodedSingleForecast; 
-    } else if (_i == 2) {
-      imagery.decoded2 = decodedSingleForecast; 
-    } else if (_i == 3) {
-      imagery.decoded3 = decodedSingleForecast; 
-    } else if (_i == 4) {
-      imagery.decoded4 = decodedSingleForecast; 
-    } else if (_i == 5) {
-      imagery.decoded5 = decodedSingleForecast; 
-    } else if (_i == 6) {
-      imagery.decoded6 = decodedSingleForecast; 
-    } else if (_i == 7) {
-      imagery.decoded7 = decodedSingleForecast; 
-    } else if (_i == 8) {
-      imagery.decoded8 = decodedSingleForecast; 
-    }    
-    await imagery.saveDecodedForecast(decodedSingleForecast, _i);
-  } else {
-    throw('update.forecast: Expected file forecast.$_i.png does not exist. Stopping');
-  }
-}
-
 legends() async {
   List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
@@ -208,15 +144,6 @@ legends() async {
 }
 
 // Local product update isolate helper functions (for backgrounding)
-FutureOr<imglib.Image> bgForecast(File _file) async {
-  imglib.Image _forecast;
-  imglib.PngDecoder pngDecoder = new imglib.PngDecoder();
-  print('update.forecasts: Decoding image '+_file.path);
-  _forecast = pngDecoder.decodeImage(await _file.readAsBytes());
-  print('update.forecasts: Done decoding image '+_file.path);
-  return _forecast;
-}
-
 FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
   List<String> _legends = [];
   print('update.legends: Starting update process');

@@ -90,7 +90,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         imageCache.clear();
         imageCache.clearLiveImages();
       });
-      update.forecasts();
     }
   }
   _locatePressed() async {
@@ -118,19 +117,19 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             Row(children: [ 
               for (int _i=0; _i<1; _i++) 
                 _returnSpacer(),
-              for (Color _color in imagery.colorsHex.sublist(0,12))
+              for (Color _color in imagery.colorsObj.sublist(0,12))
                 Container(color: _color, child: _returnSpacer())
             ]),
             Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
             Row(children: [ 
               for (int _i=0; _i<1; _i++) 
                 _returnSpacer(),
-              for (Color _color in imagery.colorsHex.sublist(12,17))
+              for (Color _color in imagery.colorsObj.sublist(12,17))
                 Container(color: _color, child: _returnSpacer())
             ]),
             Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
             Row(children: [ 
-              for (Color _color in imagery.colorsHex.sublist(18))
+              for (Color _color in imagery.colorsObj.sublist(18))
                 Container(color: _color, child: _returnSpacer())
             ]),
             Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),

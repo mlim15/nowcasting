@@ -76,7 +76,6 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 try {
                   await update.remoteImagery(context, true, false);
                   await update.legends();
-                  update.forecasts();
                 } catch(e) {
                   print('onboarding.OnboardingScreenState: Could not get initial images');
                   _obScaffoldKey.currentState.showSnackBar(ux.onboardErrorSnack);

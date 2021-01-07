@@ -15,7 +15,6 @@ import 'package:Nowcasting/UI-info.dart' as info;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
-import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 
 // TODO animate splash screen
@@ -25,6 +24,7 @@ SharedPreferences prefs;
 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 AndroidDeviceInfo androidInfo;
 IosDeviceInfo iosInfo;
+const platform = const MethodChannel("com.github.the_salami.nowcasting/pngj");
 
 // App code
 void main() async {
@@ -108,10 +108,8 @@ class SplashState extends State<Splash> {
         _changeSplashText('Checking for Updates...');
         if (await update.remoteImagery(context, false, false)) {
           _setTextVisible(false);
-          update.forecasts();
         } else {
           _setTextVisible(false);
-          await imagery.loadDecodedForecasts();
         }
         await update.legends();
         print('SplashState: Done attempting to update images');

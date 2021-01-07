@@ -1,13 +1,13 @@
+import 'dart:core';
 import 'dart:io';
 import 'dart:math';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as imglib;
 import 'package:latlong/latlong.dart';
 
+import 'package:Nowcasting/main.dart';
 import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-update.dart' as update;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Details relevant to nowcasting imagery products - pixel dimensions
@@ -18,184 +18,92 @@ final LatLng ne = LatLng(51.0000, -66.7500);
 
 // Imagery legend colors in AARRGGBB hex and equivalent hex AABBGGRR -> decimal AABBGGRR form
 // Getting a pixel value from a decoded png returns the value in the decimal AABBGGRR form
+
 final l1hex = Color(0xFF00FF00);
-final l1dec = 4278255360;
-final l2hex = Color(0xFF00B400); 
-final l2dec = 4278236160;
-final l3hex = Color(0xFF007300); 
-final l3dec = 4278219520;
-final l4hex = Color(0xFF005500); 
-final l4dec = 4278210560;
-final l5hex = Color(0xFFFFFF00); 
-final l5dec = 4278255615;
-final l6hex = Color(0xFFFFB400); 
-final l6dec = 4278236415;
-final l7hex = Color(0xFFFF6400); 
-final l7dec = 4278215935;
-final l8hex = Color(0xFFC80000); 
-final l8dec = 4278190280;
-final l9hex = Color(0xFFFF64FF); 
-final l9dec = 4294927615;
-final l10hex = Color(0xFFB400B4); 
-final l10dec = 4289986740;
-final l11hex = Color(0xFF640064); 
-final l11dec = 4284743780;
-final l12hex = Color(0xFF000000); 
-final l12dec = 4278190080;
-// snow 2 and 3 don't seem to be actually in imagery
+final l2hex = Color(0xFF00B400);
+final l3hex = Color(0xFF007300);
+final l4hex = Color(0xFF005500);
+final l5hex = Color(0xFFFFFF00);
+final l6hex = Color(0xFFFFB400);
+final l7hex = Color(0xFFFF6400);
+final l8hex = Color(0xFFC80000);
+final l9hex = Color(0xFFFF64FF);
+final l10hex = Color(0xFFB400B4);
+final l11hex = Color(0xFF640064);
+final l12hex = Color(0xFF000000);
+// snow 3 doesn't seem to be actually in imagery
 final t1hex = Color(0xFF37F0C8);
-final t1dec = 4291358775;  
 final t2hex = Color(0xFF00A58C);
-final t2dec = 4287407360; 
 final t3hex = Color(0xFF287D8C);
-final t3dec = 4287397160; 
 final t4hex = Color(0xFF4B5A6E);
-final t4dec = 4285422155; 
 final t5hex = Color(0xFFFFC382);
-final t5dec = 4286759935; 
 final s1hex = Color(0xFFCEFFFF);
-final s1dec = 4294967246; 
 final s2hex = Color(0xFF9CEEFF);
-final s2dec = 4294962844; 
 final s4hex = Color(0xFF86D9FF);
-final s4dec = 4294957446; 
 final s5hex = Color(0xFF6DC1FF);
-final s5dec = 4294951277; 
 final s6hex = Color(0xFF4196FF);
-final s6dec = 4294940225; 
 final s7hex = Color(0xFF2050FF);
-final s7dec = 4294922272; 
 final s8hex = Color(0xFF040ED8);
-final s8dec = 4292349444; 
 final s9hex = Color(0xFFFF9898);
-final s9dec = 4288190719; 
+final String l1str = "FF00FF00";
+final String l2str = "FF00B400";
+final String l3str = "FF007300";
+final String l4str = "FF005000";
+final String l5str = "FFFFFF00";
+final String l6str = "FFFFB400";
+final String l7str = "FFFF6400";
+final String l8str = "FFC80000";
+final String l9str = "FFFF64FF";
+final String l10str = "FFB400B4";
+final String l11str = "FF640064";
+final String l12str = "FF000000";
+final String t1str = "FF37F0C8";
+final String t2str = "FF00A58C";
+final String t3str = "FF287D8C";
+final String t4str = "FF4B5A6E";
+final String t5str = "FFFFC382";
+final String s1str = "FFCEFFFF";
+final String s2str = "FF9CEEFF";
+final String s4str = "FF86D9FF";
+final String s5str = "FF6DC1FF";
+final String s6str = "FF4196FF";
+final String s7str = "FF2050FF";
+final String s8str = "FF040ED8";
+final String s9str = "FFFF9898";
 
 // Arrays storing data about possible values in a pixel from the nowcasting data products.
 // Indices match between the arrays for easy conversion between them.
-final colorsHex = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex, l10hex, l11hex, l12hex, t1hex, t2hex, t3hex, t4hex, t5hex, s1hex, s2hex, s4hex, s5hex, s6hex, s7hex, s8hex, s9hex];
-final colorsDec = [l1dec, l2dec, l3dec, l4dec, l5dec, l6dec, l7dec, l8dec, l9dec, l10dec, l11dec, l12dec, t1dec, t2dec, t3dec, t4dec, t5dec, s1dec, s2dec, s4dec, s5dec, s6dec, s7dec, s8dec, s9dec];
+final colorsStr = [l1str, l2str, l3str, l4str, l5str, l6str, l7str, l8str, l9str, l10str, l11str, l12str, t1str, t2str, t3str, t4str, t5str, s1str, s2str, s4str, s5str, s6str, s7str, s8str, s9str];
+final colorsObj = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex, l10hex, l11hex, l12hex, t1hex, t2hex, t3hex, t4hex, t5hex, s1hex, s2hex, s4hex, s5hex, s6hex, s7hex, s8hex, s9hex];
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Light Snow", "Snow", "Snow", "Heavy Snow", "Blizzard", "Wet Blizzard"];
 final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
-
-// Arrays storing local products derived from nowcasting data
-// These decoded images are very big so we don't use an array, that would require all to be in memory even when we only need one
-imglib.Image decoded0;
-imglib.Image decoded1;
-imglib.Image decoded2;
-imglib.Image decoded3;
-imglib.Image decoded4;
-imglib.Image decoded5;
-imglib.Image decoded6;
-imglib.Image decoded7;
-imglib.Image decoded8;
 List<String> legends = [];
+Map<String, String> forecastCache = {};
 
 // Functions that take decimal AABBGGRR values queried from the data products
 // and provide the corresponding hex color, icon, or text description
-String dec2desc(int _dec) {
-  int _index = colorsDec.indexWhere((element) => element == _dec);
-  if (_index == -1) {
-    return "None";
-  }
-  return descriptors[_index];
+
+Color hex2color(String _hex) {
+  // Assumes 8 character hex.
+  return Color(int.parse(_hex, radix: 16));
 }
 
-Icon dec2icon(int _dec) {
-  int _index = colorsDec.indexWhere((element) => element == _dec);
-  if (_index == -1) {
+Icon hex2icon(String _hex) {
+  int _index = colorsStr.indexWhere((element) => element == _hex);
+  if (colorsStr.contains(_hex)) {
+    return Icon(icons[_index], color: Colors.white);
+  } else {
     return Icon(Icons.wb_sunny, color: Colors.white);
   }
-  return Icon(icons[_index], color: Colors.white);
 }
 
-Color dec2hex(int _dec) {
-  // TODO probably not safe. Some checks are in order before doing this and blindly returning it
-  String _aabbggrr = _dec.toRadixString(16);
-  _aabbggrr = _aabbggrr.padRight(8,'0');
-  String _aarrggbb = _aabbggrr.substring(0,2)+_aabbggrr.substring(6,8)+_aabbggrr.substring(4,6)+_aabbggrr.substring(2,4);
-  return Color(int.parse(_aarrggbb, radix: 16));
-}
-
-// Saving and loading raw decoded AABBGGRR images to/from disk.
-// Decompressing and decoding AARRGGBB png to uncompressed AABBGGRR is computationally expensive,
-// taking up to a minute on slower devices. This saves loading time and battery when compared
-// with decoding the png on every launch, in exchange for eating up what is probably 
-// an unreasonable amount of disk space.
-saveDecodedForecasts() async {
-  for (int i = 0; i <= 8; i++) {
-    print('imagery.saveDecodedForecasts: Saving decoded image $i (9 total)');
-    if (i == 0) {
-      saveDecodedForecast(decoded0, i);
-    } else if (i == 1) {
-      saveDecodedForecast(decoded1, i);
-    } else if (i == 2) {
-      saveDecodedForecast(decoded2, i);
-    } else if (i == 3) {
-      saveDecodedForecast(decoded3, i);
-    } else if (i == 4) {
-      saveDecodedForecast(decoded4, i);
-    } else if (i == 5) {
-      saveDecodedForecast(decoded5, i);
-    } else if (i == 6) {
-      saveDecodedForecast(decoded6, i);
-    } else if (i == 7) {
-      saveDecodedForecast(decoded7, i);
-    } else if (i == 8) {
-      saveDecodedForecast(decoded8, i);
-    }
+String hex2desc(String _hex) {
+  int _index = colorsStr.indexWhere((element) => element == _hex);
+  if (colorsStr.contains(_hex)) {
+    return descriptors[_index];
+  } else {
+    return "None";
   }
-  print('imagery.saveDecodedForecasts: Finished saving decoded images');
-}
-
-saveDecodedForecast(imglib.Image _decodedForecast, int _index) async {
-  File _file = io.localFile('decodedForecast.$_index.raw');
-  _file.writeAsBytes(_decodedForecast.getBytes());
-}
-
-loadDecodedForecast(int _i) async {
-  try {
-    // First check to make sure the local image is newer than the local
-    // decoded image. This could happen if the user closes the app while the images are decoding,
-    // or while the decoded images are being saved.
-    DateTime _forecastLastMod = io.localFile('forecast.$_i.png').lastModifiedSync();
-    DateTime _decodedLastMod = io.localFile('decodedForecast.$_i.raw').lastModifiedSync();
-    if (_decodedLastMod.isBefore(_forecastLastMod)) {
-      throw('imagery.loadDecodedForecast: locally cached decoded image $_i is outdated compared to local png');
-    }
-    // If it's not outdated, load it from disk
-    File _file = io.localFile('decodedForecast.$_i.raw');
-    if (_i == 0) {
-      decoded0 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 1) {
-      decoded1 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 2) {
-      decoded2 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 3) {
-      decoded3 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 4) {
-      decoded4 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 5) {
-      decoded5 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 6) {
-      decoded6 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 7) {
-      decoded7 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    } else if (_i == 8) {
-      decoded8 = imglib.Image.fromBytes(imageryDimensions, imageryDimensions, _file.readAsBytesSync());
-    }
-  } catch (e) {
-    print('imagery.loadDecodedForecast: Error loading previously decoded image $_i, triggering refresh: '+e.toString());
-    // If encountering an error, trigger the decoding of the pngs all over again.
-    update.forecast(_i);
-    return;
-  }
-}
-
-loadDecodedForecasts() async {
-  for (int i = 0; i <= 8; i++) {
-    loadDecodedForecast(i);
-  }
-  print('imagery.loadDecodedForecasts: Finished loading previously decoded images');
 }
 
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
@@ -239,31 +147,46 @@ bool coordOutOfBounds(LatLng coord) {
   }
   return false;
 }
-Future<int> getPixelValue(int x, int y, int index, {int maxRetries = 30, int retryCount = 0}) async {
-  if (retryCount >= maxRetries) {
-    return null;
-  }
-  // Make sure decoded$index is non-null
-  if (index == 0 && decoded0 != null) {
-    return decoded0.getPixelSafe(x, y);
-  } else if (index == 1 && decoded1 != null) {
-    return decoded1.getPixelSafe(x, y);
-  } else if (index == 2 && decoded2 != null) {
-    return decoded2.getPixelSafe(x, y);
-  } else if (index == 3 && decoded3 != null) {
-    return decoded3.getPixelSafe(x, y);
-  } else if (index == 4 && decoded4 != null) {
-    return decoded4.getPixelSafe(x, y);
-  } else if (index == 5 && decoded5 != null) {
-    return decoded5.getPixelSafe(x, y);
-  } else if (index == 6 && decoded6 != null) {
-    return decoded6.getPixelSafe(x, y);
-  } else if (index == 7 && decoded7 != null) {
-    return decoded7.getPixelSafe(x, y);
-  } else if (index == 8 && decoded8 != null) {
-    return decoded8.getPixelSafe(x, y);
+
+cachePixel(int _x, int _y, int _index, String _result) {
+  // Check to see if it's already cached.
+  if (forecastCache.containsKey("$_index,$_x,$_y")) {
+    // Then we don't need to add anything.
+    return;
   } else {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return getPixelValue(x, y, index, retryCount: retryCount+1);
+    // Add it to the cache.
+    forecastCache["$_index,$_x,$_y"] = _result;
   }
 }
+
+saveForecastCache() async {
+  
+}
+
+loadForecastCache() async {
+
+}
+
+Future<String> getPixel(int _x, int _y, int _index) async {
+    String _result;
+    // First check to see if the result is in the cache
+    // and return that if we can. This is less expensive.
+    if (forecastCache.containsKey("$_index,$_x,$_y")) {
+      return forecastCache["$_index,$_x,$_y"];
+    }
+    // If not then run the platform code to decode the image and
+    // retrieve the pixel value.
+    File _file = io.localFile('forecast.$_index.png');
+    try {
+      _result = await platform.invokeMethod('getPixel', <String, dynamic>{
+        "fileName": _file.path.toString(), 
+        "xCoord": _x, 
+        "ycoord": _y,
+      });
+      // Cache the result.
+      cachePixel(_x, _y, _index, _result);
+    } catch (e) {
+      print(e);
+    }
+    return _result;
+  }

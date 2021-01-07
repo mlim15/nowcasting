@@ -82,7 +82,6 @@ class ForecastScreenState extends State<ForecastScreen> {
             await update.radarOutages();
             if (await update.remoteImagery(context, false, true)) {
               await update.legends();
-              await update.forecasts();
             }
             _rebuild();
           },
@@ -341,12 +340,12 @@ class ForecastSliver extends StatelessWidget {
 
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
-      List<int> _pixelValues = [];
+      List<String> _pixelValues = [];
       List<int> _latLng = imagery.geoToPixel(_location.latitude, _location.longitude);
       int _x = _latLng[0];
       int _y = _latLng[1];
       for (int _i = 0; _i <= 8; _i++) {
-        _pixelValues.add(await imagery.getPixelValue(_x, _y, _i));
+        _pixelValues.add(await imagery.getPixel(_x, _y, _i));
       }
       if (_pixelValues.contains(null)) {
         return Text("Error, decoding timed out.");
@@ -361,18 +360,16 @@ class ForecastSliver extends StatelessWidget {
               children: <Widget>[
                 Container(
                   padding: EdgeInsets.all(2),
-                  child: imagery.dec2icon(_pixelValues[_i]),
+                  child: imagery.hex2icon(_pixelValues[_i]),
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
                     borderRadius: new BorderRadius.circular(8.0),
-                    color: imagery.dec2hex(_pixelValues[_i]).opacity == 0 
-                      ? Color(0xFF000000)
-                      : imagery.dec2hex(_pixelValues[_i])
+                    color: imagery.hex2color(_pixelValues[_i])
                   ),
                 ),
                 Container(
                   child: Text(
-                    imagery.dec2desc(_pixelValues[_i]), 
+                    imagery.hex2desc(_pixelValues[_i]),
                     style: ux.latoWhite
                   ), 
                 ),
