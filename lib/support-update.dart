@@ -231,27 +231,9 @@ legend(int i) async {
 }
 
 legends() async {
-  List<DateTime> _filesLastMod = [];
   for (int i = 0; i <= 8; i++) {
-    if (await io.localFile('forecast.$i.png').exists()) {
-      _filesLastMod.add(io.localFile('forecast.$i.png').lastModifiedSync());
-    } else {
-      throw('update.legends: Expected file forecast.$i.png does not exist. Stopping');
-    }
+    legend(i);
   }
-  imagery.legends = await compute(bgLegends, _filesLastMod);
-}
-
-// Local product update isolate helper functions (for backgrounding)
-FutureOr<List<String>> bgLegends(List<DateTime> _filesLastMod) async {
-  List<String> _legends = [];
-  print('update.legends: Starting update process');
-  for (int i = 0; i <= 8; i++) {
-    // Files generated at e.g. XX:13 and labelled as a 20 min forecast for XX:20. That means it represents the weather for XX:40.
-    _legends.add(_filesLastMod[i].toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString());
-  }
-  print('update.legends: Following legends were inferred from file mod times: '+_legends.toString());
-  return _legends;
 }
 
 // Update functions for booleans stored in support-location that determine 
