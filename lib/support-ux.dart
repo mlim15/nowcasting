@@ -187,15 +187,15 @@ updateStatusBarBrightness(BuildContext context, [bool transparent = false, bool 
   }
 }
 
-Widget locMarker(BuildContext context) {
+Widget locMarker(BuildContext context, {Color markerColor = const Color(0xFFFFFFFF), Color borderColor = const Color(0xFF0075b3)}) {
   return Container(
     padding: EdgeInsets.all(4),
     //height: 2,
     //width: 2,
     decoration: BoxDecoration(
-      border: Border.all(color: nowcastingColor.withOpacity(0.6), width: 3),
+      border: Border.all(color: borderColor.withOpacity(0.8), width: 3),
       shape: BoxShape.circle,
-      color: Color(0x80FFFFFF),
+      color: markerColor.withOpacity(0.5),
       boxShadow: [
         BoxShadow(color: Colors.black54.withOpacity(0.1), blurRadius: 0.0,) //offset: const Offset(1, 2.5),)
       ]
