@@ -32,7 +32,8 @@ public class MainActivity extends FlutterActivity {
                             File _sourceFile = new File(_fileName);
                             PngReaderInt _pngReader = new PngReaderInt(_sourceFile);
                             ImageLineInt _pixelRow = ((ImageLineInt) _pngReader.readRow(_y));
-                            int _pixelValueA = _pixelRow.getElem(_x*4-1);
+
+                            int _pixelValueA = _pixelRow.getElem(_x*4+3);
                             // If the pixel is transparent there is no point in continuing.
                             if (_pixelValueA == 0) {
                                 _pngReader.close();
