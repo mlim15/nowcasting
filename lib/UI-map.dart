@@ -21,9 +21,9 @@ GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
 String lightKey = '**REMOVED**';
 String darkKey = '**REMOVED**';
 
-MapOptions getMapOptions(BuildContext context, {double lat = 45.5088, double lon = -73.5878, void Function(MapPosition, bool) positionChanged}) {
+MapOptions getMapOptions(BuildContext context, {double centerLat = 45.5088, double centerLon = -73.5878, void Function(MapPosition, bool) positionChanged}) {
   return MapOptions(
-    center: LatLng(lat, lon),
+    center: LatLng(centerLat, centerLon),
     zoom: 6.0,
     maxZoom: ux.retinaMode(context) ? 8.4 : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
     minZoom: 5,

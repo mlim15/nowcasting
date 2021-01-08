@@ -53,6 +53,18 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
   // Widget definition
   @override
   Widget build(BuildContext context) {
+    // Determine whether or not to send coordinates of center
+    // anything out of bounds will result in an unmovable map
+    MapOptions _mapOptions;
+    if (imagery.coordOutOfBounds(_location)) {
+      // When out of bounds, simply do not send centerLat/centerLon and the
+      // method defaults to McGill.
+      _mapOptions = map.getMapOptions(context, positionChanged: _positionChanged);
+    } else {
+      // Else send them so we can start centered on the current coordinates of the saved location.
+      _mapOptions = map.getMapOptions(context, centerLat: _location.latitude, centerLon: _location.longitude, positionChanged: _positionChanged);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(this._locName),
@@ -67,7 +79,7 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
         children: [
           FlutterMap(
             mapController: _mapController,
-            options: map.getMapOptions(context, lat: _location.latitude, lon: _location.longitude, positionChanged: _positionChanged),
+            options: _mapOptions,
             layers: [
               map.getTileLayerOptions(context),
               OverlayImageLayerOptions(
