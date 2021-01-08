@@ -21,6 +21,35 @@ GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
 String lightKey = '**REMOVED**';
 String darkKey = '**REMOVED**';
 
+MapOptions getMapOptions(BuildContext context, {double lat = 45.5088, double lon = -73.5878}) {
+  return MapOptions(
+    center: LatLng(lat, lon),
+    zoom: 6.0,
+    maxZoom: ux.retinaMode(context) ? 8.4 : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
+    minZoom: 5,
+    swPanBoundary: imagery.sw,
+    nePanBoundary: imagery.ne,
+  );
+}
+
+TileLayerOptions getTileLayerOptions(BuildContext context) {
+  return TileLayerOptions(
+    tileProvider: AssetTileProvider(), //CachedNetworkTileProvider(),
+    urlTemplate: ux.darkMode(context) 
+      ? "assets/jawg-dark/{z}/{x}/{y}.png" //"https://tile.jawg.io/5c69b784-52bc-408b-8d03-66e426232e15/{z}/{x}/{y}.png?access-token=$darkKey"
+      : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey", 
+    minNativeZoom: 5,
+    maxNativeZoom: 9,
+    backgroundColor: ux.darkMode(context) 
+      ? Color(0xFF000000) 
+      : Color(0xFFCCE7FC),
+    overrideTilesWhenUrlChanges: true, 
+    tileFadeInDuration: 0, 
+    tileFadeInStartWhenOverride: 1.0,
+    retinaMode: ux.retinaMode(context), // Set retinamode based on device DPI
+  );
+}
+
 class MapScreen extends StatefulWidget {
   @override
   MapScreenState createState() => new MapScreenState();
@@ -205,30 +234,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         children: [
           FlutterMap(
             mapController: mapController,
-            options: MapOptions(
-              center: LatLng(45.5088, -73.5878),
-              zoom: 6.0,
-              maxZoom: ux.retinaMode(context) ? 8.4 : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
-              minZoom: 5,
-              swPanBoundary: imagery.sw,
-              nePanBoundary: imagery.ne,
-            ),
+            options: getMapOptions(context),
             layers: [
-              TileLayerOptions(
-                tileProvider: AssetTileProvider(), //CachedNetworkTileProvider(),
-                urlTemplate: ux.darkMode(context) 
-                  ? "assets/jawg-dark/{z}/{x}/{y}.png" //"https://tile.jawg.io/5c69b784-52bc-408b-8d03-66e426232e15/{z}/{x}/{y}.png?access-token=$darkKey"
-                  : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey", 
-                minNativeZoom: 5,
-                maxNativeZoom: 9,
-                backgroundColor: ux.darkMode(context) 
-                  ? Color(0xFF000000) 
-                  : Color(0xFFCCE7FC),
-                overrideTilesWhenUrlChanges: true, 
-                tileFadeInDuration: 0, 
-                tileFadeInStartWhenOverride: 1.0,
-                retinaMode: ux.retinaMode(context), // Set retinamode based on device DPI
-              ),
+              getTileLayerOptions(context),
               OverlayImageLayerOptions(
                 overlayImages: <OverlayImage>[
                   OverlayImage(
