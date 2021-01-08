@@ -21,7 +21,7 @@ GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
 String lightKey = '**REMOVED**';
 String darkKey = '**REMOVED**';
 
-MapOptions getMapOptions(BuildContext context, {double lat = 45.5088, double lon = -73.5878}) {
+MapOptions getMapOptions(BuildContext context, {double lat = 45.5088, double lon = -73.5878, void Function(MapPosition, bool) positionChanged}) {
   return MapOptions(
     center: LatLng(lat, lon),
     zoom: 6.0,
@@ -29,6 +29,7 @@ MapOptions getMapOptions(BuildContext context, {double lat = 45.5088, double lon
     minZoom: 5,
     swPanBoundary: imagery.sw,
     nePanBoundary: imagery.ne,
+    onPositionChanged: positionChanged ?? positionChanged,
   );
 }
 
