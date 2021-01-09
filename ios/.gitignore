@@ -24,6 +24,10 @@ Flutter/flutter_assets/
 Flutter/flutter_export_environment.sh
 ServiceDefinitions.json
 Runner/GeneratedPluginRegistrant.*
+*.xcbuild
+build/XCBuildData/build.db
+Flutter/.last_build_id
+build/XCBuildData/BuildDescriptionCacheIndex*
 
 # Exceptions to above rules.
 !default.mode1v3
