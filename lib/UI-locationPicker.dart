@@ -32,14 +32,22 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
   }
 
   _positionChanged(MapPosition _newPosition, bool _hasGesture) async {
-    // TODO this delay is to prevent it from happening while the
-    // screen is building. For some reason flutter_map seems
-    // to call the onPositionChanged even while the screen is first rendering.
-    // This causes an error. Flutter does not provide the ability to
-    // check the widget build state outside of debug mode. (this.context.debugDoingBuild)
-    // This solution may reduce stress on low end devices and it's
-    // nicely animated so it's not all that bad I guess
-    await Future.delayed(Duration(milliseconds: 250));
+    // Do not set the state unless the position has actually changed from a 
+    // possible starting position. This prevents errors due to calling setState
+    // during initial building, because onPositionChanged is for some reason 
+    // called even during the intial build.
+    // https://github.com/fleaflet/flutter_map/issues/56
+    // LatLng cannot be tested with == operator (immutable), test longitude instead
+    if (imagery.coordOutOfBounds(_location)) {
+      // Then default centre coordinates were used when drawing the map.
+      // Test against these defaults
+      if (_newPosition.center.longitude == -73.574990) {
+        return;
+      }
+    } else if (_newPosition.center.longitude == _location.longitude) {
+      // Otherwise test against the saved location to determine if we really moved
+      return;
+    }
     setState(() {_markerLoc = _newPosition.center;});
   }
 
