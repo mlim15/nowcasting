@@ -24,12 +24,12 @@ public class MainActivity extends FlutterActivity {
                 (call, result) -> {
                     // Note: this method is invoked on the main thread.
                     if (call.method.equals("getPixel")) {
-                        final String _fileName = call.argument("fileName");
+                        final String _filePath = call.argument("filePath");
                         final int _x = call.argument("xCoord");
-                        final int _y = call.argument("ycoord");
+                        final int _y = call.argument("yCoord");
                         String _pixelValue = "";
                         try {
-                            File _sourceFile = new File(_fileName);
+                            File _sourceFile = new File(_filePath);
                             PngReaderInt _pngReader = new PngReaderInt(_sourceFile);
                             ImageLineInt _pixelRow = ((ImageLineInt) _pngReader.readRow(_y));
 

@@ -179,9 +179,9 @@ Future<String> getPixel(int _x, int _y, int _index) async {
     File _file = io.localFile('forecast.$_index.png');
     try {
       _result = await platform.invokeMethod('getPixel', <String, dynamic>{
-        "fileName": _file.path.toString(), 
+        "filePath": _file.path.toString(), 
         "xCoord": _x, 
-        "ycoord": _y,
+        "yCoord": _y,
       });
       // Cache the result.
       cachePixel(_x, _y, _index, _result);
