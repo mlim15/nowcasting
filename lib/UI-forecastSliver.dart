@@ -61,7 +61,6 @@ class ForecastSliver extends StatelessWidget {
       loc.savePlaces();
     }
 
-    // TODO location picker with a map instead of typing coordinates
     AlertDialog editPopup(bool _isEditable) {
       // Set initial text values using the controllers for each text field
       if (_isEditable) {
@@ -124,32 +123,34 @@ class ForecastSliver extends StatelessWidget {
                     readOnly: !_isEditable,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: <Widget>[
-                      Spacer(),
-                      RaisedButton(
-                        child: Text("Choose Location"),
-                        color: ux.nowcastingColor,
-                        textColor: Colors.white,
-                        onPressed: () async {
-                          LatLng _chosenLoc = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LocationPickerScreen(_location, _locName),
-                            ),
-                          );
-                          if (_chosenLoc != null) {
-                            _latControl.text = _chosenLoc.latitude.toString();
-                            _lonControl.text = _chosenLoc.longitude.toString();
+                _index != -1 
+                  ? Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: <Widget>[
+                        Spacer(),
+                        RaisedButton(
+                          child: Text("Choose Location"),
+                          color: ux.nowcastingColor,
+                          textColor: Colors.white,
+                          onPressed: () async {
+                            LatLng _chosenLoc = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LocationPickerScreen(_location, _locName),
+                              ),
+                            );
+                            if (_chosenLoc != null) {
+                              _latControl.text = _chosenLoc.latitude.toString();
+                              _lonControl.text = _chosenLoc.longitude.toString();
+                            }
                           }
-                        }
-                      ),
-                      Spacer()
-                    ],
+                        ),
+                        Spacer()
+                      ],
+                    )
                   )
-                ),         
+                  : Container(),        
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
