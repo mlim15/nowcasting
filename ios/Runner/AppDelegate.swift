@@ -45,9 +45,10 @@ import Flutter
 
 func getPixel(_filePath: String, _x: NSNumber, _y: NSNumber) -> String {
     
-    if let _pixelData = UIImage.init(contentsOfFile: _filePath) {
-        let _rawData: UnsafePointer<UInt8> = CFDataGetBytePtr(_pixelData.cgImage?.dataProvider?.data)
-        let _pixelIndex: Int = ((Int(_pixelData.size.width) * Int(truncating: _y)) + Int(truncating: _x)) * 4
+    if let _image = UIImage.init(contentsOfFile: _filePath) {
+        let _rawImage = (_image.cgImage)!.dataProvider!.data
+        let _rawData: UnsafePointer<UInt8> = CFDataGetBytePtr(_rawImage)
+        let _pixelIndex: Int = ((Int(_image.size.width) * Int(truncating: _y)) + Int(truncating: _x)) * 4
         let _pixelValueA = UInt8(_rawData[_pixelIndex+3])
         // Check if pixel is transparent and return the only possible value if so
         if (_pixelValueA == 0) {
