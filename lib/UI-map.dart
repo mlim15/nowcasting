@@ -212,11 +212,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   value: _nowcastOpacity,
                   min: 0.1,
                   max: 0.9,
-                  // TODO unfortunately state changes here force a redraw of the entire
-                  // inner scaffold, not just the drawer. Dragging the slider back and forth quickly 
-                  // eventually results in a crash. Settings should be moved to their own page
-                  // perhaps, or a popup. In normal usage this problem will never
-                  // result in a crash, but it is a limitation.
                   onChanged: (newOpacity) {
                     setState(() {
                       _nowcastOpacity = newOpacity;
@@ -251,7 +246,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                     opacity: _nowcastOpacity,
                     imageProvider: io.localFile('forecast.$_count.png').existsSync() 
-                      ? MemoryImage(io.localFile('forecast.$_count.png').readAsBytesSync()) 
+                      ? FileImage(io.localFile('forecast.$_count.png')) 
                       : AssetImage('assets/launcher/logo.png'),
                     gaplessPlayback: true,
                   )
