@@ -202,7 +202,7 @@ completeUpdateSingleImage(int index, bool forceRefresh) async {
     if (await remoteImage(forceRefresh, index)) {
       // If an update occurred, then also update its legend and clear its cache.
       imagery.forecastCache[index].clear();
-      legend(index);
+      await legend(index);
       imageUpdateStatus[index] = completionStatus.success;
       return true;
     } else {
