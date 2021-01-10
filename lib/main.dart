@@ -126,7 +126,7 @@ class SplashState extends State<Splash> {
       loc.updateLastKnownLocation();
       try {
         _changeSplashText('Checking for Updates...');
-        if (await update.completeUpdate(context, false, false)) {
+        if (await update.completeUpdate(false, true)) {
           _setTextVisible(false);
         } else {
           _setTextVisible(false);

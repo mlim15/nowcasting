@@ -84,7 +84,7 @@ class ForecastScreenState extends State<ForecastScreen> {
         onRefresh: () async {
             await loc.updateLastKnownLocation();
             await update.radarOutages();
-            await update.completeUpdate(context, false, true);
+            await update.completeUpdate(false, true, context: this.context);
             _rebuild();
           },
           child: CustomScrollView(

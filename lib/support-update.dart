@@ -139,7 +139,7 @@ bool isComplete(dynamic element) {
 }
 
 // Full local product generation from start to finish
-completeUpdate(BuildContext context, bool forceRefresh, bool notSilent, {bool parallel = false}) async {
+completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();
@@ -167,25 +167,25 @@ completeUpdate(BuildContext context, bool forceRefresh, bool notSilent, {bool pa
     await Future.delayed(const Duration(milliseconds: 500));
     // Check to see if we have exceeded the max waiting time.
     if (_counter >= _maxTries) {
-      ux.showSnackBarIf(notSilent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
+      context ?? ux.showSnackBarIf(!silent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
       return false;
     }
     if (imageUpdateStatus.every(isSuccess)) {
         // Then the update has fully succeeded.
         // Display success snackbar and return true
-        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+        context ?? ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
         return true;
       } else if (imageUpdateStatus.contains(completionStatus.failure)) {
         // Then we know the update has failed somewhere.
-        ux.showSnackBarIf(notSilent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
+        context ?? ux.showSnackBarIf(!silent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
         return false;
       } else if (imageUpdateStatus.every(isUnnecessary)) {
         // Then the update was not necessary. Tell the user so.
-        ux.showSnackBarIf(notSilent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
+        context ?? ux.showSnackBarIf(!silent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
         return false;
       } else if (imageUpdateStatus.every(isComplete)) {
         // Perhaps we have a mix of only success and unnecessary. In this case, just display to the user as a success.
-        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+        context ?? ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
         return true;
       } else {
         // Otherwise continue to wait until any of the above situations is true,

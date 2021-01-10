@@ -109,7 +109,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
-    if (await update.completeUpdate(context, false, true)) {
+    if (await update.completeUpdate(false, false, context: this.context)) {
       setState( () {
         if (_playing) {
           _togglePlaying();
