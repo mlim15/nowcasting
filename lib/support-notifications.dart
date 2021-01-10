@@ -42,6 +42,7 @@ const NotificationDetails platformChannelSpecifics =
     NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
 
 showNotification(String _desc, String _placeName, String _time) async {
+  // TODO On android information can be cut off when strings are too long.
   await flutterLocalNotificationsPlugin.show(0, '$_desc detected at $_placeName at $_time', 'Tap for more details.', platformChannelSpecifics);
 }
 
@@ -56,7 +57,8 @@ bool anyNotificationsEnabled() {
 /// This "Headless Task" is run when app is terminated.
 void backgroundFetchCallback(String taskId) async {
   // TODO do not generate more notifications if the first are not yet dismissed,
-  // if such a thing is possible.
+  // if such a thing is possible. Perhaps store array of lastNotified DateTimes
+  // and restrict to once per couple hours per location.
   print('notifications.backgroundFetchCallback: Headless event $taskId received.');
 
   // Initialize sharedprefs and notification plugins, read notification preferences
