@@ -12,7 +12,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:background_fetch/background_fetch.dart';
 
+DateTime lastShownNotificationCurrentLoc = DateTime.fromMillisecondsSinceEpoch(0);
+List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEpoch(0)];
+
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
+Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
+bool doNotNotifyUnderThreshold = true;
+int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
+
 bool enabledCurrentLoc = false;
 List<bool> enabledSavedLoc = [false];
 bool notificationsInitialized = false;
@@ -60,7 +67,7 @@ void backgroundFetchCallback(String taskId) async {
   // if such a thing is possible. Perhaps store array of lastNotified DateTimes
   // and restrict to once per couple hours per location.
   // TODO configurable threshold so you aren't notified for a drizzle
-  print('notifications.backgroundFetchCallback: Headless event $taskId received.');
+  print('notifications.backgroundFetchCallback: Headless event $taskId received at '+DateTime.now().toString());
 
   // Initialize sharedprefs and notification plugins, read notification preferences
   if (!notificationsInitialized) {await flutterLocalNotificationsPlugin.initialize(initializationSettings);}
