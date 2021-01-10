@@ -31,7 +31,7 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
     Navigator.pop(context, _mapController.center);
   }
 
-  _positionChanged(MapPosition _newPosition, bool _hasGesture) async {
+  _positionChanged(MapPosition _newPosition, bool _hasGesture) {
     // Do not set the state unless the position has actually changed from a 
     // possible starting position. This prevents errors due to calling setState
     // during initial building, because onPositionChanged is for some reason 
