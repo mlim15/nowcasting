@@ -134,6 +134,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                   // If we got permission, set the boolean to enable notifications
                   // Set the boolean to enable notifications
                   notifications.enabledCurrentLoc = true;
+                  notifications.scheduleBackgroundFetch();
                 } else {
                   // iOS user rejected notification permissions.
                   ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
