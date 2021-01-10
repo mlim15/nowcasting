@@ -59,6 +59,7 @@ void backgroundFetchCallback(String taskId) async {
   // TODO do not generate more notifications if the first are not yet dismissed,
   // if such a thing is possible. Perhaps store array of lastNotified DateTimes
   // and restrict to once per couple hours per location.
+  // TODO configurable threshold so you aren't notified for a drizzle
   print('notifications.backgroundFetchCallback: Headless event $taskId received.');
 
   // Initialize sharedprefs and notification plugins, read notification preferences
