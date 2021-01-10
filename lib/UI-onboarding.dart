@@ -118,7 +118,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             ),
           PageViewModel(
             title: "Notifications",
-            body: "The app can alert you about incoming rain. If enabled, it will check once per hour at most, notifying you if it will rain at your location in the coming hour. Each update is roughly 250KB in size. Would you like to enable these alerts now?",
+            body: "The app can alert you about incoming rain. If enabled, it will check roughly once per hour, notifying you if it will rain or snow at your location in the coming hour. Would you like to enable these alerts now?",
             image: _buildImage('img2'),
             decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
             footer: new ProgressButton(
