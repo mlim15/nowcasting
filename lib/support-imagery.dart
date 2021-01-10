@@ -107,7 +107,7 @@ String hex2desc(String _hex) {
 }
 
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
-geoToPixel(double lat, double lon) {
+List<int> geoToPixel(double lat, double lon) {
   if (coordOutOfBounds(LatLng(lat, lon))) {
     throw('imagery.geoToPixel: Error, passed coordinates were out of bounds');
   }
