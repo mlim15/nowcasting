@@ -36,7 +36,7 @@ class InfoScreen extends StatelessWidget  {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          GestureDetector(onTap: () {notifications.showNotification("Heavy Rain", "London", "19:00");}, child: Container(margin: EdgeInsets.all(16), child: Image.asset('assets/launcher/icon_android.png', width: 96, height: 96))),
+                          Container(margin: EdgeInsets.all(16), child: Image.asset('assets/launcher/icon_android.png', width: 96, height: 96)),
                           Center(child: 
                             Column(
                               children: <Widget>[
