@@ -1,18 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+
 import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
 
-import 'package:flutter/material.dart';
 import 'package:Nowcasting/main.dart' as main;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
 
 Location location = new Location();
 
 LatLng lastKnownLocation;
-bool notifyLoc = false;
 List<LatLng> places = [LatLng(45.504688, -73.574990)];
 List<String> placeNames = ['McGill Downtown Campus'];
-List<bool> notify = [false];
 
 bool weatherAlert = false;
 bool radarOutage = false;
@@ -25,30 +25,31 @@ restorePlaces(BuildContext context) async {
   print('location.restorePlaces: Starting restore process');
   List<String> _loadPlaces;
   List<String> _loadNames;
-  List<String> _loadNotify;
+  List<String> _loadNotifySaved;
+  bool _loadNotifyCurrentBool;
   try {
     _loadPlaces = main.prefs.getStringList('places');
     _loadNames = main.prefs.getStringList('placeNames');
-    _loadNotify = main.prefs.getStringList('notify');
-    notifyLoc = main.prefs.getBool('notifyLoc');
+    _loadNotifySaved = main.prefs.getStringList('notify');
+    _loadNotifyCurrentBool = main.prefs.getBool('notifyLoc');
   } catch(e) {
     // If the load failed somehow already, use defaults.
     print('location.restorePlaces[e1]: Error loading SharedPreference stored values. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
-    notify = [false];
-    notifyLoc = false;
+    notifications.enabledSavedLoc = [false];
+    notifications.enabledCurrentLoc = false;
     return;
   }
-  // Check for nulls first and just return in that case
-  if (_loadPlaces == null || _loadNames == null || _loadNotify == null || notifyLoc == null) {
+  // Check for nulls first in the retrieved data and just return in that case
+  if (_loadPlaces == null || _loadNames == null || _loadNotifySaved == null || _loadNotifyCurrentBool == null) {
     print('location.restorePlaces[e2]: Tried to restore but SharedPreferences were null. Using defaults.');
-    notifyLoc = false;
     return;
   }
   List<double> _loadPlacesDouble = [];
   List<LatLng> _loadPlacesLatLng = [];
-  List<bool> _loadNotifyBool = [];
+  List<bool> _loadNotifySavedBool = [];
+  // Load saved place coordinates
   if (_loadPlaces.isNotEmpty) {
     for (String _s in _loadPlaces) {
       _loadPlacesDouble.add(double.parse(_s));
@@ -62,26 +63,30 @@ restorePlaces(BuildContext context) async {
   } else {
     places = [];
   }
+  // Load place names
   if (_loadNames.isNotEmpty) {
     placeNames = _loadNames;
   } else {
     placeNames = [];
   }
-  if (_loadNotify.isNotEmpty) {
-    for (String _s in _loadNotify) {
-      _loadNotifyBool.add(bool.fromEnvironment(_s));
+  // Load whether notifications are enabled for each saved location
+  if (_loadNotifySaved.isNotEmpty) {
+    for (String _s in _loadNotifySaved) {
+      _loadNotifySavedBool.add(bool.fromEnvironment(_s));
     }
-    if (_loadNotifyBool != null) {
-      notify = _loadNotifyBool;
+    if (_loadNotifySavedBool != null) {
+      notifications.enabledSavedLoc = _loadNotifySavedBool;
     }
   } else {
-    notify = [];
+    notifications.enabledSavedLoc = [];
   }
+  // Load whether notifications are enabled for the saved location
+  notifications.enabledCurrentLoc = _loadNotifyCurrentBool;
   try {
     // Flutter does not evaluate assertions in profile or release mode.
-    if (!(places != null && placeNames != null && notify != null)) {
+    if (!(places != null && placeNames != null && notifications.enabledSavedLoc != null)) {
       throw('location.restorePlaces: Loaded arrays generated null results. Reverting to defaults.');
-    } else if (!(places.length == placeNames.length && placeNames.length == notify.length)) {
+    } else if (!(places.length == placeNames.length && placeNames.length == notifications.enabledSavedLoc.length)) {
       throw('location.restorePlaces: Loaded arrays were not equal in length. Reverting to defaults.');
     } 
   } catch(e) {
@@ -89,8 +94,8 @@ restorePlaces(BuildContext context) async {
     print('location.restorePlaces[e3]: Restore seemed to succeed but failed final sanity check. Reverting to defaults. Error was '+e.toString());
     places = [LatLng(45.504688, -73.574990)];
     placeNames = ['McGill Downtown Campus'];
-    notify = [false];
-    notifyLoc = false;
+    notifications.enabledSavedLoc = [false];
+    notifications.enabledCurrentLoc = false;
     return;
   }
   print('location.restorePlaces: Successfully restored locations: $placeNames');
@@ -108,11 +113,11 @@ savePlaces() async {
   main.prefs.setStringList('places', _savePlaces);
   main.prefs.setStringList('placeNames', placeNames);
   List<String> _saveNotify = [];
-  for (bool _n in notify) {
+  for (bool _n in notifications.enabledSavedLoc) {
     _saveNotify.add(_n.toString());
   }
   main.prefs.setStringList('notify', _saveNotify);
-  main.prefs.setBool('notifyLoc', notifyLoc);
+  main.prefs.setBool('notifyLoc', notifications.enabledCurrentLoc);
 }
 
 // Save/restore/update functions for last known location using SharedPreferences.

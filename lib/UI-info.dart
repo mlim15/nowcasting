@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-ux.dart' as ux;
 
 class InfoScreen extends StatelessWidget  {
@@ -35,7 +36,7 @@ class InfoScreen extends StatelessWidget  {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          Container(margin: EdgeInsets.all(16), child: Image.asset('assets/launcher/icon_android.png', width: 96, height: 96)),
+                          GestureDetector(onTap: () {notifications.showNotification("Heavy Rain", "London", "19:00");}, child: Container(margin: EdgeInsets.all(16), child: Image.asset('assets/launcher/icon_android.png', width: 96, height: 96))),
                           Center(child: 
                             Column(
                               children: <Widget>[

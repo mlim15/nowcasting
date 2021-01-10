@@ -3,11 +3,13 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter_progress_button/flutter_progress_button.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -96,7 +98,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
           if (_showLocationsPage)
             PageViewModel(
               title: "Location Permissions",
-              body:  "Giving access to your location will enable the app to provide local forecasts.", //TODO For notifications, you will need to grant access even in the background.",
+              body:  "Giving access to your location will enable the app to provide local forecasts. Giving access to your location in the background will enable more accurate notifications.",
               image: _buildImage('manypixels-iso-navigation'),
               decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
               footer: new ProgressButton(
@@ -114,12 +116,33 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 },
               ),
             ),
-          //PageViewModel(
-          //  title: "Notifications",
-          //  body: "Another beautiful body text for this example onboarding",
-          //  image: _buildImage('img2'),
-          //  decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
-          //),
+          PageViewModel(
+            title: "Notifications",
+            body: "The app can alert you about incoming rain. If enabled, it will check once per hour at most, notifying you if it will rain at your location in the coming hour. Each update is roughly 250KB in size. Would you like to enable these alerts now?",
+            image: _buildImage('img2'),
+            decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
+            footer: new ProgressButton(
+              defaultWidget: Text("Enable Notifications", style: ux.progressButtonTextStyle),
+              progressWidget: ux.progressButtonWidget,
+              width: ux.progressButtonWidth,
+              height: ux.progressButtonHeight,
+              borderRadius: ux.progressButtonBorderRadius,
+              color: ux.progressButtonColor,
+              onPressed: () async {
+                // Either be android, or request permission on iOS
+                if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,)) {
+                  // If we got permission, set the boolean to enable notifications
+                  // Set the boolean to enable notifications
+                  notifications.enabledCurrentLoc = true;
+                } else {
+                  // iOS user rejected notification permissions.
+                  ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
+                }
+                return () {
+                  _introKey.currentState?.animateScroll(4); 
+                }; 
+              },)
+          ),
           PageViewModel(
             title: "All done!",
             bodyWidget: Row(

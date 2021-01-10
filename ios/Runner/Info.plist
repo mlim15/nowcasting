@@ -30,6 +30,10 @@
 	<string>Nowcasting uses your location in the background to provide incoming rain alerts.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Nowcasting uses your location when the app is open to provide local forecasts.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

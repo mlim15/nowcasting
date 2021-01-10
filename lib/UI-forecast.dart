@@ -7,6 +7,7 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/UI-forecastSliver.dart';
 
 // Widgets
@@ -23,12 +24,12 @@ class ForecastScreenState extends State<ForecastScreen> {
       if (loc.lastKnownLocation == null || imagery.coordOutOfBounds(loc.lastKnownLocation)) {
         loc.places.add(LatLng(0, 0));
         loc.placeNames.add('New Location');
-        loc.notify.add(false);
+        notifications.enabledSavedLoc.add(false);
         loc.savePlaces();
       } else {
         loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
         loc.placeNames.add('Copy of Current Location');
-        loc.notify.add(false);
+        notifications.enabledSavedLoc.add(false);
         loc.savePlaces();
       }
     });

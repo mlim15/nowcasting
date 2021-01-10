@@ -20,6 +20,8 @@ final onboardCannotContinueSnack = SnackBar(behavior: SnackBarBehavior.floating,
 // Snack bars about location updates
 final locationOffSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Cannot update location. Check permissions or turn on location services.'));
 final restoreErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error restoring location list. It has been reset to default.'));
+// Snack bars about notifications
+final notificationPermissionErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('To display notifications, you\'ll need to grant the app permission.'),);
 
 // Theme definitions
 final nowcastingColor = const Color(0xFF0075b3);
