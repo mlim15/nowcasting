@@ -223,9 +223,9 @@ class ForecastSliver extends StatelessWidget {
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
       List<String> _pixelValues = [];
-      List<int> _latLng = imagery.geoToPixel(_location.latitude, _location.longitude);
-      int _x = _latLng[0];
-      int _y = _latLng[1];
+      List<int> _pixelCoord = imagery.geoToPixel(_location.latitude, _location.longitude);
+      int _x = _pixelCoord[0];
+      int _y = _pixelCoord[1];
       for (int _i = 0; _i <= 8; _i++) {
         _pixelValues.add(await imagery.getPixel(_x, _y, _i));
       }
