@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-ux.dart' as ux;
 
 class InfoScreen extends StatelessWidget  {
