@@ -80,9 +80,9 @@ void backgroundFetchCallback(String taskId) async {
   for (int _i = 0; _i < maxLookahead; _i++) {
     // Check if any notify locations are left that we haven't found a result for.
     // If not, break out of the for loop, we've notified for all possible locations.
-    if (!anyNotificationsEnabled()) {break;}
+    if (!(_enabledCurrentLocCopy || _enabledSavedLocCopy.any((entry) {return entry == true;}))) {break;}
     // Otherwise, there is something to look for still. Fetch the next image.
-    update.completeUpdateSingleImage(_i, false);
+    await update.completeUpdateSingleImage(_i, false);
     // Check any enabled locations in this image.
     if (_enabledCurrentLocCopy) {
       List<int> _pixelCoord = geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
@@ -129,9 +129,9 @@ scheduleBackgroundFetch() {
     ),
     backgroundFetchCallback
   ).then((int status) {
-      print('[BackgroundFetch] configure success: $status');
+      print('notifications.scheduleBackgroundFetch: configure success: $status');
     }).catchError((e) {
-      print('[BackgroundFetch] configure ERROR: $e');
+      print('notifications.scheduleBackgroundFetch: configure ERROR: $e');
     }
   );
   // Register to receive BackgroundFetch events after app is terminated.
@@ -141,9 +141,14 @@ scheduleBackgroundFetch() {
   }
 }
 
+Future<bool> notificationTapped(String payload) {
+  return update.completeUpdate(false, true);
+}
+
 initialize() async {
   // Initialize notification channels
-  if (await flutterLocalNotificationsPlugin.initialize(initializationSettings)) {
+  // TODO when launched using notification, trigger refresh
+  if (await flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: notificationTapped)) {
     notificationsInitialized = true;
   }
   if (anyNotificationsEnabled()) {
