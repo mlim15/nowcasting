@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:latlong/latlong.dart';
@@ -56,7 +54,7 @@ loadForecastCaches() async {
 
 // Save/restore/update functions for last known location, saved locations, 
 // and notification preferences using SharedPreferences.
-restorePlaces(BuildContext context) async {
+restorePlaces() async {
   print('location.restorePlaces: Starting restore process');
   List<String> _loadPlaces;
   List<String> _loadNames;

@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 
-
 import 'package:Nowcasting/UI-onboarding.dart' as onboarding;
 import 'package:Nowcasting/UI-map.dart' as map;
 import 'package:Nowcasting/UI-forecast.dart' as forecast;
@@ -121,7 +120,7 @@ class SplashState extends State<Splash> {
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
       await io.restoreLastKnownLocation();
-      await io.restorePlaces(context);
+      await io.restorePlaces();
       print('SplashState: Done restoring places');
       // TODO Seems to hang here when 'await' is added
       loc.updateLastKnownLocation();
