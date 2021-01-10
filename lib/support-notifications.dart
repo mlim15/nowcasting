@@ -15,8 +15,9 @@ import 'package:background_fetch/background_fetch.dart';
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
 bool enabledCurrentLoc = false;
 List<bool> enabledSavedLoc = [false];
+bool notificationsInitialized = false;
 
-FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin  = FlutterLocalNotificationsPlugin();
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('notification_icon');
 final IOSInitializationSettings initializationSettingsIOS = IOSInitializationSettings(
   requestSoundPermission: false,
@@ -54,15 +55,25 @@ bool anyNotificationsEnabled() {
 
 /// This "Headless Task" is run when app is terminated.
 void backgroundFetchCallback(String taskId) async {
+  // TODO do not generate more notifications if the first are not yet dismissed,
+  // if such a thing is possible.
   print('notifications.backgroundFetchCallback: Headless event $taskId received.');
 
   // Initialize sharedprefs and notification plugins, read notification preferences
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  main.prefs = await SharedPreferences.getInstance();
-  loc.updateLastKnownLocation();
-  await io.restoreLastKnownLocation();
-  await io.restorePlaces();
+  if (!notificationsInitialized) {await flutterLocalNotificationsPlugin.initialize(initializationSettings);}
+  if (loc.lastKnownLocation == null) {
+    // Then we know the app is closed and we need to reload our variables.
+    main.prefs = await SharedPreferences.getInstance();
+    loc.updateLastKnownLocation();
+    await io.restoreLastKnownLocation();
+    await io.restorePlaces();
+  }
 
+  // Work with deep copies because we're manipulating this data
+  List<bool> _enabledSavedLocCopy = new List<bool>.generate(enabledSavedLoc.length, (_index) {if (enabledSavedLoc[_index] == true) {return true;} else {return false;}});
+  bool _enabledCurrentLocCopy;
+  if (enabledCurrentLoc) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
+  
   for (int _i = 0; _i < maxLookahead; _i++) {
     // Check if any notify locations are left that we haven't found a result for.
     // If not, break out of the for loop, we've notified for all possible locations.
@@ -70,22 +81,22 @@ void backgroundFetchCallback(String taskId) async {
     // Otherwise, there is something to look for still. Fetch the next image.
     update.completeUpdateSingleImage(_i, false);
     // Check any enabled locations in this image.
-    if (enabledCurrentLoc) {
+    if (_enabledCurrentLocCopy) {
       List<int> _pixelCoord = geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
       String _thisLocPixel = await getPixel(_pixelCoord[0], _pixelCoord[1], _i);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
-        enabledCurrentLoc = false; // Don't panic. This isn't saved, it's just a way to make the next iteration skip checking this location
+        _enabledCurrentLocCopy = false;
         showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(legends[_i])));
       }
     }
-    for (int _n in Iterable<int>.generate(enabledSavedLoc.length)) {
-      if (enabledSavedLoc[_n]) {
+    for (int _n in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
+      if (_enabledSavedLocCopy[_n]) {
         List<int> _pixelCoord = geoToPixel(loc.places[_n].latitude, loc.places[_n].longitude);
         String _thisLocPixel = await getPixel(_pixelCoord[0], _pixelCoord[1], _i);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
-          enabledSavedLoc[_n] = false; // Don't panic. This isn't saved, it's just a way to make the next iteration skip checking this location
+          _enabledSavedLocCopy[_n] = false;
           showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(legends[_i])));
         }
       }
@@ -129,7 +140,9 @@ scheduleBackgroundFetch() {
 
 initialize() async {
   // Initialize notification channels
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  if (await flutterLocalNotificationsPlugin.initialize(initializationSettings)) {
+    notificationsInitialized = true;
+  }
   if (anyNotificationsEnabled()) {
     scheduleBackgroundFetch();
   }
