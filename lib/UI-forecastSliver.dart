@@ -12,6 +12,7 @@ import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/UI-locationPicker.dart';
 
 // Forecast sliver widget definition
@@ -53,23 +54,31 @@ class ForecastSliver extends StatelessWidget {
     _notifyPressed([bool currentLoc = false]) async {
       // Request permissions on iOS if necessary
       if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true)) {
+        bool _oldState = notifications.anyNotificationsEnabled();
         // We have permission to display notifications.
         // Toggle notify.
         _notify
           ? _notify = false
           : _notify = true;
+        rebuildCallback();
         if (currentLoc) {
           notifications.enabledCurrentLoc = _notify;
         } else {
           // Update value in array
           notifications.enabledSavedLoc[_index] = _notify;
         }
-        loc.savePlaces();
+        io.savePlaces();
+        if (_oldState == false && _notify == true) {
+          // If we are enabling when all were previously disabled, 
+          // schedule the background job.
+          notifications.scheduleBackgroundFetch();
+        } else if (!notifications.anyNotificationsEnabled()) {
+          notifications.cancelBackgroundFetch();
+        }
       } else {
         // Display a snackbar to the user saying they need to grant permission
         ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
       }
-
     }
 
     AlertDialog editPopup(bool _isEditable) {
@@ -185,7 +194,7 @@ class ForecastSliver extends StatelessWidget {
                           ? () {
                             if (_formKey.currentState.validate()) {
                               _formKey.currentState.save();
-                              loc.savePlaces();
+                              io.savePlaces();
                               rebuildCallback();
                               Navigator.of(context).pop();
                             }
@@ -405,7 +414,6 @@ class ForecastSliver extends StatelessWidget {
                                     } else {
                                       _notifyPressed();
                                     }
-                                    rebuildCallback();
                                   },
                                 ),
                                 _index == -1
