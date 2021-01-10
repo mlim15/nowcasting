@@ -11,8 +11,6 @@ import Flutter
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     }
-    // flutter workmanager setup
-    UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60*60)) // Seconds * Minutes
     // flutter_native_splash
     var flutter_native_splash = 1
     UIApplication.shared.isStatusBarHidden = false
