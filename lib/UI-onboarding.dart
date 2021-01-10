@@ -10,6 +10,7 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-io.dart' as io;
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -129,11 +130,13 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               borderRadius: ux.progressButtonBorderRadius,
               color: ux.progressButtonColor,
               onPressed: () async {
-                // Either be android, or request permission on iOS
-                if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,)) {
+                // We must have a valid location
+                // Also either be android, or request permission on iOS
+                if (loc.lastKnownLocation != null && (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,))) {
                   // If we got permission, set the boolean to enable notifications
                   // Set the boolean to enable notifications
                   notifications.enabledCurrentLoc = true;
+                  io.savePlaceData();
                   notifications.scheduleBackgroundFetch();
                 } else {
                   // iOS user rejected notification permissions.

@@ -67,7 +67,7 @@ class ForecastSliver extends StatelessWidget {
           // Update value in array
           notifications.enabledSavedLoc[_index] = _notify;
         }
-        io.savePlaces();
+        io.savePlaceData();
         if (_oldState == false && _notify == true) {
           // If we are enabling when all were previously disabled, 
           // schedule the background job.
@@ -194,7 +194,7 @@ class ForecastSliver extends StatelessWidget {
                           ? () {
                             if (_formKey.currentState.validate()) {
                               _formKey.currentState.save();
-                              io.savePlaces();
+                              io.savePlaceData();
                               rebuildCallback();
                               Navigator.of(context).pop();
                             }

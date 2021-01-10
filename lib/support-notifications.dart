@@ -68,8 +68,8 @@ void backgroundFetchCallback(String taskId) async {
     // Then we know the app is closed and we need to reload our variables.
     main.prefs = await SharedPreferences.getInstance();
     loc.updateLastKnownLocation();
-    await io.restoreLastKnownLocation();
-    await io.restorePlaces();
+    await io.loadLastKnownLocation();
+    await io.loadPlaceData();
   }
 
   // Work with deep copies because we're manipulating this data

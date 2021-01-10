@@ -119,8 +119,8 @@ class SplashState extends State<Splash> {
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
-      await io.restoreLastKnownLocation();
-      await io.restorePlaces();
+      await io.loadLastKnownLocation();
+      await io.loadPlaceData();
       print('SplashState: Done restoring places');
       // TODO Seems to hang here when 'await' is added
       loc.updateLastKnownLocation();

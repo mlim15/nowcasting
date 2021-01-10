@@ -54,7 +54,7 @@ loadForecastCaches() async {
 
 // Save/restore/update functions for last known location, saved locations, 
 // and notification preferences using SharedPreferences.
-restorePlaces() async {
+loadPlaceData() async {
   print('location.restorePlaces: Starting restore process');
   List<String> _loadPlaces;
   List<String> _loadNames;
@@ -140,7 +140,7 @@ restorePlaces() async {
   print('location.restorePlaces: Successfully restored locations: '+loc.placeNames.toString());
 }
 
-savePlaces() async {
+savePlaceData() async {
   print('update.SavePlaces: Starting save process');
   List<String> _savePlaces = [];
   for (LatLng _place in loc.places) {
@@ -159,7 +159,7 @@ savePlaces() async {
   main.prefs.setBool('notifyLoc', notifications.enabledCurrentLoc);
 }
 
-restoreLastKnownLocation() async {
+loadLastKnownLocation() async {
   double _loadLat = main.prefs.getDouble('lastKnownLatitude');
   double _loadLon = main.prefs.getDouble('lastKnownLongitude');
   if (_loadLat != null && _loadLon != null) {
@@ -168,6 +168,8 @@ restoreLastKnownLocation() async {
 }
 
 saveLastKnownLocation() async {
+  // There's no need to call this in most circumstances
+  // because loc.updateLastKnownLocation will automatically save it.
   try {
     await main.prefs.setDouble('lastKnownLatitude', loc.lastKnownLocation.latitude);
     await main.prefs.setDouble('lastKnownLongitude', loc.lastKnownLocation.longitude);

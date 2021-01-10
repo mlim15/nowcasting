@@ -26,12 +26,12 @@ class ForecastScreenState extends State<ForecastScreen> {
         loc.places.add(LatLng(0, 0));
         loc.placeNames.add('New Location');
         notifications.enabledSavedLoc.add(false);
-        io.savePlaces();
+        io.savePlaceData();
       } else {
         loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
         loc.placeNames.add('Copy of Current Location');
         notifications.enabledSavedLoc.add(false);
-        io.savePlaces();
+        io.savePlaceData();
       }
     });
   }
@@ -40,7 +40,7 @@ class ForecastScreenState extends State<ForecastScreen> {
     _editing
     ? setState(() {
       _editing = false;
-      io.savePlaces();
+      io.savePlaceData();
     })
     : setState(() {
       _editing = true;
@@ -53,7 +53,7 @@ class ForecastScreenState extends State<ForecastScreen> {
       // in the list, swap out of editing mode
       if (loc.places.length == 0) {
         _editing = false;
-        io.savePlaces();
+        io.savePlaceData();
       }
     });
   }
