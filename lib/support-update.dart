@@ -140,6 +140,8 @@ bool isComplete(dynamic element) {
 
 // Full local product generation from start to finish
 completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
+  // If an update is already in progress, just return.
+  if (imageUpdateStatus.any((_item) {return _item == completionStatus.inProgress;})) {return false;}
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();
