@@ -81,7 +81,9 @@ restorePlaces(BuildContext context) async {
     notifications.enabledSavedLoc = [];
   }
   // Load whether notifications are enabled for the saved location
-  notifications.enabledCurrentLoc = _loadNotifyCurrentBool;
+  if (_loadNotifyCurrentBool != null) {
+    notifications.enabledCurrentLoc = _loadNotifyCurrentBool;
+  }
   try {
     // Flutter does not evaluate assertions in profile or release mode.
     if (!(places != null && placeNames != null && notifications.enabledSavedLoc != null)) {
