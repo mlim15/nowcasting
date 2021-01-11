@@ -116,8 +116,6 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           _togglePlaying();
         }
         _count = 0;
-        imageCache.clear();
-        imageCache.clearLiveImages();
       });
     }
   }
@@ -247,7 +245,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                     opacity: _nowcastOpacity,
                     imageProvider: io.localFile('forecast.$_count.png').existsSync() 
-                      ? FileImage(io.localFile('forecast.$_count.png')) 
+                      ? FileImage(io.localFile('forecast.$_count.png'))
                       : AssetImage('assets/launcher/logo.png'),
                     gaplessPlayback: true,
                   )

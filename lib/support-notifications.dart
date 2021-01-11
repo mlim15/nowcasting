@@ -88,11 +88,13 @@ void backgroundFetchCallback(String taskId) async {
   // Disable notifications this go-round for any locations that have already 
   // been shown for in the last minimumTimeBetweenNotifications (default 180 minutes).
   if (DateTime.now().difference(lastShownNotificationCurrentLoc) < minimumTimeBetweenNotifications) {
+    print('notifications.backgroundFetchCallback: Might have notified for current location, but skipped because notified too soon ago.');
     _enabledCurrentLocCopy = false;
   }
   for (int _i in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
     if (_enabledSavedLocCopy[_i] == true) {
       if ((DateTime.now().difference(lastShownNotificationSavedLoc[_i]) < minimumTimeBetweenNotifications)) {
+        print('notifications.backgroundFetchCallback: Might have notified for saved location '+loc.placeNames[_i]+', but skipped because notified too soon ago.');
         _enabledSavedLocCopy[_i] = false;
       }
     }
@@ -118,6 +120,8 @@ void backgroundFetchCallback(String taskId) async {
           io.savePlaceData();
           // TODO save this to sharedpref
           showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+        } else {
+          print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
         }
       }
     }
@@ -135,6 +139,8 @@ void backgroundFetchCallback(String taskId) async {
             lastShownNotificationSavedLoc[_n] = new DateTime.now();
             io.savePlaceData();
             showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+          } else {
+          print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
           }
         }
       }

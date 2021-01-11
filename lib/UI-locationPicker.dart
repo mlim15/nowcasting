@@ -98,7 +98,7 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
                     ),
                     opacity: 0.5,
                     imageProvider: io.localFile('forecast.0.png').existsSync() 
-                      ? FileImage(io.localFile('forecast.0.png')) 
+                      ? FileImage(io.localFile('forecast.0.png'))
                       : AssetImage('assets/launcher/logo.png'),
                     gaplessPlayback: true,
                   )

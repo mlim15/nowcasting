@@ -149,6 +149,8 @@ completeUpdateSingleImage(int index, bool forceRefresh) async {
     if (await remoteImage(forceRefresh, index)) {
       // If an update occurred, then also update its legend and clear its cache.
       imagery.forecastCache[index].clear();
+      // Evict the image from flutter's internal cache to force FileImages with it to reload.
+      FileImage(io.localFile('forecast.$index.png')).evict();
       await legend(index);
       job.imageUpdateStatus[index] = job.CompletionStatus.success;
       return true;
