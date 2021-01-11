@@ -5,10 +5,11 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:latlong/latlong.dart';
 
-import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/main.dart' as main;
+import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 Directory appDocPath;
 
@@ -49,7 +50,17 @@ loadForecastCaches() async {
       } 
     }
   }
+  job.forecastCacheLoaded = job.CompletionStatus.success;
   print('imagery.loadForecastCache: Finished loading cached image values');
+}
+
+restoreDefaultPlaceData([String errorMessage, Error e]) {
+  if (errorMessage != null && e != null) {print(errorMessage+' Reverting to defaults. Error was '+e.toString());}
+  else if (errorMessage != null) {print(errorMessage+' Reverting to defaults.');}
+  loc.places = [LatLng(45.504688, -73.574990)];
+  loc.placeNames = ['McGill Downtown Campus'];
+  notifications.enabledSavedLoc = [false];
+  notifications.enabledCurrentLoc = false;
 }
 
 // Save/restore/update functions for last known location, saved locations, 
@@ -67,16 +78,12 @@ loadPlaceData() async {
     _loadNotifyCurrentBool = main.prefs.getBool('notifyLoc');
   } catch(e) {
     // If the load failed somehow already, use defaults.
-    print('location.restorePlaces[e1]: Error loading SharedPreference stored values. Reverting to defaults. Error was '+e.toString());
-    loc.places = [LatLng(45.504688, -73.574990)];
-    loc.placeNames = ['McGill Downtown Campus'];
-    notifications.enabledSavedLoc = [false];
-    notifications.enabledCurrentLoc = false;
+    print('location.restorePlaces: Error loading SharedPreference stored values. Default values from initialization kept.');
     return;
   }
   // Check for nulls first in the retrieved data and just return in that case
   if (_loadPlaces == null || _loadNames == null || _loadNotifySaved == null || _loadNotifyCurrentBool == null) {
-    print('location.restorePlaces[e2]: Tried to restore but SharedPreferences were null. Using defaults.');
+    print('location.restorePlaces: Tried to restore but SharedPreferences were null. Default values from initialization kept.');
     return;
   }
   List<double> _loadPlacesDouble = [];
@@ -124,17 +131,13 @@ loadPlaceData() async {
   try {
     // Flutter does not evaluate assertions in profile or release mode.
     if (!(loc.places != null && loc.placeNames != null && notifications.enabledSavedLoc != null)) {
-      throw('location.restorePlaces: Loaded arrays generated null results. Reverting to defaults.');
+      throw('location.restorePlaces: Loaded arrays generated null results.');
     } else if (!(loc.places.length == loc.placeNames.length && loc.placeNames.length == notifications.enabledSavedLoc.length)) {
-      throw('location.restorePlaces: Loaded arrays were not equal in length. Reverting to defaults.');
+      throw('location.restorePlaces: Loaded arrays were not equal in length.');
     } 
   } catch(e) {
     // If the load failed somehow based on the above test, reset to defaults
-    print('location.restorePlaces[e3]: Restore seemed to succeed but failed final sanity check. Reverting to defaults. Error was '+e.toString());
-    loc.places = [LatLng(45.504688, -73.574990)];
-    loc.placeNames = ['McGill Downtown Campus'];
-    notifications.enabledSavedLoc = [false];
-    notifications.enabledCurrentLoc = false;
+    restoreDefaultPlaceData('location.restorePlaces: Restored values failed sanity check.', e);
     return;
   }
   print('location.restorePlaces: Successfully restored locations: '+loc.placeNames.toString());
@@ -178,4 +181,18 @@ saveLastKnownLocation() async {
     print('loc.saveLastKnownLocation: Could not update: '+e.toString());
     return false;
   }
+}
+
+loadNotificationPreferences() {
+  //DateTime lastShownNotificationCurrentLoc = DateTime.fromMillisecondsSinceEpoch(0);
+  //List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEpoch(0)];
+  //int maxLookahead = 2; // Index 2 is 60 minutes ahead
+  //Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
+  //bool doNotNotifyUnderThreshold = true;
+  //int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
+  
+}
+
+saveNotificationPreferences() {
+
 }

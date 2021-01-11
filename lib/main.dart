@@ -123,8 +123,6 @@ class SplashState extends State<Splash> {
       await io.loadLastKnownLocation();
       await io.loadPlaceData();
       print('SplashState: Done restoring places');
-      // TODO Seems to hang here when 'await' is added
-      loc.updateLastKnownLocation();
       try {
         _changeSplashText('Checking for Updates...');
         if (await update.completeUpdate(false, true) != job.CompletionStatus.failure) {

@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 
-import 'package:Nowcasting/main.dart';
+import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -178,7 +178,7 @@ Future<String> getPixel(int _x, int _y, int _index) async {
     // retrieve the pixel value.
     File _file = io.localFile('forecast.$_index.png');
     try {
-      _result = await platform.invokeMethod('getPixel', <String, dynamic>{
+      _result = await main.platform.invokeMethod('getPixel', <String, dynamic>{
         "filePath": _file.path.toString(), 
         "xCoord": _x, 
         "yCoord": _y,

@@ -1,9 +1,8 @@
 import 'package:intl/intl.dart';
 import 'dart:io' show Platform;
 
-import 'package:Nowcasting/support-imagery.dart';
-import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/main.dart' as main;
+import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
@@ -93,22 +92,22 @@ void backgroundFetchCallback(String taskId) async {
     await update.completeUpdateSingleImage(_i, false);
     // Check any enabled locations in this image.
     if (_enabledCurrentLocCopy) {
-      List<int> _pixelCoord = geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
-      String _thisLocPixel = await getPixel(_pixelCoord[0], _pixelCoord[1], _i);
+      List<int> _pixelCoord = imagery.geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
+      String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
         _enabledCurrentLocCopy = false;
-        showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(legends[_i])));
+        showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
       }
     }
     for (int _n in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
       if (_enabledSavedLocCopy[_n]) {
-        List<int> _pixelCoord = geoToPixel(loc.places[_n].latitude, loc.places[_n].longitude);
-        String _thisLocPixel = await getPixel(_pixelCoord[0], _pixelCoord[1], _i);
+        List<int> _pixelCoord = imagery.geoToPixel(loc.places[_n].latitude, loc.places[_n].longitude);
+        String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
           _enabledSavedLocCopy[_n] = false;
-          showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(legends[_i])));
+          showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
         }
       }
     }

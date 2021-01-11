@@ -71,9 +71,9 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
     Response response = await dio.get(
       url,
       options: Options(
-          responseType: ResponseType.bytes,
-          followRedirects: false,
-          receiveTimeout: 0),
+        responseType: ResponseType.bytes,
+        followRedirects: false,
+        receiveTimeout: 0),
     );
     File file = File(savePath);
     var raf = file.openSync(mode: FileMode.write);
@@ -109,6 +109,8 @@ remoteImage(bool forceRefresh, int i) async {
 Future<job.CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
   // If an update is already in progress, just return.
   if (job.imageUpdateStatus.any(job.isHotState)) {return job.CompletionStatus.inProgress;}
+  // Update location
+  loc.updateLastKnownLocation();
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();

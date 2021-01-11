@@ -82,8 +82,6 @@ class ForecastScreenState extends State<ForecastScreen> {
           ? Colors.white
           : ux.nowcastingColor,
         onRefresh: () async {
-            await loc.updateLastKnownLocation();
-            await update.radarOutages();
             await update.completeUpdate(false, true, context: this.context);
             _rebuild();
           },
@@ -97,7 +95,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new ux.WarningSliver(loc.radarOutageText, ux.WarningLevel.notice, url: loc.radarOutageUrl),
+                      (context, index) => new ux.WarningSliver(ux.radarOutageText, ux.WarningLevel.notice, url: ux.radarOutageUrl),
                       childCount: loc.radarOutage ? 1 : 0,
                     ),
                   ),
@@ -112,7 +110,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new ux.WarningSliver(loc.alertText, ux.WarningLevel.alert, url: loc.alertUrl),
+                      (context, index) => new ux.WarningSliver(ux.alertText, ux.WarningLevel.alert, url: ux.alertUrl),
                       childCount: 1, //TODO loc.alerts.length? store in array for multiple location alerts?
                     ),
                   ),
