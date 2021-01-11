@@ -41,7 +41,7 @@ android {
         applicationId "com.github.the_salami.nowcasting"
         minSdkVersion 16
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode flutterVersionCode
+        versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
