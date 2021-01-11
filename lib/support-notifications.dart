@@ -72,18 +72,17 @@ void backgroundFetchCallback(String taskId) async {
 
   // Initialize sharedprefs and notification plugins, read notification preferences
   if (!notificationsInitialized) {await flutterLocalNotificationsPlugin.initialize(initializationSettings);}
-  if (loc.lastKnownLocation == null) {
+  if (loc.currentLocation.coordinates == null) {
     // Then we know the app is closed and we need to reload our variables.
     main.prefs = await SharedPreferences.getInstance();
-    loc.updateLastKnownLocation();
-    await io.loadLastKnownLocation();
+    loc.currentLocation.update();
     await io.loadPlaceData();
   }
 
   // Work with deep copies because we're manipulating this data
-  List<bool> _enabledSavedLocCopy = new List<bool>.generate(enabledSavedLoc.length, (_index) {if (enabledSavedLoc[_index] == true) {return true;} else {return false;}});
+  List<bool> _enabledSavedLocCopy = new List<bool>.generate(loc.savedPlaces.length, (_index) {if (loc.savedPlaces[_index].notify == true) {return true;} else {return false;}});
   bool _enabledCurrentLocCopy;
-  if (enabledCurrentLoc) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
+  if (loc.currentLocation.notify) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
   
   // Disable notifications this go-round for any locations that have already 
   // been shown for in the last minimumTimeBetweenNotifications (default 180 minutes).
@@ -94,7 +93,7 @@ void backgroundFetchCallback(String taskId) async {
   for (int _i in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
     if (_enabledSavedLocCopy[_i] == true) {
       if ((DateTime.now().difference(lastShownNotificationSavedLoc[_i]) < minimumTimeBetweenNotifications)) {
-        print('notifications.backgroundFetchCallback: Might have notified for saved location '+loc.placeNames[_i]+', but skipped because notified too soon ago.');
+        print('notifications.backgroundFetchCallback: Might have notified for saved location '+loc.savedPlaces[_i].name+', but skipped because notified too soon ago.');
         _enabledSavedLocCopy[_i] = false;
       }
     }
@@ -108,7 +107,7 @@ void backgroundFetchCallback(String taskId) async {
     await update.completeUpdateSingleImage(_i, false);
     // Check this image for current location, if notifications are enabled for it
     if (_enabledCurrentLocCopy) {
-      List<int> _pixelCoord = imagery.geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
+      List<int> _pixelCoord = imagery.geoToPixel(loc.currentLocation.coordinates.latitude, loc.currentLocation.coordinates.longitude);
       String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
@@ -128,7 +127,7 @@ void backgroundFetchCallback(String taskId) async {
     // Check this image for any saved locations, if notifications are enabled for them
     for (int _n in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
       if (_enabledSavedLocCopy[_n]) {
-        List<int> _pixelCoord = imagery.geoToPixel(loc.places[_n].latitude, loc.places[_n].longitude);
+        List<int> _pixelCoord = imagery.geoToPixel(loc.savedPlaces[_n].coordinates.latitude, loc.savedPlaces[_n].coordinates.longitude);
         String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
@@ -138,7 +137,7 @@ void backgroundFetchCallback(String taskId) async {
             _enabledSavedLocCopy[_n] = false;
             lastShownNotificationSavedLoc[_n] = new DateTime.now();
             io.savePlaceData();
-            showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+            showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
           } else {
           print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
           }

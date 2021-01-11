@@ -110,7 +110,7 @@ Future<job.CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {Bui
   // If an update is already in progress, just return.
   if (job.imageUpdateStatus.any(job.isHotState)) {return job.CompletionStatus.inProgress;}
   // Update location
-  loc.updateLastKnownLocation();
+  loc.currentLocation.update();
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();

@@ -70,7 +70,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // flutter_map and user_location variables
   MapController mapController = MapController();
-  List<Marker> markerList = [Marker(point: loc.lastKnownLocation, builder: ux.locMarker)];
+  List<Marker> markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)];
 
   // Dark mode listening
   @override
@@ -123,8 +123,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (await loc.checkLocPerm() == false || await loc.checkLocService() == false) {
       ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
     } else {
-      await loc.updateLastKnownLocation(withRequests: true); 
-      setState(() {markerList = [Marker(point: loc.lastKnownLocation, builder: ux.locMarker)]; mapController.move(loc.lastKnownLocation, 9);});
+      await loc.currentLocation.update(withRequests: true); 
+      setState(() {markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)]; mapController.move(loc.currentLocation.coordinates, 9);});
     }
   }
   Widget _returnSpacer() {

@@ -111,7 +111,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: ux.progressButtonBorderRadius,
                 color: ux.progressButtonColor,
                 onPressed: () async {    
-                  await loc.updateLastKnownLocation(withRequests: true); 
+                  await loc.currentLocation.update(withRequests: true); 
                   return () {
                     _introKey.currentState?.animateScroll(3); 
                   }; 
@@ -133,7 +133,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               onPressed: () async {
                 // We must have a valid location
                 // Also either be android, or request permission on iOS
-                if (loc.lastKnownLocation != null && (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,))) {
+                if (loc.currentLocation.coordinates != null && (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,))) {
                   // If we got permission, set the boolean to enable notifications
                   // Set the boolean to enable notifications
                   notifications.enabledCurrentLoc = true;

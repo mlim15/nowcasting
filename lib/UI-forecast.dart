@@ -22,17 +22,19 @@ class ForecastScreenState extends State<ForecastScreen> {
   
   _addLocationPressed() async {
     setState(() {
-      if (loc.lastKnownLocation == null || imagery.coordOutOfBounds(loc.lastKnownLocation)) {
-        loc.places.add(LatLng(0, 0));
-        loc.placeNames.add('New Location');
-        notifications.enabledSavedLoc.add(false);
-        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
+      if (loc.currentLocation.coordinates == null || imagery.coordOutOfBounds(loc.currentLocation.coordinates)) {
+        loc.savedPlaces.add(loc.SavedLocation(
+          name: "New Location", 
+          coordinates: LatLng(0,0), 
+          notify: false
+        ));
         io.savePlaceData();
       } else {
-        loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
-        loc.placeNames.add('Copy of Current Location');
-        notifications.enabledSavedLoc.add(false);
-        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
+        loc.savedPlaces.add(loc.SavedLocation(
+          name: "Copy of Current Location", 
+          coordinates: new LatLng(loc.currentLocation.coordinates.latitude, loc.currentLocation.coordinates.longitude), 
+          notify: false
+        ));
         io.savePlaceData();
       }
     });
@@ -53,7 +55,7 @@ class ForecastScreenState extends State<ForecastScreen> {
     setState(() {
       // If we are rebuilding after deleting the last item
       // in the list, swap out of editing mode
-      if (loc.places.length == 0) {
+      if (loc.savedPlaces.isEmpty) {
         _editing = false;
         io.savePlaceData();
       }
@@ -69,7 +71,7 @@ class ForecastScreenState extends State<ForecastScreen> {
       appBar: AppBar(
         title: const Text('Forecast'),
         actions: <Widget>[
-          loc.places.isNotEmpty
+          loc.savedPlaces.isNotEmpty
             ? IconButton(
               icon: _editing
                 ? Icon(Icons.done)
@@ -121,16 +123,16 @@ class ForecastScreenState extends State<ForecastScreen> {
                   child: Container(),
                 ),
               // Current location sliver
-              loc.lastKnownLocation != null
+              loc.currentLocation.coordinates != null
                 // If current location is available
                 ? SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0),
                   sliver: SliverFixedExtentList(
-                    delegate: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
+                    delegate: imagery.coordOutOfBounds(loc.currentLocation.coordinates) == false 
                       // geoToPixel returns false if location is outside bbox. 
                       // If geoToPixel doesn't return false, build the forecast sliver:
                       ? SliverChildBuilderDelegate(
-                        (context, index) => new ForecastSliver(loc.lastKnownLocation, "Current Location", -1, _editing, () {_rebuild();}),
+                        (context, index) => new ForecastSliver(loc.currentLocation),
                         childCount: 1,
                       )
                       // Otherwise, display a notice that tells the user they are out of coverage.
@@ -138,7 +140,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                         (context, index) => new ux.WarningSliver("McGill's Nowcasting service does not provide data for your current location.", ux.WarningLevel.notice),
                         childCount: 1,
                       ),
-                    itemExtent: imagery.coordOutOfBounds(loc.lastKnownLocation) == false 
+                    itemExtent: imagery.coordOutOfBounds(loc.currentLocation.coordinates) == false 
                       ? _editing
                         ? ux.sliverHeightExpanded
                         : ux.sliverHeight
@@ -157,7 +159,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   ),
                 ),
               // Slivers for stored locations
-              (loc.places.isNotEmpty && loc.places.every((item) {return item != null;}))
+              (loc.savedPlaces.isNotEmpty)
                 ? SliverPadding(
                   padding: const EdgeInsets.symmetric(vertical: 0.0),
                   sliver: SliverFixedExtentList(
@@ -165,12 +167,12 @@ class ForecastScreenState extends State<ForecastScreen> {
                       ? ux.sliverHeightExpanded
                       : ux.sliverHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new ForecastSliver(loc.places[index], loc.placeNames[index], index, _editing, () {_rebuild();}),
-                      childCount: loc.places.length,
+                      (context, index) => new ForecastSliver(loc.savedPlaces[index], _editing, () {_rebuild();}),
+                      childCount: loc.savedPlaces.length,
                     ),
                   ),
                 )
-                : loc.places.isEmpty 
+                : loc.savedPlaces.isEmpty 
                   ? SliverToBoxAdapter( 
                     child: Container(),
                   )

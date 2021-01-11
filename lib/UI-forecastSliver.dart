@@ -17,13 +17,11 @@ import 'package:Nowcasting/UI-locationPicker.dart';
 
 // Forecast sliver widget definition
 class ForecastSliver extends StatelessWidget {
-  final LatLng _location;
-  final String _locName;
   final bool _editing;
-  final int _index;
   final VoidCallback rebuildCallback;
+  final loc.NowcastingLocation location;
 
-  ForecastSliver(this._location, this._locName, [this._index = -1, this._editing = false, this.rebuildCallback]);
+  ForecastSliver(this.location, [this._editing = false, this.rebuildCallback]);
 
   Widget _showFailed() {
     return Column(
@@ -39,19 +37,16 @@ class ForecastSliver extends StatelessWidget {
 
     // Infer whether notifications are on/off based on passed value and
     // store locally as boolean
-    bool _notify = false;
-    _index != -1
-      ? _notify = notifications.enabledSavedLoc[_index] 
-      : _notify = notifications.enabledCurrentLoc;
+    bool _notify = this.location.notify;
     
     // Keys and controllers for later use
     final _formKey = GlobalKey<FormState>();
     final _latControl = TextEditingController();
     final _lonControl = TextEditingController();
-    TextEditingController _nameTextController = new TextEditingController.fromValue(TextEditingValue(text: _locName));
+    TextEditingController _nameTextController = new TextEditingController.fromValue(TextEditingValue(text: this.location.name));
     
     // Button press methods
-    _notifyPressed([bool currentLoc = false]) async {
+    _notifyPressed() async {
       // Request permissions on iOS if necessary
       if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true)) {
         bool _oldState = notifications.anyNotificationsEnabled();
@@ -61,12 +56,7 @@ class ForecastSliver extends StatelessWidget {
           ? _notify = false
           : _notify = true;
         rebuildCallback();
-        if (currentLoc) {
-          notifications.enabledCurrentLoc = _notify;
-        } else {
-          // Update value in array
-          notifications.enabledSavedLoc[_index] = _notify;
-        }
+        this.location.notify = _notify;
         io.savePlaceData();
         if (_oldState == false && _notify == true) {
           // If we are enabling when all were previously disabled, 
@@ -83,19 +73,11 @@ class ForecastSliver extends StatelessWidget {
 
     AlertDialog editPopup(bool _isEditable) {
       // Set initial text values using the controllers for each text field
-      if (_isEditable) {
-        // Then it's for a saved location. Load
-        // from array based on index
-        _latControl.text = loc.places[_index].latitude.toString();
-        _lonControl.text = loc.places[_index].longitude.toString();
-      } else {
-        // It's for the current location
-        _latControl.text = loc.lastKnownLocation.latitude.toString();
-        _lonControl.text = loc.lastKnownLocation.longitude.toString();
-      }
+        _latControl.text = this.location.coordinates.latitude.toString();
+        _lonControl.text = this.location.coordinates.longitude.toString();
 
       return AlertDialog(
-        title: Text("Coordinates for '"+_locName+"'"),
+        title: Text("Coordinates for '"+this.location.name+"'"),
         content: SingleChildScrollView( 
           scrollDirection: Axis.vertical,
           child: Form(
@@ -110,7 +92,7 @@ class ForecastSliver extends StatelessWidget {
                     decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) {
-                      loc.places[_index].latitude = double.parse(newValue);
+                      this.location.coordinates.latitude = double.parse(newValue);
                     },
                     validator: (newValue) {
                       if (double.tryParse(newValue) == null) {
@@ -130,7 +112,7 @@ class ForecastSliver extends StatelessWidget {
                     decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
                     keyboardType: TextInputType.number,
                     onSaved: (newValue) {
-                      loc.places[_index].longitude = double.parse(newValue);
+                      this.location.coordinates.longitude = double.parse(newValue);
                     },
                     validator: (newValue) {
                       if (double.tryParse(newValue) == null) {
@@ -143,7 +125,7 @@ class ForecastSliver extends StatelessWidget {
                     readOnly: !_isEditable,
                   ),
                 ),
-                _index != -1 
+                this.location is! loc.CurrentLocation 
                   ? Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -157,7 +139,7 @@ class ForecastSliver extends StatelessWidget {
                             LatLng _chosenLoc = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => LocationPickerScreen(_location, _locName),
+                                builder: (context) => LocationPickerScreen(this.location),
                               ),
                             );
                             if (_chosenLoc != null) {
@@ -201,7 +183,7 @@ class ForecastSliver extends StatelessWidget {
                           }
                           : () async {
                             ux.showSnackBarIf(true, ux.updatingLocationSnack,context);
-                            bool _updateSucceeded = await loc.updateLastKnownLocation();
+                            bool _updateSucceeded = await loc.currentLocation.update();
                             rebuildCallback();
                             Navigator.of(context).pop();
                             _updateSucceeded
@@ -223,7 +205,7 @@ class ForecastSliver extends StatelessWidget {
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
       List<String> _pixelValues = [];
-      List<int> _pixelCoord = imagery.geoToPixel(_location.latitude, _location.longitude);
+      List<int> _pixelCoord = imagery.geoToPixel(this.location.coordinates.latitude, this.location.coordinates.longitude);
       int _x = _pixelCoord[0];
       int _y = _pixelCoord[1];
       for (int _i = 0; _i <= 8; _i++) {
@@ -317,25 +299,13 @@ class ForecastSliver extends StatelessWidget {
                           color: Colors.white,
                           disabledColor: Colors.white.withAlpha(90),
                           icon: Icon(Icons.arrow_upward),
-                          onPressed: _index == 0 || _index == -1
+                          onPressed: ((this.location is loc.CurrentLocation) || (loc.savedPlaces.first == this.location))
                             ? null // Disable the "up" button if it's first in the list or the current location box
                             : () {
-                              LatLng _thisPlace = loc.places[_index];
-                              String _thisPlaceName = loc.placeNames[_index];
-                              bool _thisPlaceNotif = notifications.enabledSavedLoc[_index];
-                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
-                              LatLng _swapPlace = loc.places[_index-1];
-                              String _swapPlaceName = loc.placeNames[_index-1];
-                              bool _swapPlaceNotif = notifications.enabledSavedLoc[_index-1];
-                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index-1];
-                              loc.places[_index] = _swapPlace;
-                              loc.placeNames[_index] = _swapPlaceName;
-                              notifications.enabledSavedLoc[_index] = _swapPlaceNotif;
-                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
-                              loc.places[_index-1] = _thisPlace;
-                              loc.placeNames[_index-1] = _thisPlaceName;
-                              notifications.enabledSavedLoc[_index-1] = _thisPlaceNotif;
-                              notifications.lastShownNotificationSavedLoc[_index-1] = _thisTimeLastNotif;
+                              int _index = loc.savedPlaces.indexOf(this.location);
+                              loc.SavedLocation _thisLoc = loc.savedPlaces[_index];
+                              loc.savedPlaces[_index] = loc.savedPlaces[_index-1];
+                              loc.savedPlaces[_index-1] = _thisLoc;
                               rebuildCallback();
                               io.savePlaceData();
                             },
@@ -344,25 +314,13 @@ class ForecastSliver extends StatelessWidget {
                           color: Colors.white,
                           disabledColor: Colors.white.withAlpha(90),
                           icon: Icon(Icons.arrow_downward), 
-                          onPressed: _index == loc.places.length-1 || _index == -1
+                          onPressed: ((this.location is loc.CurrentLocation) || (loc.savedPlaces.last == this.location))
                             ? null // Disable the "down" button if it's the last in the list  or the current location box
                             : () {
-                              LatLng _thisPlace = loc.places[_index];
-                              String _thisPlaceName = loc.placeNames[_index];
-                              bool _thisPlaceNot = notifications.enabledSavedLoc[_index];
-                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
-                              LatLng _swapPlace = loc.places[_index+1];
-                              String _swapPlaceName = loc.placeNames[_index+1];
-                              bool _swapPlaceNot = notifications.enabledSavedLoc[_index+1];
-                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index+1];
-                              loc.places[_index] = _swapPlace;
-                              loc.placeNames[_index] = _swapPlaceName;
-                              notifications.enabledSavedLoc[_index] = _swapPlaceNot;
-                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
-                              loc.places[_index+1] = _thisPlace;
-                              loc.placeNames[_index+1] = _thisPlaceName;
-                              notifications.enabledSavedLoc[_index+1] = _thisPlaceNot;
-                              notifications.lastShownNotificationSavedLoc[_index+1] = _thisTimeLastNotif;
+                              int _index = loc.savedPlaces.indexOf(this.location);
+                              loc.SavedLocation _thisLoc = loc.savedPlaces[_index];
+                              loc.savedPlaces[_index] = loc.savedPlaces[_index+1];
+                              loc.savedPlaces[_index+1] = _thisLoc;
                               rebuildCallback();
                               io.savePlaceData();
                             },
@@ -377,7 +335,7 @@ class ForecastSliver extends StatelessWidget {
                           children: [
                             Row( 
                               children: [
-                                _index == -1
+                                this.location is loc.CurrentLocation
                                   ? IconButton(
                                       icon: Icon(Icons.info, color: Colors.white),
                                       onPressed: () {
@@ -401,32 +359,22 @@ class ForecastSliver extends StatelessWidget {
                                       );
                                     } ,
                                   ),
-                                _index == -1
+                                this.location is loc.CurrentLocation
                                   ? Expanded(child: Text("Current Location", textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis))
                                   : Flexible( 
                                     child: TextFormField(
                                       controller: _nameTextController,
                                       style: ux.latoWhite,
-                                      onChanged: (_content) {loc.placeNames[_index] = _content;},
+                                      onChanged: (_content) {this.location.name = _content;},
                                     )
                                   ),
                                 IconButton(
-                                  icon: _index == -1
-                                      ? notifications.enabledCurrentLoc
-                                        ? Icon(Icons.notifications_active, color: Colors.white)
-                                        : Icon(Icons.notifications_off, color: Colors.white)
-                                      : notifications.enabledSavedLoc[_index]
-                                        ? Icon(Icons.notifications_active, color: Colors.white)
-                                        : Icon(Icons.notifications_off, color: Colors.white),
-                                  onPressed: () {
-                                    if (_index == -1) {
-                                      _notifyPressed(true);
-                                    } else {
-                                      _notifyPressed();
-                                    }
-                                  },
+                                icon: this.location.notify
+                                  ? Icon(Icons.notifications_active, color: Colors.white)
+                                  : Icon(Icons.notifications_off, color: Colors.white),
+                                  onPressed: () {_notifyPressed();},
                                 ),
-                                _index == -1
+                                this.location is loc.CurrentLocation
                                   ? Container()
                                   : IconButton(
                                     icon: Icon(Icons.delete, color: Colors.white),
@@ -443,7 +391,7 @@ class ForecastSliver extends StatelessWidget {
                                                   children: <Widget>[
                                                     Padding(
                                                       padding: EdgeInsets.all(2.0),
-                                                      child: Text("Delete '"+loc.placeNames[_index]+"'?")
+                                                      child: Text("Delete '"+this.location.name+"'?")
                                                     ),
                                                     Padding(
                                                       padding: const EdgeInsets.all(8.0),
@@ -461,10 +409,7 @@ class ForecastSliver extends StatelessWidget {
                                                             color: ux.nowcastingColor,
                                                             textColor: Colors.white,
                                                             onPressed: () async {
-                                                              loc.places.removeAt(_index);
-                                                              loc.placeNames.removeAt(_index);
-                                                              notifications.enabledSavedLoc.removeAt(_index);
-                                                              notifications.lastShownNotificationSavedLoc.removeAt(_index);
+                                                              loc.savedPlaces.remove(this.location);
                                                               rebuildCallback();
                                                               Navigator.of(context).pop();
                                                             },
@@ -484,7 +429,7 @@ class ForecastSliver extends StatelessWidget {
                                   ),
                               ]
                             ),
-                            imagery.coordOutOfBounds(_location)
+                            imagery.coordOutOfBounds(this.location.coordinates)
                               // If coordinates of the location are out of service range, display a message
                               ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                               // Otherwise read the forecast images
@@ -506,9 +451,9 @@ class ForecastSliver extends StatelessWidget {
                           children: [
                             Container(
                               padding: EdgeInsets.all(8), 
-                              child: new Text(_locName, textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis),
+                              child: new Text(this.location.name, textAlign: TextAlign.left, style: TextStyle(fontSize: 16).merge(ux.latoWhite), overflow: TextOverflow.ellipsis),
                             ),
-                            imagery.coordOutOfBounds(_location)
+                            imagery.coordOutOfBounds(this.location.coordinates)
                               // If coordinates of the location are out of service range, display a message
                               ? Container(margin: EdgeInsets.all(8), child: Text("Tap the pencil icons to edit this entry and add valid coordinates.", style: ux.latoWhite))
                               // Otherwise read the forecast images

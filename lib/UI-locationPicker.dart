@@ -7,22 +7,21 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/UI-map.dart' as map;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-io.dart' as io;
+import 'package:Nowcasting/support-location.dart' as loc;
 
 class LocationPickerScreen extends StatefulWidget {
-  final LatLng _location;
-  final String _locName;
+  final loc.NowcastingLocation location;
 
-  LocationPickerScreen(this._location, this._locName);
+  LocationPickerScreen(this.location);
 
   @override
-  LocationPickerScreenState createState() => new LocationPickerScreenState(this._location, this._locName);
+  LocationPickerScreenState createState() => new LocationPickerScreenState(this.location);
 }
 
 class LocationPickerScreenState extends State<LocationPickerScreen> with WidgetsBindingObserver {
-  final LatLng _location;
-  final String _locName;
+  final loc.NowcastingLocation location;
 
-  LocationPickerScreenState(this._location, this._locName);
+  LocationPickerScreenState(this.location);
 
   MapController _mapController = MapController();
   LatLng _markerLoc = LatLng(0,0);
@@ -38,13 +37,13 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
     // called even during the intial build.
     // https://github.com/fleaflet/flutter_map/issues/56
     // LatLng cannot be tested with == operator (immutable), test longitude instead
-    if (imagery.coordOutOfBounds(_location)) {
+    if (imagery.coordOutOfBounds(this.location.coordinates)) {
       // Then default centre coordinates were used when drawing the map.
       // Test against these defaults
       if (_newPosition.center.longitude == -73.574990) {
         return;
       }
-    } else if (_newPosition.center.longitude == _location.longitude) {
+    } else if (_newPosition.center.longitude == this.location.coordinates.longitude) {
       // Otherwise test against the saved location to determine if we really moved
       return;
     }
@@ -64,18 +63,18 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
     // Determine whether or not to send coordinates of center
     // anything out of bounds will result in an unmovable map
     MapOptions _mapOptions;
-    if (imagery.coordOutOfBounds(_location)) {
+    if (imagery.coordOutOfBounds(this.location.coordinates)) {
       // When out of bounds, simply do not send centerLat/centerLon and the
       // method defaults to McGill.
       _mapOptions = map.getMapOptions(context, positionChanged: _positionChanged);
     } else {
       // Else send them so we can start centered on the current coordinates of the saved location.
-      _mapOptions = map.getMapOptions(context, centerLat: _location.latitude, centerLon: _location.longitude, positionChanged: _positionChanged);
+      _mapOptions = map.getMapOptions(context, centerLat: this.location.coordinates.latitude, centerLon: this.location.coordinates.longitude, positionChanged: _positionChanged);
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(this._locName),
+        title: Text(this.location.name),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.done),
@@ -109,7 +108,7 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
                   // Center of map (follows view to show new selection)
                   Marker(point: _markerLoc, builder: (context) {return ux.locMarker(context, markerColor: ux.alertColor, borderColor: ux.alertColor);}),
                   // Current saved location (if applicable)
-                  Marker(point: _location, builder: (context) {return ux.locMarker(context);})
+                  Marker(point: this.location.coordinates, builder: (context) {return ux.locMarker(context);})
                 ],
               ),
             ], // End of layers
