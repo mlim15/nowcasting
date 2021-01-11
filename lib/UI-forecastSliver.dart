@@ -320,19 +320,24 @@ class ForecastSliver extends StatelessWidget {
                           onPressed: _index == 0 || _index == -1
                             ? null // Disable the "up" button if it's first in the list or the current location box
                             : () {
-                              LatLng thisPlace = loc.places[_index];
-                              String thisPlaceName = loc.placeNames[_index];
-                              bool thisPlaceNot = notifications.enabledSavedLoc[_index];
-                              LatLng swapPlace = loc.places[_index-1];
-                              String swapPlaceName = loc.placeNames[_index-1];
-                              bool swapPlaceNot = notifications.enabledSavedLoc[_index-1];
-                              loc.places[_index] = swapPlace;
-                              loc.placeNames[_index] = swapPlaceName;
-                              notifications.enabledSavedLoc[_index] = swapPlaceNot;
-                              loc.places[_index-1] = thisPlace;
-                              loc.placeNames[_index-1] = thisPlaceName;
-                              notifications.enabledSavedLoc[_index-1] = thisPlaceNot;
+                              LatLng _thisPlace = loc.places[_index];
+                              String _thisPlaceName = loc.placeNames[_index];
+                              bool _thisPlaceNotif = notifications.enabledSavedLoc[_index];
+                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
+                              LatLng _swapPlace = loc.places[_index-1];
+                              String _swapPlaceName = loc.placeNames[_index-1];
+                              bool _swapPlaceNotif = notifications.enabledSavedLoc[_index-1];
+                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index-1];
+                              loc.places[_index] = _swapPlace;
+                              loc.placeNames[_index] = _swapPlaceName;
+                              notifications.enabledSavedLoc[_index] = _swapPlaceNotif;
+                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
+                              loc.places[_index-1] = _thisPlace;
+                              loc.placeNames[_index-1] = _thisPlaceName;
+                              notifications.enabledSavedLoc[_index-1] = _thisPlaceNotif;
+                              notifications.lastShownNotificationSavedLoc[_index-1] = _thisTimeLastNotif;
                               rebuildCallback();
+                              io.savePlaceData();
                             },
                         ),
                         IconButton(
@@ -342,19 +347,24 @@ class ForecastSliver extends StatelessWidget {
                           onPressed: _index == loc.places.length-1 || _index == -1
                             ? null // Disable the "down" button if it's the last in the list  or the current location box
                             : () {
-                              LatLng thisPlace = loc.places[_index];
-                              String thisPlaceName = loc.placeNames[_index];
-                              bool thisPlaceNot = notifications.enabledSavedLoc[_index];
-                              LatLng swapPlace = loc.places[_index+1];
-                              String swapPlaceName = loc.placeNames[_index+1];
-                              bool swapPlaceNot = notifications.enabledSavedLoc[_index+1];
-                              loc.places[_index] = swapPlace;
-                              loc.placeNames[_index] = swapPlaceName;
-                              notifications.enabledSavedLoc[_index] = swapPlaceNot;
-                              loc.places[_index+1] = thisPlace;
-                              loc.placeNames[_index+1] = thisPlaceName;
-                              notifications.enabledSavedLoc[_index+1] = thisPlaceNot;
+                              LatLng _thisPlace = loc.places[_index];
+                              String _thisPlaceName = loc.placeNames[_index];
+                              bool _thisPlaceNot = notifications.enabledSavedLoc[_index];
+                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
+                              LatLng _swapPlace = loc.places[_index+1];
+                              String _swapPlaceName = loc.placeNames[_index+1];
+                              bool _swapPlaceNot = notifications.enabledSavedLoc[_index+1];
+                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index+1];
+                              loc.places[_index] = _swapPlace;
+                              loc.placeNames[_index] = _swapPlaceName;
+                              notifications.enabledSavedLoc[_index] = _swapPlaceNot;
+                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
+                              loc.places[_index+1] = _thisPlace;
+                              loc.placeNames[_index+1] = _thisPlaceName;
+                              notifications.enabledSavedLoc[_index+1] = _thisPlaceNot;
+                              notifications.lastShownNotificationSavedLoc[_index+1] = _thisTimeLastNotif;
                               rebuildCallback();
+                              io.savePlaceData();
                             },
                         ),
                         Spacer(),
@@ -454,6 +464,7 @@ class ForecastSliver extends StatelessWidget {
                                                               loc.places.removeAt(_index);
                                                               loc.placeNames.removeAt(_index);
                                                               notifications.enabledSavedLoc.removeAt(_index);
+                                                              notifications.lastShownNotificationSavedLoc.removeAt(_index);
                                                               rebuildCallback();
                                                               Navigator.of(context).pop();
                                                             },

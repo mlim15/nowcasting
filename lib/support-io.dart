@@ -69,18 +69,22 @@ loadPlaceData() async {
   List<String> _loadNames;
   List<String> _loadNotifySaved;
   bool _loadNotifyCurrentBool;
+  String _loadLastNotifiedCurrentLoc;
+  List<String> _loadLastNotifiedSavedLoc;
   try {
     _loadPlaces = main.prefs.getStringList('places');
     _loadNames = main.prefs.getStringList('placeNames');
     _loadNotifySaved = main.prefs.getStringList('notify');
     _loadNotifyCurrentBool = main.prefs.getBool('notifyLoc');
+    _loadLastNotifiedSavedLoc = main.prefs.getStringList('lastNotifiedSavedLoc');
+    _loadLastNotifiedCurrentLoc = main.prefs.getString('lastNotifiedCurrentLoc');
   } catch(e) {
     // If the load failed somehow already, use defaults.
     print('location.restorePlaces: Error loading SharedPreference stored values. Default values from initialization kept.');
     return;
   }
   // Check for nulls first in the retrieved data and just return in that case
-  if (_loadPlaces == null || _loadNames == null || _loadNotifySaved == null || _loadNotifyCurrentBool == null) {
+  if (_loadPlaces == null || _loadNames == null || _loadNotifySaved == null || _loadNotifyCurrentBool == null || _loadLastNotifiedSavedLoc == null || _loadLastNotifiedCurrentLoc == null) {
     print('location.restorePlaces: Tried to restore but SharedPreferences were null. Default values from initialization kept.');
     return;
   }
@@ -126,6 +130,18 @@ loadPlaceData() async {
   if (_loadNotifyCurrentBool != null) {
     notifications.enabledCurrentLoc = _loadNotifyCurrentBool;
   }
+  // Load time last notified for saved locations
+  List<DateTime> _loadLastNotifiedSavedLocDateTime = [];
+  if (_loadLastNotifiedSavedLoc.isNotEmpty) {
+    for (String _s in _loadLastNotifiedSavedLoc) {
+      _loadLastNotifiedSavedLocDateTime.add(DateTime.parse(_s));
+    }
+    notifications.lastShownNotificationSavedLoc = _loadLastNotifiedSavedLocDateTime;
+  } else {
+    _loadLastNotifiedSavedLocDateTime = [];
+  }
+  // Load time last notified for current location
+  notifications.lastShownNotificationCurrentLoc = DateTime.parse(_loadLastNotifiedCurrentLoc);
   try {
     // Flutter does not evaluate assertions in profile or release mode.
     if (!(loc.places != null && loc.placeNames != null && notifications.enabledSavedLoc != null)) {
@@ -158,6 +174,12 @@ savePlaceData() async {
   }
   main.prefs.setStringList('notify', _saveNotify);
   main.prefs.setBool('notifyLoc', notifications.enabledCurrentLoc);
+  List<String> _saveLastNotifiedSavedLoc = [];
+  for (DateTime _dt in notifications.lastShownNotificationSavedLoc) {
+    _saveLastNotifiedSavedLoc.add(_dt.toIso8601String());
+  }
+  main.prefs.setStringList('lastNotifiedSavedLoc', _saveLastNotifiedSavedLoc);
+  main.prefs.setString('lastNotifiedCurrentLoc', notifications.lastShownNotificationCurrentLoc.toIso8601String());
 }
 
 loadLastKnownLocation() async {
@@ -182,15 +204,13 @@ saveLastKnownLocation() async {
 }
 
 loadNotificationPreferences() {
-  //DateTime lastShownNotificationCurrentLoc = DateTime.fromMillisecondsSinceEpoch(0);
-  //List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEpoch(0)];
-  //int maxLookahead = 2; // Index 2 is 60 minutes ahead
-  //Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
-  //bool doNotNotifyUnderThreshold = true;
-  //int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
+
   
 }
 
 saveNotificationPreferences() {
+  //int maxLookahead = 2; // Index 2 is 60 minutes ahead
+  //Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
+  //int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
 
 }

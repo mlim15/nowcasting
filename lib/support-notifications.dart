@@ -17,8 +17,10 @@ List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEp
 
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
 Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
-bool doNotNotifyUnderThreshold = true;
-int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
+// First items of each type (t1, s1, l1) will not generate notifications
+// When zero it is effectively disabled because the method that checks
+// this will only ever return a result that says it's not under the threshold
+int severityThreshold = 1; 
 
 bool enabledCurrentLoc = false;
 List<bool> enabledSavedLoc = [false];
@@ -66,10 +68,6 @@ bool anyNotificationsEnabled() {
 /// This is what determines whether to generate a notification (and does so)
 /// when it is triggered by the OS.
 void backgroundFetchCallback(String taskId) async {
-  // TODO do not generate more notifications if the first are not yet dismissed,
-  // if such a thing is possible. Perhaps store array of lastNotified DateTimes
-  // and restrict to once per couple hours per location.
-  // TODO configurable threshold so you aren't notified for a drizzle
   print('notifications.backgroundFetchCallback: Headless event $taskId received at '+DateTime.now().toString());
 
   // Initialize sharedprefs and notification plugins, read notification preferences
@@ -87,30 +85,57 @@ void backgroundFetchCallback(String taskId) async {
   bool _enabledCurrentLocCopy;
   if (enabledCurrentLoc) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
   
+  // Disable notifications this go-round for any locations that have already 
+  // been shown for in the last minimumTimeBetweenNotifications (default 180 minutes).
+  if (DateTime.now().difference(lastShownNotificationCurrentLoc) < minimumTimeBetweenNotifications) {
+    _enabledCurrentLocCopy = false;
+  }
+  for (int _i in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
+    if (_enabledSavedLocCopy[_i] == true) {
+      if ((DateTime.now().difference(lastShownNotificationSavedLoc[_i]) < minimumTimeBetweenNotifications)) {
+        _enabledSavedLocCopy[_i] = false;
+      }
+    }
+  }
+
   for (int _i = 0; _i < maxLookahead; _i++) {
     // Check if any notify locations are left that we haven't found a result for.
     // If not, break out of the for loop, we've notified for all possible locations.
     if (!(_enabledCurrentLocCopy || _enabledSavedLocCopy.any((entry) {return entry == true;}))) {break;}
     // Otherwise, there is something to look for still. Fetch the next image.
     await update.completeUpdateSingleImage(_i, false);
-    // Check any enabled locations in this image.
+    // Check this image for current location, if notifications are enabled for it
     if (_enabledCurrentLocCopy) {
       List<int> _pixelCoord = imagery.geoToPixel(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude);
       String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
-        _enabledCurrentLocCopy = false;
-        showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+        if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
+          // Disable this location for the next loop, update the time we last notified for it
+          // and show the notification.
+          _enabledCurrentLocCopy = false;
+          lastShownNotificationCurrentLoc = new DateTime.now();
+          io.savePlaceData();
+          // TODO save this to sharedpref
+          showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+        }
       }
     }
+    // Check this image for any saved locations, if notifications are enabled for them
     for (int _n in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
       if (_enabledSavedLocCopy[_n]) {
         List<int> _pixelCoord = imagery.geoToPixel(loc.places[_n].latitude, loc.places[_n].longitude);
         String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
-          _enabledSavedLocCopy[_n] = false;
-          showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+          if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
+            // Disable this location for the next loop, update the time we last notified for it
+            // and show the notification.
+            _enabledSavedLocCopy[_n] = false;
+            lastShownNotificationSavedLoc[_n] = new DateTime.now();
+            io.savePlaceData();
+            showNotification(imagery.hex2desc(_thisLocPixel), loc.placeNames[_n], DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+          }
         }
       }
     }

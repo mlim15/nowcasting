@@ -26,11 +26,13 @@ class ForecastScreenState extends State<ForecastScreen> {
         loc.places.add(LatLng(0, 0));
         loc.placeNames.add('New Location');
         notifications.enabledSavedLoc.add(false);
+        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
         io.savePlaceData();
       } else {
         loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
         loc.placeNames.add('Copy of Current Location');
         notifications.enabledSavedLoc.add(false);
+        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
         io.savePlaceData();
       }
     });
