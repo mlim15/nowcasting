@@ -6,8 +6,7 @@ List<CompletionStatus> imageUpdateStatus = new List(9);
 //CompletionStatus notificationPreferencesLoaded = CompletionStatus.inactive;
 //CompletionStatus savedPlacesLoaded = CompletionStatus.inactive;
 //CompletionStatus forecastCacheLoaded = CompletionStatus.inactive;
-//CompletionStatus lastKnownLocationLoaded = CompletionStatus.inactive;
-//List<CompletionStatus> loadStatus = [savedPlacesLoaded, forecastCacheLoaded, notificationPreferencesLoaded, lastKnownLocationLoaded];
+//List<CompletionStatus> loadStatus = [savedPlacesLoaded, forecastCacheLoaded, notificationPreferencesLoaded];
 
 // Generic stuff that can be reused (definitions, helper functions, etc)
 // Global array and enum definition used to track status of jobs for each image
