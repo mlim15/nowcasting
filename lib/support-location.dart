@@ -61,6 +61,7 @@ class CurrentLocation extends NowcastingLocation {
   LatLng coordinates;
   bool notify = false;
   DateTime lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
+  DateTime lastUpdated = DateTime.fromMicrosecondsSinceEpoch(0);
 
   // Default constructor
   CurrentLocation();
@@ -68,17 +69,19 @@ class CurrentLocation extends NowcastingLocation {
   // Constructor to load from JSON
   CurrentLocation.fromJson(Map<String, dynamic> json)
       : name = "Current Location",
-        coordinates = LatLng(double.parse(json['latitude']), double.parse(json['longitude'])),
-        notify = (json['notify'] == "true"),
-        lastNotified = DateTime.parse(json['lastNotified']);
+        coordinates = json['latitude'] != null ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null,
+        notify = json['notify'],
+        lastNotified = DateTime.parse(json['lastNotified']),
+        lastUpdated = DateTime.parse(json['lastUpdated']);
 
   // Export as JSON
   Map<String, dynamic> toJson() =>
     {
-      'latitude': coordinates.latitude.toString(),
-      'longitude': coordinates.longitude.toString(),
-      'notify' : notify.toString(),
-      'lastNotified' : lastNotified.toIso8601String()
+      'latitude': coordinates != null ? coordinates.latitude.toString() : null,
+      'longitude': coordinates != null ? coordinates.longitude.toString() : null,
+      'notify' : notify,
+      'lastNotified' : lastNotified.toIso8601String(),
+      'lastUpdated' : lastUpdated.toIso8601String()
     };
 
   update({bool withRequests = false}) async {
@@ -86,6 +89,7 @@ class CurrentLocation extends NowcastingLocation {
       LocationData _newLoc = await getUserLocation(withRequests: withRequests);
       if (_newLoc != null) {
         this.coordinates = new LatLng(_newLoc.latitude, _newLoc.longitude);
+        lastUpdated = DateTime.now();
         await io.savePlaceData();
         return true;
       } else {
