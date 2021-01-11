@@ -1,11 +1,13 @@
 // Stuff used to track the specific jobs in this app
 List<CompletionStatus> imageUpdateStatus = new List(9);
-List<CompletionStatus> legendUpdateStatus = new List(9);
-CompletionStatus notificationPreferencesLoaded = CompletionStatus.inactive;
-CompletionStatus savedPlacesLoaded = CompletionStatus.inactive;
-CompletionStatus forecastCacheLoaded = CompletionStatus.inactive;
-CompletionStatus lastKnownLocationLoaded = CompletionStatus.inactive;
-List<CompletionStatus> loadStatus = [savedPlacesLoaded, forecastCacheLoaded, notificationPreferencesLoaded, lastKnownLocationLoaded];
+// We could use it for all these things but frankly they aren't of sufficient
+// complexity to warrant it right now.
+//List<CompletionStatus> legendUpdateStatus = new List(9);
+//CompletionStatus notificationPreferencesLoaded = CompletionStatus.inactive;
+//CompletionStatus savedPlacesLoaded = CompletionStatus.inactive;
+//CompletionStatus forecastCacheLoaded = CompletionStatus.inactive;
+//CompletionStatus lastKnownLocationLoaded = CompletionStatus.inactive;
+//List<CompletionStatus> loadStatus = [savedPlacesLoaded, forecastCacheLoaded, notificationPreferencesLoaded, lastKnownLocationLoaded];
 
 // Generic stuff that can be reused (definitions, helper functions, etc)
 // Global array and enum definition used to track status of jobs for each image

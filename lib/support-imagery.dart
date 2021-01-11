@@ -4,11 +4,12 @@ import 'dart:math';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import 'package:latlong/latlong.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-io.dart' as io;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Details relevant to nowcasting imagery products - pixel dimensions
 // and geographical bbox

@@ -9,7 +9,6 @@ import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-location.dart' as loc;
-import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 Directory appDocPath;
 
@@ -50,7 +49,6 @@ loadForecastCaches() async {
       } 
     }
   }
-  job.forecastCacheLoaded = job.CompletionStatus.success;
   print('imagery.loadForecastCache: Finished loading cached image values');
 }
 

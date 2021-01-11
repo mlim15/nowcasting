@@ -1,5 +1,9 @@
-import 'package:intl/intl.dart';
 import 'dart:io' show Platform;
+
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:background_fetch/background_fetch.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-io.dart' as io;
@@ -7,10 +11,6 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-jobStatus.dart' as job;
-
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:background_fetch/background_fetch.dart';
 
 DateTime lastShownNotificationCurrentLoc = DateTime.fromMillisecondsSinceEpoch(0);
 List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEpoch(0)];
@@ -35,7 +35,6 @@ final InitializationSettings initializationSettings = InitializationSettings(
   android: initializationSettingsAndroid,
   iOS: initializationSettingsIOS,
 );
-
 const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
   'nowcasting', 'Alerts', 'Notfies you about precipitation in your area during the coming hour',
   importance: Importance.defaultImportance,
@@ -45,8 +44,10 @@ const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotifi
 const IOSNotificationDetails iOSPlatformChannelSpecifics = IOSNotificationDetails(
   // Not sure if anything needed/wanted here
 );
-const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+const NotificationDetails platformChannelSpecifics = NotificationDetails(
+  android: androidPlatformChannelSpecifics, 
+  iOS: iOSPlatformChannelSpecifics
+);
 
 showNotification(String _desc, String _placeName, String _time) async {
   // TODO On android information can be cut off when strings are too long.
@@ -62,6 +63,8 @@ bool anyNotificationsEnabled() {
 }
 
 /// This "Headless Task" is run when app is terminated.
+/// This is what determines whether to generate a notification (and does so)
+/// when it is triggered by the OS.
 void backgroundFetchCallback(String taskId) async {
   // TODO do not generate more notifications if the first are not yet dismissed,
   // if such a thing is possible. Perhaps store array of lastNotified DateTimes
