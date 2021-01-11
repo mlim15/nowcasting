@@ -131,7 +131,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                       // geoToPixel returns false if location is outside bbox. 
                       // If geoToPixel doesn't return false, build the forecast sliver:
                       ? SliverChildBuilderDelegate(
-                        (context, index) => new ForecastSliver(loc.currentLocation),
+                        (context, index) => new ForecastSliver(loc.currentLocation, _editing, () {_rebuild();}),
                         childCount: 1,
                       )
                       // Otherwise, display a notice that tells the user they are out of coverage.
