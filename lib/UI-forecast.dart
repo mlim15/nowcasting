@@ -85,7 +85,7 @@ class ForecastScreenState extends State<ForecastScreen> {
           ? Colors.white
           : ux.nowcastingColor,
         onRefresh: () async {
-            await update.completeUpdate(false, true, context: this.context);
+            await update.completeUpdate(false, false, context: this.context);
             _rebuild();
           },
           child: CustomScrollView(
