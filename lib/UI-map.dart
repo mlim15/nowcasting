@@ -12,6 +12,7 @@ import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -109,7 +110,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
-    if (await update.completeUpdate(false, false, context: this.context)) {
+    if (await update.completeUpdate(false, false, context: this.context) != job.CompletionStatus.failure) {
       setState( () {
         if (_playing) {
           _togglePlaying();

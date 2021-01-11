@@ -11,6 +11,7 @@ import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-io.dart' as io;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -79,7 +80,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 try {
                   // TODO if I make the forecast screen a little more flexible
                   // the entire onboarding page here can be removed
-                  if (await update.completeUpdate(true, true)) {
+                  if (await update.completeUpdate(true, true) != job.CompletionStatus.failure) {
                     doNotProceed = false;
                   }
                 } catch(e) {

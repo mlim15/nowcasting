@@ -7,6 +7,7 @@ import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -148,7 +149,7 @@ scheduleBackgroundFetch() {
   }
 }
 
-Future<bool> notificationTapped(String payload) {
+Future<job.CompletionStatus> notificationTapped(String payload) {
   return update.completeUpdate(false, true);
 }
 

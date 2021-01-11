@@ -17,6 +17,7 @@ import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // TODO animate splash screen
 // TODO localization including map images... maybe generate/redownload with localized per-region names?
@@ -126,7 +127,7 @@ class SplashState extends State<Splash> {
       loc.updateLastKnownLocation();
       try {
         _changeSplashText('Checking for Updates...');
-        if (await update.completeUpdate(false, true)) {
+        if (await update.completeUpdate(false, true) != job.CompletionStatus.failure) {
           _setTextVisible(false);
         } else {
           _setTextVisible(false);

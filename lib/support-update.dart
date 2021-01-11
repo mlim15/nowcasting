@@ -106,15 +106,13 @@ remoteImage(bool forceRefresh, int i) async {
 }
 
 // Full local product generation from start to finish
-Future<bool> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
+Future<job.CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
   // If an update is already in progress, just return.
-  if (job.containsInProgress(job.imageUpdateStatus)) {return false;}
+  if (job.imageUpdateStatus.any(job.isHotState)) {return job.CompletionStatus.inProgress;}
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();
-  for (int _i = 0; _i <= 8; _i++) {
-    job.imageUpdateStatus[_i] = job.CompletionStatus.notStarted;
-  }
+  job.setAll(job.imageUpdateStatus, job.CompletionStatus.isQueued);
   // Running all the requests at the same time could theoretically
   // speed up the process, but it unfortunately often results in
   // failed requests and breaks things.
@@ -128,13 +126,18 @@ Future<bool> completeUpdate(bool forceRefresh, bool silent, {BuildContext contex
     }
   }
   job.CompletionStatus result = await job.completion(job.imageUpdateStatus);
-  job.handleCompletion(
-    statusOfResult: result,
-    timedOutCallback: (BuildContext context) {context ?? ux.showSnackBarIf(!silent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');}, 
-    successCallback: (BuildContext context) {context ?? ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');},
-    failureCallback: (BuildContext context) {context ?? ux.showSnackBarIf(!silent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');},
-    unnecessaryCallback: (BuildContext context) {context ?? ux.showSnackBarIf(!silent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');},
-  );
+  if (context != null) {
+    if (result == job.CompletionStatus.timedOut) {
+      ux.showSnackBarIf(!silent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
+    } else if (result == job.CompletionStatus.success) {
+      ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+    } else if (result == job.CompletionStatus.failure) {
+      ux.showSnackBarIf(!silent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
+    } else if (result == job.CompletionStatus.unnecessary) {
+      ux.showSnackBarIf(!silent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
+    }
+  }
+  return result;
 }
 
 completeUpdateSingleImage(int index, bool forceRefresh) async {
