@@ -1,14 +1,18 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:latlong/latlong.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 //import 'package:Nowcasting/main.dart'; // Would be needed for sharedpref
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/UI-locationPicker.dart';
 
 // Forecast sliver widget definition
@@ -37,8 +41,8 @@ class ForecastSliver extends StatelessWidget {
     // store locally as boolean
     bool _notify = false;
     _index != -1
-      ? _notify = loc.notify[_index] 
-      : _notify = loc.notifyLoc;
+      ? _notify = notifications.enabledSavedLoc[_index] 
+      : _notify = notifications.enabledCurrentLoc;
     
     // Keys and controllers for later use
     final _formKey = GlobalKey<FormState>();
@@ -48,17 +52,33 @@ class ForecastSliver extends StatelessWidget {
     
     // Button press methods
     _notifyPressed([bool currentLoc = false]) async {
-      // Toggle notify.
-      _notify
-        ? _notify = false
-        : _notify = true;
-      if (currentLoc) {
-        loc.notifyLoc = _notify;
+      // Request permissions on iOS if necessary
+      if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true)) {
+        bool _oldState = notifications.anyNotificationsEnabled();
+        // We have permission to display notifications.
+        // Toggle notify.
+        _notify
+          ? _notify = false
+          : _notify = true;
+        rebuildCallback();
+        if (currentLoc) {
+          notifications.enabledCurrentLoc = _notify;
+        } else {
+          // Update value in array
+          notifications.enabledSavedLoc[_index] = _notify;
+        }
+        io.savePlaceData();
+        if (_oldState == false && _notify == true) {
+          // If we are enabling when all were previously disabled, 
+          // schedule the background job.
+          notifications.scheduleBackgroundFetch();
+        } else if (!notifications.anyNotificationsEnabled()) {
+          notifications.cancelBackgroundFetch();
+        }
       } else {
-        // Update value in array
-        loc.notify[_index] = _notify;
+        // Display a snackbar to the user saying they need to grant permission
+        ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
       }
-      loc.savePlaces();
     }
 
     AlertDialog editPopup(bool _isEditable) {
@@ -174,7 +194,7 @@ class ForecastSliver extends StatelessWidget {
                           ? () {
                             if (_formKey.currentState.validate()) {
                               _formKey.currentState.save();
-                              loc.savePlaces();
+                              io.savePlaceData();
                               rebuildCallback();
                               Navigator.of(context).pop();
                             }
@@ -203,9 +223,9 @@ class ForecastSliver extends StatelessWidget {
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
       List<String> _pixelValues = [];
-      List<int> _latLng = imagery.geoToPixel(_location.latitude, _location.longitude);
-      int _x = _latLng[0];
-      int _y = _latLng[1];
+      List<int> _pixelCoord = imagery.geoToPixel(_location.latitude, _location.longitude);
+      int _x = _pixelCoord[0];
+      int _y = _pixelCoord[1];
       for (int _i = 0; _i <= 8; _i++) {
         _pixelValues.add(await imagery.getPixel(_x, _y, _i));
       }
@@ -300,19 +320,24 @@ class ForecastSliver extends StatelessWidget {
                           onPressed: _index == 0 || _index == -1
                             ? null // Disable the "up" button if it's first in the list or the current location box
                             : () {
-                              LatLng thisPlace = loc.places[_index];
-                              String thisPlaceName = loc.placeNames[_index];
-                              bool thisPlaceNot = loc.notify[_index];
-                              LatLng swapPlace = loc.places[_index-1];
-                              String swapPlaceName = loc.placeNames[_index-1];
-                              bool swapPlaceNot = loc.notify[_index-1];
-                              loc.places[_index] = swapPlace;
-                              loc.placeNames[_index] = swapPlaceName;
-                              loc.notify[_index] = swapPlaceNot;
-                              loc.places[_index-1] = thisPlace;
-                              loc.placeNames[_index-1] = thisPlaceName;
-                              loc.notify[_index-1] = thisPlaceNot;
+                              LatLng _thisPlace = loc.places[_index];
+                              String _thisPlaceName = loc.placeNames[_index];
+                              bool _thisPlaceNotif = notifications.enabledSavedLoc[_index];
+                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
+                              LatLng _swapPlace = loc.places[_index-1];
+                              String _swapPlaceName = loc.placeNames[_index-1];
+                              bool _swapPlaceNotif = notifications.enabledSavedLoc[_index-1];
+                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index-1];
+                              loc.places[_index] = _swapPlace;
+                              loc.placeNames[_index] = _swapPlaceName;
+                              notifications.enabledSavedLoc[_index] = _swapPlaceNotif;
+                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
+                              loc.places[_index-1] = _thisPlace;
+                              loc.placeNames[_index-1] = _thisPlaceName;
+                              notifications.enabledSavedLoc[_index-1] = _thisPlaceNotif;
+                              notifications.lastShownNotificationSavedLoc[_index-1] = _thisTimeLastNotif;
                               rebuildCallback();
+                              io.savePlaceData();
                             },
                         ),
                         IconButton(
@@ -322,19 +347,24 @@ class ForecastSliver extends StatelessWidget {
                           onPressed: _index == loc.places.length-1 || _index == -1
                             ? null // Disable the "down" button if it's the last in the list  or the current location box
                             : () {
-                              LatLng thisPlace = loc.places[_index];
-                              String thisPlaceName = loc.placeNames[_index];
-                              bool thisPlaceNot = loc.notify[_index];
-                              LatLng swapPlace = loc.places[_index+1];
-                              String swapPlaceName = loc.placeNames[_index+1];
-                              bool swapPlaceNot = loc.notify[_index+1];
-                              loc.places[_index] = swapPlace;
-                              loc.placeNames[_index] = swapPlaceName;
-                              loc.notify[_index] = swapPlaceNot;
-                              loc.places[_index+1] = thisPlace;
-                              loc.placeNames[_index+1] = thisPlaceName;
-                              loc.notify[_index+1] = thisPlaceNot;
+                              LatLng _thisPlace = loc.places[_index];
+                              String _thisPlaceName = loc.placeNames[_index];
+                              bool _thisPlaceNot = notifications.enabledSavedLoc[_index];
+                              DateTime _thisTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index];
+                              LatLng _swapPlace = loc.places[_index+1];
+                              String _swapPlaceName = loc.placeNames[_index+1];
+                              bool _swapPlaceNot = notifications.enabledSavedLoc[_index+1];
+                              DateTime _swapTimeLastNotif = notifications.lastShownNotificationSavedLoc[_index+1];
+                              loc.places[_index] = _swapPlace;
+                              loc.placeNames[_index] = _swapPlaceName;
+                              notifications.enabledSavedLoc[_index] = _swapPlaceNot;
+                              notifications.lastShownNotificationSavedLoc[_index] = _swapTimeLastNotif;
+                              loc.places[_index+1] = _thisPlace;
+                              loc.placeNames[_index+1] = _thisPlaceName;
+                              notifications.enabledSavedLoc[_index+1] = _thisPlaceNot;
+                              notifications.lastShownNotificationSavedLoc[_index+1] = _thisTimeLastNotif;
                               rebuildCallback();
+                              io.savePlaceData();
                             },
                         ),
                         Spacer(),
@@ -380,25 +410,22 @@ class ForecastSliver extends StatelessWidget {
                                       onChanged: (_content) {loc.placeNames[_index] = _content;},
                                     )
                                   ),
-                                // TODO implement notifications and uncomment this button.
-                                // it already works to toggle the boolean.
-                                //IconButton(
-                                //  icon: _index == -1
-                                //      ? loc.notifyLoc
-                                //        ? Icon(Icons.notifications_active, color: Colors.white)
-                                //        : Icon(Icons.notifications_off, color: Colors.white)
-                                //      : loc.notify[_index]
-                                //        ? Icon(Icons.notifications_active, color: Colors.white)
-                                //        : Icon(Icons.notifications_off, color: Colors.white),
-                                //  onPressed: () {
-                                //    if (_index == -1) {
-                                //      _notifyPressed(true);
-                                //    } else {
-                                //      _notifyPressed();
-                                //    }
-                                //    rebuildCallback();
-                                //  },
-                                //),
+                                IconButton(
+                                  icon: _index == -1
+                                      ? notifications.enabledCurrentLoc
+                                        ? Icon(Icons.notifications_active, color: Colors.white)
+                                        : Icon(Icons.notifications_off, color: Colors.white)
+                                      : notifications.enabledSavedLoc[_index]
+                                        ? Icon(Icons.notifications_active, color: Colors.white)
+                                        : Icon(Icons.notifications_off, color: Colors.white),
+                                  onPressed: () {
+                                    if (_index == -1) {
+                                      _notifyPressed(true);
+                                    } else {
+                                      _notifyPressed();
+                                    }
+                                  },
+                                ),
                                 _index == -1
                                   ? Container()
                                   : IconButton(
@@ -436,7 +463,8 @@ class ForecastSliver extends StatelessWidget {
                                                             onPressed: () async {
                                                               loc.places.removeAt(_index);
                                                               loc.placeNames.removeAt(_index);
-                                                              loc.notify.removeAt(_index);
+                                                              notifications.enabledSavedLoc.removeAt(_index);
+                                                              notifications.lastShownNotificationSavedLoc.removeAt(_index);
                                                               rebuildCallback();
                                                               Navigator.of(context).pop();
                                                             },

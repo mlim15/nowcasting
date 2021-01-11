@@ -15,7 +15,8 @@ import 'package:Nowcasting/UI-info.dart' as info;
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
-import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // TODO animate splash screen
 // TODO localization including map images... maybe generate/redownload with localized per-region names?
@@ -39,6 +40,8 @@ void main() async {
   if (Platform.isIOS) {
     iosInfo = await deviceInfo.iosInfo;
   }
+  await notifications.initialize();
+
   // FOR DEBUG PURPOSES
   // Shows normal error boxes in profile and release modes
   //ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -58,6 +61,7 @@ void main() async {
   //    ),
   //  );
   //};
+  
   runApp(MyApp());
 }
 
@@ -115,14 +119,12 @@ class SplashState extends State<Splash> {
       // Instead we do some housekeeping before getting to the main app UI.
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
-      await loc.restoreLastKnownLocation();
-      await loc.restorePlaces(context);
+      await io.loadLastKnownLocation();
+      await io.loadPlaceData();
       print('SplashState: Done restoring places');
-      // TODO Seems to hang here when 'await' is added
-      loc.updateLastKnownLocation();
       try {
         _changeSplashText('Checking for Updates...');
-        if (await update.completeUpdate(context, false, false)) {
+        if (await update.completeUpdate(false, true) != job.CompletionStatus.failure) {
           _setTextVisible(false);
         } else {
           _setTextVisible(false);

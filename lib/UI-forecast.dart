@@ -7,6 +7,8 @@ import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/UI-forecastSliver.dart';
 
 // Widgets
@@ -23,13 +25,15 @@ class ForecastScreenState extends State<ForecastScreen> {
       if (loc.lastKnownLocation == null || imagery.coordOutOfBounds(loc.lastKnownLocation)) {
         loc.places.add(LatLng(0, 0));
         loc.placeNames.add('New Location');
-        loc.notify.add(false);
-        loc.savePlaces();
+        notifications.enabledSavedLoc.add(false);
+        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
+        io.savePlaceData();
       } else {
         loc.places.add(new LatLng(loc.lastKnownLocation.latitude, loc.lastKnownLocation.longitude));
         loc.placeNames.add('Copy of Current Location');
-        loc.notify.add(false);
-        loc.savePlaces();
+        notifications.enabledSavedLoc.add(false);
+        notifications.lastShownNotificationSavedLoc.add(DateTime.fromMicrosecondsSinceEpoch(0));
+        io.savePlaceData();
       }
     });
   }
@@ -38,7 +42,7 @@ class ForecastScreenState extends State<ForecastScreen> {
     _editing
     ? setState(() {
       _editing = false;
-      loc.savePlaces();
+      io.savePlaceData();
     })
     : setState(() {
       _editing = true;
@@ -51,7 +55,7 @@ class ForecastScreenState extends State<ForecastScreen> {
       // in the list, swap out of editing mode
       if (loc.places.length == 0) {
         _editing = false;
-        loc.savePlaces();
+        io.savePlaceData();
       }
     });
   }
@@ -80,9 +84,7 @@ class ForecastScreenState extends State<ForecastScreen> {
           ? Colors.white
           : ux.nowcastingColor,
         onRefresh: () async {
-            await loc.updateLastKnownLocation();
-            await update.radarOutages();
-            await update.completeUpdate(context, false, true);
+            await update.completeUpdate(false, true, context: this.context);
             _rebuild();
           },
           child: CustomScrollView(
@@ -95,7 +97,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new ux.WarningSliver(loc.radarOutageText, ux.WarningLevel.notice, url: loc.radarOutageUrl),
+                      (context, index) => new ux.WarningSliver(ux.radarOutageText, ux.WarningLevel.notice, url: ux.radarOutageUrl),
                       childCount: loc.radarOutage ? 1 : 0,
                     ),
                   ),
@@ -110,7 +112,7 @@ class ForecastScreenState extends State<ForecastScreen> {
                   sliver: SliverFixedExtentList(
                     itemExtent: ux.sliverThinHeight,
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => new ux.WarningSliver(loc.alertText, ux.WarningLevel.alert, url: loc.alertUrl),
+                      (context, index) => new ux.WarningSliver(ux.alertText, ux.WarningLevel.alert, url: ux.alertUrl),
                       childCount: 1, //TODO loc.alerts.length? store in array for multiple location alerts?
                     ),
                   ),

@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Snack bars
 final checkingSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Checking for updates...'));
@@ -20,6 +20,14 @@ final onboardCannotContinueSnack = SnackBar(behavior: SnackBarBehavior.floating,
 // Snack bars about location updates
 final locationOffSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Cannot update location. Check permissions or turn on location services.'));
 final restoreErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error restoring location list. It has been reset to default.'));
+// Snack bars about notifications
+final notificationPermissionErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('To display notifications, you\'ll need to grant the requested permissions.'),);
+
+// Strings displayed on alerts, and urls opened by tapping certain alerts
+String radarOutageText = 'The nowcasting service is currently experiencing an outage. This may be due to unscheduled outages in Environment Canada\'s radar system. Tap for more info.';
+String alertText = 'Severe weather alert at your location. Tap for more info.';
+String radarOutageUrl = 'https://www.canada.ca/en/environment-climate-change/services/weather-general-tools-resources/radar-overview/outages-maintenance.html';
+String alertUrl = 'url-not-set';
 
 // Theme definitions
 final nowcastingColor = const Color(0xFF0075b3);

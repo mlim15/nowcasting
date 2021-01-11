@@ -12,6 +12,7 @@ import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -109,14 +110,12 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     });
   }
   _refreshPressed() async {
-    if (await update.completeUpdate(context, false, true)) {
+    if (await update.completeUpdate(false, false, context: this.context) != job.CompletionStatus.failure) {
       setState( () {
         if (_playing) {
           _togglePlaying();
         }
         _count = 0;
-        imageCache.clear();
-        imageCache.clearLiveImages();
       });
     }
   }
@@ -246,7 +245,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                     opacity: _nowcastOpacity,
                     imageProvider: io.localFile('forecast.$_count.png').existsSync() 
-                      ? FileImage(io.localFile('forecast.$_count.png')) 
+                      ? FileImage(io.localFile('forecast.$_count.png'))
                       : AssetImage('assets/launcher/logo.png'),
                     gaplessPlayback: true,
                   )

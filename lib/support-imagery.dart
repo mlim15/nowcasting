@@ -4,11 +4,12 @@ import 'dart:math';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:latlong/latlong.dart';
 
-import 'package:Nowcasting/main.dart';
-import 'package:Nowcasting/support-io.dart' as io;
+import 'package:latlong/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:Nowcasting/main.dart' as main;
+import 'package:Nowcasting/support-io.dart' as io;
 
 // Details relevant to nowcasting imagery products - pixel dimensions
 // and geographical bbox
@@ -77,12 +78,17 @@ final colorsStr = [l1str, l2str, l3str, l4str, l5str, l6str, l7str, l8str, l9str
 final colorsObj = [l1hex, l2hex, l3hex, l4hex, l5hex, l6hex, l7hex, l8hex, l9hex, l10hex, l11hex, l12hex, t1hex, t2hex, t3hex, t4hex, t5hex, s1hex, s2hex, s4hex, s5hex, s6hex, s7hex, s8hex, s9hex];
 final descriptors = ["Light Drizzle", "Drizzle", "Light Rain", "Light Rain", "Rain", "Rain", "Heavy Rain", "Heavy Rain", "Storm", "Storm", "Violent Storm", "Hailstorm", "Light Sleet", "Light Sleet", "Sleet", "Sleet", "Heavy Sleet", "Gentle Snow", "Light Snow", "Light Snow", "Snow", "Snow", "Heavy Snow", "Blizzard", "Wet Blizzard"];
 final icons = [MdiIcons.weatherPartlyRainy, MdiIcons.weatherPartlyRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherRainy, MdiIcons.weatherPouring, MdiIcons.weatherPouring, MdiIcons.weatherLightningRainy, MdiIcons.weatherLightningRainy, MdiIcons.weatherHail, MdiIcons.weatherPartlySnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherSnowyRainy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherPartlySnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyHeavy, MdiIcons.weatherSnowyRainy];
+
+final rainStr = [l1str, l2str, l3str, l4str, l5str, l6str, l7str, l8str, l9str, l10str, l11str, l12str];
+final transitionStr = [t1str, t2str, t3str, t4str, t5str];
+final snowStr = [s1str, s2str, s4str, s5str, s6str, s7str, s8str, s9str];
+
+// Lists that store information about local data products
 List<String> legends = new List(9);
 List<Map<String, dynamic>> forecastCache = new List.generate(9, (i) {return {};}, growable: false);
 
 // Functions that take decimal AABBGGRR values queried from the data products
 // and provide the corresponding hex color, icon, or text description
-
 Color hex2color(String _hex) {
   // Assumes 8 character hex.
   return Color(int.parse(_hex, radix: 16));
@@ -106,8 +112,34 @@ String hex2desc(String _hex) {
   }
 }
 
+// Helper functions to resolve relative severity
+bool isUnderThreshold(String _pixelColor, int _threshold) {
+  if (rainStr.contains(_pixelColor)) {
+    if (rainStr.indexOf(_pixelColor) > _threshold-1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  if (transitionStr.contains(_pixelColor)) {
+    if (transitionStr.indexOf(_pixelColor) > _threshold-1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  if (snowStr.contains(_pixelColor)) {
+    if (snowStr.indexOf(_pixelColor) > _threshold-1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return false;
+}
+
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
-geoToPixel(double lat, double lon) {
+List<int> geoToPixel(double lat, double lon) {
   if (coordOutOfBounds(LatLng(lat, lon))) {
     throw('imagery.geoToPixel: Error, passed coordinates were out of bounds');
   }
@@ -178,7 +210,7 @@ Future<String> getPixel(int _x, int _y, int _index) async {
     // retrieve the pixel value.
     File _file = io.localFile('forecast.$_index.png');
     try {
-      _result = await platform.invokeMethod('getPixel', <String, dynamic>{
+      _result = await main.platform.invokeMethod('getPixel', <String, dynamic>{
         "filePath": _file.path.toString(), 
         "xCoord": _x, 
         "yCoord": _y,

@@ -10,6 +10,7 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // TODO figure out for sure if the legends need 20 min added to their duration
 // or if forecasts are for the stated time
@@ -70,9 +71,9 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
     Response response = await dio.get(
       url,
       options: Options(
-          responseType: ResponseType.bytes,
-          followRedirects: false,
-          receiveTimeout: 0),
+        responseType: ResponseType.bytes,
+        followRedirects: false,
+        receiveTimeout: 0),
     );
     File file = File(savePath);
     var raf = file.openSync(mode: FileMode.write);
@@ -104,48 +105,16 @@ remoteImage(bool forceRefresh, int i) async {
   return true;
 }
 
-// Global array and enum definition used to track status of jobs for each image
-enum completionStatus {
-  success,
-  unnecessary,
-  failure,
-  inProgress,
-  notStarted
-}
-List<completionStatus> imageUpdateStatus = new List(9);
-
-bool isSuccess(dynamic element) {
-  if (element == completionStatus.success) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool isUnnecessary(dynamic element) {
-  if (element == completionStatus.unnecessary) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool isComplete(dynamic element) {
-  if (element == completionStatus.success || element == completionStatus.unnecessary) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 // Full local product generation from start to finish
-completeUpdate(BuildContext context, bool forceRefresh, bool notSilent, {bool parallel = false}) async {
+Future<job.CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
+  // If an update is already in progress, just return.
+  if (job.imageUpdateStatus.any(job.isHotState)) {return job.CompletionStatus.inProgress;}
+  // Update location
+  loc.updateLastKnownLocation();
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();
-  for (int _i = 0; _i <= 8; _i++) {
-    imageUpdateStatus[_i] = completionStatus.notStarted;
-  }
+  job.setAll(job.imageUpdateStatus, job.CompletionStatus.isQueued);
   // Running all the requests at the same time could theoretically
   // speed up the process, but it unfortunately often results in
   // failed requests and breaks things.
@@ -158,61 +127,41 @@ completeUpdate(BuildContext context, bool forceRefresh, bool notSilent, {bool pa
       await completeUpdateSingleImage(_i, forceRefresh);
     }
   }
-  // All the garbage we use to determine when the job is actually done
-  // and give feedback to the user.
-  int _counter = 0;
-  int _maxTries = 30;
-  while(true) {
-    // Every 500 ms proceed to check to see if any ending condition is true.
-    await Future.delayed(const Duration(milliseconds: 500));
-    // Check to see if we have exceeded the max waiting time.
-    if (_counter >= _maxTries) {
-      ux.showSnackBarIf(notSilent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
-      return false;
+  job.CompletionStatus result = await job.completion(job.imageUpdateStatus);
+  if (context != null) {
+    if (result == job.CompletionStatus.timedOut) {
+      ux.showSnackBarIf(!silent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
+    } else if (result == job.CompletionStatus.success) {
+      ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+    } else if (result == job.CompletionStatus.failure) {
+      ux.showSnackBarIf(!silent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
+    } else if (result == job.CompletionStatus.unnecessary) {
+      ux.showSnackBarIf(!silent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
     }
-    if (imageUpdateStatus.every(isSuccess)) {
-        // Then the update has fully succeeded.
-        // Display success snackbar and return true
-        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
-        return true;
-      } else if (imageUpdateStatus.contains(completionStatus.failure)) {
-        // Then we know the update has failed somewhere.
-        ux.showSnackBarIf(notSilent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
-        return false;
-      } else if (imageUpdateStatus.every(isUnnecessary)) {
-        // Then the update was not necessary. Tell the user so.
-        ux.showSnackBarIf(notSilent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
-        return false;
-      } else if (imageUpdateStatus.every(isComplete)) {
-        // Perhaps we have a mix of only success and unnecessary. In this case, just display to the user as a success.
-        ux.showSnackBarIf(notSilent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
-        return true;
-      } else {
-        // Otherwise continue to wait until any of the above situations is true,
-        // or we time out.
-        _counter += 1;
-      }
   }
+  return result;
 }
 
 completeUpdateSingleImage(int index, bool forceRefresh) async {
-  imageUpdateStatus[index] = completionStatus.inProgress;
+  job.imageUpdateStatus[index] = job.CompletionStatus.inProgress;
   try {
     // First check for remote update for the image and download it if necessary.
     if (await remoteImage(forceRefresh, index)) {
       // If an update occurred, then also update its legend and clear its cache.
       imagery.forecastCache[index].clear();
-      legend(index);
-      imageUpdateStatus[index] = completionStatus.success;
+      // Evict the image from flutter's internal cache to force FileImages with it to reload.
+      FileImage(io.localFile('forecast.$index.png')).evict();
+      await legend(index);
+      job.imageUpdateStatus[index] = job.CompletionStatus.success;
       return true;
     } else {
       // No update was needed for the image.
-      imageUpdateStatus[index] = completionStatus.unnecessary;
+      job.imageUpdateStatus[index] = job.CompletionStatus.unnecessary;
       return false;
     }
   } catch(e) {
     print('update.completeUpdateSingleImage: Error updating image $index: '+e.toString());
-    imageUpdateStatus[index] = completionStatus.failure;
+    job.imageUpdateStatus[index] = job.CompletionStatus.failure;
     return false;
   }
 }
