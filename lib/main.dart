@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
+import 'package:package_info/package_info.dart';
 
 import 'package:Nowcasting/UI-onboarding.dart' as onboarding;
 import 'package:Nowcasting/UI-map.dart' as map;
@@ -21,6 +22,7 @@ import 'package:Nowcasting/support-jobStatus.dart' as job;
 // TODO animate splash screen
 // TODO localization including map images... maybe generate/redownload with localized per-region names?
 
+PackageInfo packageInfo;
 SharedPreferences prefs;
 DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 AndroidDeviceInfo androidInfo;
@@ -34,6 +36,7 @@ void main() async {
   // Initialize critical filepath information immediately
   io.updateAppDocPath();
   prefs = await SharedPreferences.getInstance();
+  packageInfo = await PackageInfo.fromPlatform();
   if (Platform.isAndroid) {
     androidInfo = await deviceInfo.androidInfo;
   }

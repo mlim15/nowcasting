@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-ux.dart' as ux;
 
 class InfoScreen extends StatelessWidget  {
@@ -39,7 +40,7 @@ class InfoScreen extends StatelessWidget  {
                           Center(child: 
                             Column(
                               children: <Widget>[
-                                Container(margin: EdgeInsets.all(8), child: Text('Version 0.1', style: ux.latoForeground(context))),
+                                Container(margin: EdgeInsets.all(8), child: Text('Version '+main.packageInfo.version, style: ux.latoForeground(context))),
                                 Container(child: Text('Made with  ❤️  in  🇨🇦 ', style: ux.latoForeground(context))),
                                 Row(children: [Text('Fork us on GitHub: ', style: ux.latoForeground(context)), IconButton(icon: Icon(MdiIcons.github), onPressed: () {_launchURL('https://github.com/the-salami/nowcasting');})]),
                               ],

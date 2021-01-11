@@ -3,7 +3,7 @@ description: Short-term Forecasts with MAPLE Nowcasting
 
 publish_to: 'none'
 
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -25,6 +25,7 @@ dependencies:
   device_info: '>=0.4.2+4'
   flutter_local_notifications: '^3.0.2'
   background_fetch: '^0.6.0'
+  package_info: ^0.4.3+2
 
 dev_dependencies:
   flutter_test:
