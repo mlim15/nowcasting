@@ -7,7 +7,6 @@ import 'package:latlong/latlong.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
-import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/support-location.dart' as loc;
 
 Directory appDocPath;
