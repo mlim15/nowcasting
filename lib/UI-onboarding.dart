@@ -120,7 +120,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             ),
           PageViewModel(
             title: "Notifications",
-            body: "Would you like the app to check roughly once an hour in the background for incoming rain? You won't be notified more than once per three hours at the very most.",
+            body: "Would you like the app to check roughly once an hour in the background for incoming rain at your location? You won't be notified more than once per three hours at the very most.",
             image: _buildImage('manypixels-iso-fishing'),
             decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
             footer: new ProgressButton(
@@ -136,7 +136,7 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 if (loc.currentLocation.coordinates != null && (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,))) {
                   // If we got permission, set the boolean to enable notifications
                   // Set the boolean to enable notifications
-                  notifications.enabledCurrentLoc = true;
+                  loc.currentLocation.notify = true;
                   io.savePlaceData();
                   notifications.scheduleBackgroundFetch();
                 } else {
