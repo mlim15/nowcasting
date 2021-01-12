@@ -40,7 +40,7 @@ class LocationPickerScreenState extends State<LocationPickerScreen> with Widgets
     if (imagery.coordOutOfBounds(this.location.coordinates)) {
       // Then default centre coordinates were used when drawing the map.
       // Test against these defaults
-      if (_newPosition.center.longitude == -73.574990) {
+      if (_newPosition.center.longitude == -73.5878) {
         return;
       }
     } else if (_newPosition.center.longitude == this.location.coordinates.longitude) {

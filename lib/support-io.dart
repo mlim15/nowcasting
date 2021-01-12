@@ -8,6 +8,7 @@ import 'package:latlong/latlong.dart';
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-notifications.dart' as notifications;
 
 Directory appDocPath;
 
@@ -85,14 +86,29 @@ savePlaceData() async {
   print('location.loadPlaceData: Successfully saved locations: '+loc.savedPlaces.toString());
 }
 
-loadNotificationPreferences() {
-
-  
+saveNotificationPreferences() {
+  main.prefs.setBool('notificationsEnabled', notifications.notificationsEnabled);
+  main.prefs.setInt('severityThreshold', notifications.severityThreshold);
+  main.prefs.setInt('minNotifDelay', notifications.minimumTimeBetween.inMinutes);
+  main.prefs.setInt('maxLookahead', notifications.maxLookahead);
 }
 
-saveNotificationPreferences() {
-  //int maxLookahead = 2; // Index 2 is 60 minutes ahead
-  //Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
-  //int severityThreshold = 2; // First two items of each type (t1, t2, s1, s2, etc) will be ignored
-
+loadNotificationPreferences() {
+  bool _loadNotificationsEnabled = main.prefs.getBool('notificationsEnabled');
+  if (_loadNotificationsEnabled != null) {
+    notifications.notificationsEnabled = _loadNotificationsEnabled;
+  }
+  int _loadSeverityThreshold = main.prefs.getInt('severityThreshold');
+  if (_loadSeverityThreshold != null) {
+    notifications.severityThreshold = _loadSeverityThreshold;
+  }
+  Duration _loadMinNotifDelay = Duration(minutes: main.prefs.getInt('minNotifDelay'));
+  if (_loadMinNotifDelay != null) {
+    notifications.minimumTimeBetween = _loadMinNotifDelay;
+  }
+  int _loadMaxLookahead = main.prefs.getInt('maxLookahead');
+  if (_loadMaxLookahead != null) {
+    notifications.maxLookahead = _loadMaxLookahead;
+  }
+  notifications.updateDataUsageEstimate();
 }

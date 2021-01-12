@@ -167,6 +167,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               child: Column(children: <Widget>[
                 Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
                 Slider.adaptive(
+                  activeColor: ux.nowcastingColor,
                   // possibly the dumbest way to implement this but it works.
                   // maybe come back and clean up later without having to hard-code values in.
                   value: speed.inMilliseconds.toInt() == 800
@@ -208,6 +209,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               child: Column(children: <Widget>[
                 Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
                 Slider.adaptive(
+                  activeColor: ux.nowcastingColor,
                   value: _nowcastOpacity,
                   min: 0.1,
                   max: 0.9,

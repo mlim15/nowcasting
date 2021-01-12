@@ -12,14 +12,16 @@ import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-jobStatus.dart' as job;
 
+bool notificationsEnabled = false;
+bool notificationsInitialized = false;
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
-Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
+Duration minimumTimeBetween = Duration(minutes: 180);
+double dataUsage = 0;
+int checkIntervalMinutes = 15;
 // First items of each type (t1, s1, l1) will not generate notifications
 // When zero it is effectively disabled because the method that checks
 // this will only ever return a result that says it's not under the threshold
 int severityThreshold = 1; 
-
-bool notificationsInitialized = false;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('notification_icon');
@@ -46,9 +48,18 @@ const NotificationDetails platformChannelSpecifics = NotificationDetails(
   iOS: iOSPlatformChannelSpecifics
 );
 
+updateDataUsageEstimate() {
+  // 100KB per image
+  // * images per update (lookahead+1)
+  // * times updated per day (24 hours/minimum time between)
+  // this is a maximum, some updates will stop before reaching the
+  // max lookahead
+  dataUsage = 0.1*(maxLookahead+1)*(1440/checkIntervalMinutes);
+}
+
 showNotification(String _desc, String _placeName, String _time) async {
   // TODO On android information can be cut off when strings are too long.
-  await flutterLocalNotificationsPlugin.show(0,'$_desc detected', 'at $_placeName at $_time. Tap for more details.', platformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(0,'$_desc detected!', '$_placeName at $_time', platformChannelSpecifics);
 }
 
 bool anyNotificationsEnabled() {
@@ -57,6 +68,15 @@ bool anyNotificationsEnabled() {
   } else {
     return false;
   }
+}
+
+int countEnabledLocations() {
+  int _enabledPlaces = 0;
+  if (loc.currentLocation.notify) {_enabledPlaces += 1;}
+  for (loc.NowcastingLocation location in loc.savedPlaces) {
+    if (location.notify) {_enabledPlaces += 1;}
+  }
+  return _enabledPlaces;
 }
 
 /// This "Headless Task" is run when app is terminated.
@@ -72,6 +92,15 @@ void backgroundFetchCallback(String taskId) async {
     main.prefs = await SharedPreferences.getInstance();
     loc.currentLocation.update();
     await io.loadPlaceData();
+    await io.loadNotificationPreferences();
+  }
+
+  // Now that we know we can access the preference, check to see if notifications are actually enabled.
+  // This shouldn't happen but this will prevent the method from running again until
+  // notifications are turned back on.
+  if (!notificationsEnabled) {
+    cancelBackgroundFetch();
+    return;
   }
 
   // Work with deep copies because we're manipulating this data
@@ -80,14 +109,14 @@ void backgroundFetchCallback(String taskId) async {
   if (loc.currentLocation.notify) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
   
   // Disable notifications this go-round for any locations that have already 
-  // been shown for in the last minimumTimeBetweenNotifications (default 180 minutes).
-  if (DateTime.now().difference(loc.currentLocation.lastNotified) < minimumTimeBetweenNotifications) {
+  // been shown for in the last minimumTimeBetween (default 180 minutes).
+  if (DateTime.now().difference(loc.currentLocation.lastNotified) < minimumTimeBetween) {
     print('notifications.backgroundFetchCallback: Might have notified for current location, but skipped because notified too soon ago.');
     _enabledCurrentLocCopy = false;
   }
   for (int _i in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
     if (_enabledSavedLocCopy[_i] == true) {
-      if ((DateTime.now().difference(loc.savedPlaces[_i].lastNotified) < minimumTimeBetweenNotifications)) {
+      if ((DateTime.now().difference(loc.savedPlaces[_i].lastNotified) < minimumTimeBetween)) {
         print('notifications.backgroundFetchCallback: Might have notified for saved location '+loc.savedPlaces[_i].name+', but skipped because notified too soon ago.');
         _enabledSavedLocCopy[_i] = false;
       }
@@ -113,7 +142,7 @@ void backgroundFetchCallback(String taskId) async {
           loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
           _triggerCompleteUpdate = true;
-          showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+          showNotification(imagery.hex2desc(_thisLocPixel), "Your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
         } else {
           print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
         }
@@ -141,10 +170,6 @@ void backgroundFetchCallback(String taskId) async {
       }
     }
   }
-  // If we showed a notification, trigger a refresh of all images in the background so it's ready when the user opens the app
-  if (_triggerCompleteUpdate) {
-    update.completeUpdate(false, true);
-  }
   BackgroundFetch.finish(taskId);
 }
 
@@ -156,7 +181,7 @@ scheduleBackgroundFetch() {
   // Configure background_fetch
   BackgroundFetch.configure(
     BackgroundFetchConfig(
-        minimumFetchInterval: Platform.isIOS ? 15 : 15, // TODO find best interval for Android.
+        minimumFetchInterval: Platform.isIOS ? 15 : checkIntervalMinutes, // TODO find best interval for Android.
         startOnBoot: true,
         stopOnTerminate: false,
         enableHeadless: true,

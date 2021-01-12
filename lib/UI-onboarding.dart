@@ -133,15 +133,26 @@ class OnboardingScreenState extends State<OnboardingScreen> {
               onPressed: () async {
                 // We must have a valid location
                 // Also either be android, or request permission on iOS
-                if (loc.currentLocation.coordinates != null && (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true,))) {
-                  // If we got permission, set the boolean to enable notifications
-                  // Set the boolean to enable notifications
-                  loc.currentLocation.notify = true;
-                  io.savePlaceData();
-                  notifications.scheduleBackgroundFetch();
+                if (loc.currentLocation.coordinates != null) {
+                  bool _notifPermGranted = true;
+                  if (Platform.isIOS) {
+                    _notifPermGranted = false;
+                    _notifPermGranted = await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true);
+                  } if (_notifPermGranted) {
+                    // If we got permission, set the boolean to enable notifications
+                    // Set the boolean to enable notifications
+                    notifications.notificationsEnabled = true;
+                    loc.currentLocation.notify = true;
+                    io.savePlaceData();
+                    io.saveNotificationPreferences();
+                    notifications.scheduleBackgroundFetch();
+                  } else {
+                    // User gave location perms but denied notification
+                    _obScaffoldKey.currentState.showSnackBar(ux.notificationPermissionErrorSnack);
+                  }
                 } else {
-                  // iOS user rejected notification permissions.
-                  ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
+                  // User did not grant location perms
+                  _obScaffoldKey.currentState.showSnackBar(ux.notificationLocPermissionErrorSnack);
                 }
                 return () {
                   _introKey.currentState?.animateScroll(4); 

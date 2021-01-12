@@ -123,6 +123,7 @@ class SplashState extends State<Splash> {
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
       await io.loadPlaceData();
+      await io.loadNotificationPreferences();
       print('SplashState: Done restoring places');
       try {
         _changeSplashText('Checking for Updates...');
