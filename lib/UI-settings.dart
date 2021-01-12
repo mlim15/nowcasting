@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
 import 'package:Nowcasting/UI-settings-places.dart';
 
@@ -69,19 +68,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                       }
                     }
                     // Toggle
-                    setState(() {
-                      notifications.notificationsEnabled = value;
-                      if (value) {
-                        notifications.scheduleBackgroundFetch();
-                        if (!notifications.anyNotificationsEnabled()) {
-                          // I considered snowing a snack but I think it's more intuitive
-                          // for users for us to just do this.
-                          loc.currentLocation.notify = true;
-                        }
-                      } else {
-                        notifications.cancelBackgroundFetch();
-                      }
-                    });
+                    setState(() {notifications.notificationsEnabled = value;});
+                    if (value) {
+                      notifications.scheduleBackgroundFetch();
+                    } else {
+                      notifications.cancelBackgroundFetch();
+                    }
                   },
                 ),
                 SettingsTile(
@@ -89,7 +81,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                   enabled: notifications.notificationsEnabled,
                   subtitle: (notifications.notificationsEnabled)
                     ? (notifications.countEnabledLocations() != 0) 
-                      ? 'Notifications enabled for '+notifications.countEnabledLocations().toString()+' locations.' 
+                      ? (notifications.countEnabledLocations() == 1)
+                        ? 'Notifications enabled for '+notifications.countEnabledLocations().toString()+' location.' 
+                        : 'Notifications enabled for '+notifications.countEnabledLocations().toString()+' locations.' 
                       : 'Tap to choose locations to notify for.'
                     : 'Notifications are disabled.',
                   leading: Icon(Icons.language),
@@ -119,8 +113,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                   switchValue: (notifications.severityThreshold == 1)
                 ),
                 SettingsTile(
-                  title: 'Check Max Once per...',
-                  subtitle: notifications.minimumTimeBetween.inMinutes.toString()+' Minutes',
+                  title: 'Check max every...',
+                  subtitle: notifications.checkIntervalMinutes.toString()+' Minutes',
                   enabled: notifications.notificationsEnabled,
                   leading: Icon(Icons.timer),
                   trailing: Container(
@@ -129,22 +123,27 @@ class SettingsScreenState extends State<SettingsScreen> {
                       activeColor: ux.nowcastingColor,
                       min: 15,
                       max: 60,
-                      divisions: 4,
+                      divisions: 3,
                       value: notifications.checkIntervalMinutes.toDouble(),
                       onChanged: notifications.notificationsEnabled ? 
                         (value) {
                           setState(() {
                             notifications.checkIntervalMinutes = value.toInt();
-                            notifications.updateDataUsageEstimate();                 
                           });
+                          notifications.updateDataUsageEstimate();   
                           io.saveNotificationPreferences();
                         }
                         : null,
+                      onChangeEnd: (value) {
+                        // Re-schedule notification events with the new time.
+                        notifications.cancelBackgroundFetch();
+                        notifications.scheduleBackgroundFetch();
+                      },
                     )
                   ),
                 ),
                 SettingsTile(
-                  title: 'Looking Ahead...',
+                  title: 'Looking ahead...',
                   subtitle: (20+notifications.maxLookahead*20).toString()+' Minutes',
                   enabled: notifications.notificationsEnabled,
                   leading: Icon(MdiIcons.crystalBall),
@@ -172,6 +171,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   title: 'Estimated Data Usage',
                   subtitle: notifications.notificationsEnabled ? 'Up to '+notifications.dataUsage.toStringAsFixed(1)+' MB/day' : 'No data will be used in the background.',
                   leading: Icon(MdiIcons.gauge),
+                  enabled: notifications.notificationsEnabled,
                 ),
               ],
             ),

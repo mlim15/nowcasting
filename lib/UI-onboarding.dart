@@ -138,7 +138,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                   if (Platform.isIOS) {
                     _notifPermGranted = false;
                     _notifPermGranted = await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true);
-                  } if (_notifPermGranted) {
+                  } 
+                  if (_notifPermGranted) {
                     // If we got permission, set the boolean to enable notifications
                     // Set the boolean to enable notifications
                     notifications.notificationsEnabled = true;

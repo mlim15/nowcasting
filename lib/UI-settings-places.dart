@@ -4,6 +4,7 @@ import 'package:settings_ui/settings_ui.dart';
 
 import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:Nowcasting/support-io.dart' as io;
 
 class PlaceSettingsScreen extends StatefulWidget  {
   final VoidCallback rebuildCallback;
@@ -15,7 +16,7 @@ class PlaceSettingsScreen extends StatefulWidget  {
 }
 
 class PlaceSettingsScreenState extends State<PlaceSettingsScreen> {
-
+  GlobalKey<ScaffoldState> _placeSettingsScaffoldKey = GlobalKey();
   final VoidCallback rebuildCallback;
 
   PlaceSettingsScreenState(this.rebuildCallback);
@@ -25,10 +26,19 @@ class PlaceSettingsScreenState extends State<PlaceSettingsScreen> {
       switchActiveColor: ux.nowcastingColor,
       title: location.name,
       switchValue: location.notify,
-      onToggle: (bool value) {
+      onToggle: (bool value) async {
+        // If we are turning on the location specifically for the Current Location
+        // entry, check for location permissions first.
+        if (location is loc.CurrentLocation && location.coordinates == null) {
+          if (!await loc.currentLocation.update(withRequests: true)) {
+            _placeSettingsScaffoldKey.currentState.showSnackBar(ux.notificationLocPermissionErrorSnack);
+            return;
+          }
+        }
         // Toggle
         setState(() {
           location.notify = value;
+          io.savePlaceData();
         });
         rebuildCallback();
       },
@@ -38,6 +48,7 @@ class PlaceSettingsScreenState extends State<PlaceSettingsScreen> {
   @override
   Widget build(BuildContext context) { 
     return Scaffold(
+      key: _placeSettingsScaffoldKey,
       appBar: AppBar(
         title: const Text('Locations'),
       ),

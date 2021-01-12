@@ -16,8 +16,8 @@ bool notificationsEnabled = false;
 bool notificationsInitialized = false;
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
 Duration minimumTimeBetween = Duration(minutes: 180);
-double dataUsage = 0;
-int checkIntervalMinutes = 15;
+double dataUsage = 0.1*(maxLookahead+1)*(1440/checkIntervalMinutes);
+int checkIntervalMinutes = 60;
 // First items of each type (t1, s1, l1) will not generate notifications
 // When zero it is effectively disabled because the method that checks
 // this will only ever return a result that says it's not under the threshold
@@ -86,9 +86,9 @@ void backgroundFetchCallback(String taskId) async {
   print('notifications.backgroundFetchCallback: Headless event $taskId received at '+DateTime.now().toString());
 
   // Initialize sharedprefs and notification plugins, read notification preferences
-  if (!notificationsInitialized) {await flutterLocalNotificationsPlugin.initialize(initializationSettings);}
-  if (loc.currentLocation.coordinates == null) {
+  if (!notificationsInitialized) {
     // Then we know the app is closed and we need to reload our variables.
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
     main.prefs = await SharedPreferences.getInstance();
     loc.currentLocation.update();
     await io.loadPlaceData();
@@ -181,7 +181,7 @@ scheduleBackgroundFetch() {
   // Configure background_fetch
   BackgroundFetch.configure(
     BackgroundFetchConfig(
-        minimumFetchInterval: Platform.isIOS ? 15 : checkIntervalMinutes, // TODO find best interval for Android.
+        minimumFetchInterval: checkIntervalMinutes, // TODO find best interval for Android.
         startOnBoot: true,
         stopOnTerminate: false,
         enableHeadless: true,

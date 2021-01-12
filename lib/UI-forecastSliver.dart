@@ -49,7 +49,6 @@ class ForecastSliver extends StatelessWidget {
     _notifyPressed() async {
       // Request permissions on iOS if necessary
       if (Platform.isAndroid || await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true)) {
-        bool _oldState = notifications.anyNotificationsEnabled();
         // We have permission to display notifications.
         // Toggle notify.
         _notify
@@ -58,13 +57,6 @@ class ForecastSliver extends StatelessWidget {
         rebuildCallback();
         this.location.notify = _notify;
         io.savePlaceData();
-        if (_oldState == false && _notify == true) {
-          // If we are enabling when all were previously disabled, 
-          // schedule the background job.
-          notifications.scheduleBackgroundFetch();
-        } else if (!notifications.anyNotificationsEnabled()) {
-          notifications.cancelBackgroundFetch();
-        }
       } else {
         // Display a snackbar to the user saying they need to grant permission
         ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);

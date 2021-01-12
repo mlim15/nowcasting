@@ -22,7 +22,7 @@ final locationOffSnack = SnackBar(behavior: SnackBarBehavior.floating, content: 
 final restoreErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('Error restoring location list. It has been reset to default.'));
 // Snack bars about notifications
 final notificationPermissionErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('To display notifications, you\'ll need to grant the requested permissions.'),);
-final notificationLocPermissionErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('To display notifications, you\'ll need to grant the app location permissions.'),);
+final notificationLocPermissionErrorSnack = SnackBar(behavior: SnackBarBehavior.floating, content: Text('To display notifications for your location, you\'ll need to grant the app location permissions.'),);
 
 // Strings displayed on alerts, and urls opened by tapping certain alerts
 String radarOutageText = 'The nowcasting service is currently experiencing an outage. This may be due to unscheduled outages in Environment Canada\'s radar system. Tap for more info.';

@@ -72,7 +72,6 @@ loadPlaceData() async {
       loc.savedPlaces.add(loc.SavedLocation.fromJson(json.decode(_json)));
     }
   }
-
   print('location.loadPlaceData: Successfully restored locations: '+loc.savedPlaces.toString());
 }
 
@@ -86,14 +85,15 @@ savePlaceData() async {
   print('location.loadPlaceData: Successfully saved locations: '+loc.savedPlaces.toString());
 }
 
-saveNotificationPreferences() {
+saveNotificationPreferences() async {
   main.prefs.setBool('notificationsEnabled', notifications.notificationsEnabled);
   main.prefs.setInt('severityThreshold', notifications.severityThreshold);
   main.prefs.setInt('minNotifDelay', notifications.minimumTimeBetween.inMinutes);
   main.prefs.setInt('maxLookahead', notifications.maxLookahead);
+  main.prefs.setInt('checkIntervalMinutes', notifications.checkIntervalMinutes);
 }
 
-loadNotificationPreferences() {
+loadNotificationPreferences() async {
   bool _loadNotificationsEnabled = main.prefs.getBool('notificationsEnabled');
   if (_loadNotificationsEnabled != null) {
     notifications.notificationsEnabled = _loadNotificationsEnabled;
@@ -102,13 +102,16 @@ loadNotificationPreferences() {
   if (_loadSeverityThreshold != null) {
     notifications.severityThreshold = _loadSeverityThreshold;
   }
-  Duration _loadMinNotifDelay = Duration(minutes: main.prefs.getInt('minNotifDelay'));
+  int _loadMinNotifDelay = main.prefs.getInt('minNotifDelay');
   if (_loadMinNotifDelay != null) {
-    notifications.minimumTimeBetween = _loadMinNotifDelay;
+    notifications.minimumTimeBetween = Duration(minutes: _loadMinNotifDelay);
   }
   int _loadMaxLookahead = main.prefs.getInt('maxLookahead');
   if (_loadMaxLookahead != null) {
     notifications.maxLookahead = _loadMaxLookahead;
   }
-  notifications.updateDataUsageEstimate();
+  int _loadCheckIntervalMinutes = main.prefs.getInt('maxFrequency');
+  if (_loadCheckIntervalMinutes != null) {
+    notifications.checkIntervalMinutes = _loadCheckIntervalMinutes;
+  }
 }
