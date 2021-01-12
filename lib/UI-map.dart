@@ -52,6 +52,35 @@ TileLayerOptions getTileLayerOptions(BuildContext context) {
   );
 }
 
+List<OverlayImage> _addAdditionalLayers({@required bool barbs, @required bool temp, @required int index, double opacity = 0.5}) {
+  List<OverlayImage> _returnMe = [];
+  if (barbs) {
+    _returnMe.add(
+      OverlayImage(
+        bounds: LatLngBounds(
+          imagery.sw, imagery.ne
+        ),
+        opacity: opacity,
+        imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/velocity.png'),
+        gaplessPlayback: true,
+      )
+    );
+  }
+  if (temp) {
+    _returnMe.add(
+      OverlayImage(
+        bounds: LatLngBounds(
+          imagery.sw, imagery.ne
+        ),
+        opacity: opacity,
+        imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_temp.$index.png'),
+        gaplessPlayback: true,
+      )
+    );
+  }
+  return _returnMe;
+}
+
 class MapScreen extends StatefulWidget {
   @override
   MapScreenState createState() => new MapScreenState();
@@ -67,6 +96,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   bool _playing = false;
   Icon _playPauseIcon = Icon(Icons.play_arrow);
   double _nowcastOpacity = 0.6;
+  bool _barbsEnabled = false;
+  bool _tempEnabled = false;
 
   // flutter_map and user_location variables
   MapController mapController = MapController();
@@ -221,6 +252,40 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 )
               ])
             ),
+            Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Additional Layers", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
+            CheckboxListTile(
+              title: Text("Velocity Barbs", style: ux.latoForeground(context)),
+              value: _barbsEnabled,
+              onChanged: (newValue) {
+                setState(() {
+                  _barbsEnabled = newValue;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
+            ),
+            CheckboxListTile(
+              title: Text("Temperature", style: ux.latoForeground(context)),
+              value: _tempEnabled,
+              onChanged: (newValue) {
+                setState(() {
+                  _tempEnabled = newValue;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
+            ),
+            _tempEnabled
+              ? Image.network(
+                'https://radar.mcgill.ca/imagery/images/temp_legend.png', 
+                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes
+                      : null,
+                  );
+                },
+              )
+              : Container(),
           ]
         )
       ),
@@ -240,7 +305,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             layers: [
               getTileLayerOptions(context),
               OverlayImageLayerOptions(
-                overlayImages: <OverlayImage>[
+                overlayImages: _addAdditionalLayers(barbs: _barbsEnabled, temp: _tempEnabled, index: _count)+<OverlayImage>[
                   OverlayImage(
                     bounds: LatLngBounds(
                       imagery.sw, imagery.ne
