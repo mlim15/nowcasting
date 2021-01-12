@@ -58,7 +58,7 @@ setAll(List<CompletionStatus> list, CompletionStatus newValue) {
   }
 }
 
-Future<CompletionStatus> completion(List<CompletionStatus> statusList, {Duration interval = const Duration(milliseconds: 250), int counter = 0, int maxTries = 60}) async {
+Future<CompletionStatus> completion(List<CompletionStatus> statusList, {Duration interval = const Duration(milliseconds: 1000), int counter = 0, int maxTries = 10}) async {
   // All the garbage we use to determine when the job is actually done
   // and give feedback to the user.
   while(true) {

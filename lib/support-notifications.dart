@@ -48,7 +48,7 @@ const NotificationDetails platformChannelSpecifics = NotificationDetails(
 
 showNotification(String _desc, String _placeName, String _time) async {
   // TODO On android information can be cut off when strings are too long.
-  await flutterLocalNotificationsPlugin.show(0, '$_desc detected at $_placeName at $_time', 'Tap for more details.', platformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(0,'$_desc detected', 'at $_placeName at $_time. Tap for more details.', platformChannelSpecifics);
 }
 
 bool anyNotificationsEnabled() {
@@ -93,7 +93,7 @@ void backgroundFetchCallback(String taskId) async {
       }
     }
   }
-
+  bool _triggerCompleteUpdate = false;
   for (int _i = 0; _i < maxLookahead; _i++) {
     // Check if any notify locations are left that we haven't found a result for.
     // If not, break out of the for loop, we've notified for all possible locations.
@@ -112,7 +112,7 @@ void backgroundFetchCallback(String taskId) async {
           _enabledCurrentLocCopy = false;
           loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
-          // TODO save this to sharedpref
+          _triggerCompleteUpdate = true;
           showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
         } else {
           print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
@@ -132,6 +132,7 @@ void backgroundFetchCallback(String taskId) async {
             _enabledSavedLocCopy[_n] = false;
             loc.savedPlaces[_n].lastNotified = new DateTime.now();
             io.savePlaceData();
+            _triggerCompleteUpdate = true;
             showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
           } else {
           print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
@@ -140,7 +141,10 @@ void backgroundFetchCallback(String taskId) async {
       }
     }
   }
-
+  // If we showed a notification, trigger a refresh of all images in the background so it's ready when the user opens the app
+  if (_triggerCompleteUpdate) {
+    update.completeUpdate(false, true);
+  }
   BackgroundFetch.finish(taskId);
 }
 

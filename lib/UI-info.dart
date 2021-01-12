@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-ux.dart' as ux;
+import 'package:Nowcasting/UI-settings.dart';
 
 class InfoScreen extends StatelessWidget  {
 
@@ -16,11 +17,26 @@ class InfoScreen extends StatelessWidget  {
     }
   }
 
+  _openSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SettingsScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('About MAPLE Nowcasting'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {_openSettings(context);},
+          )
+        ],
       ),
       body: Container(
         child: 
