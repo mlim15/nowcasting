@@ -120,8 +120,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
             ),
           PageViewModel(
             title: "Notifications",
-            body: "The app can alert you about incoming rain. If enabled, it will check roughly once per hour, notifying you if it will rain or snow at your location in the coming hour. Would you like to enable these alerts now?",
-            image: _buildImage('img2'),
+            body: "Would you like the app to check roughly once an hour in the background for incoming rain? You won't be notified more than once per three hours at the very most.",
+            image: _buildImage('manypixels-iso-fishing'),
             decoration: ux.darkMode(context) ? ux.pageDecorationDark : ux.pageDecorationLight,
             footer: new ProgressButton(
               defaultWidget: Text("Enable Notifications", style: ux.progressButtonTextStyle),
