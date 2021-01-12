@@ -122,8 +122,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                     child: Slider.adaptive(
                       activeColor: ux.nowcastingColor,
                       min: 15,
-                      max: 60,
-                      divisions: 3,
+                      max: 120,
+                      divisions: 7,
                       value: notifications.checkIntervalMinutes.toDouble(),
                       onChanged: notifications.notificationsEnabled ? 
                         (value) {
