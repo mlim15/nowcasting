@@ -12,9 +12,6 @@ import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-jobStatus.dart' as job;
 
-DateTime lastShownNotificationCurrentLoc = DateTime.fromMillisecondsSinceEpoch(0);
-List<DateTime> lastShownNotificationSavedLoc = [DateTime.fromMillisecondsSinceEpoch(0)];
-
 int maxLookahead = 2; // Index 2 is 60 minutes ahead
 Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
 // First items of each type (t1, s1, l1) will not generate notifications
@@ -22,8 +19,6 @@ Duration minimumTimeBetweenNotifications = Duration(minutes: 180);
 // this will only ever return a result that says it's not under the threshold
 int severityThreshold = 1; 
 
-bool enabledCurrentLoc = false;
-List<bool> enabledSavedLoc = [false];
 bool notificationsInitialized = false;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -57,7 +52,7 @@ showNotification(String _desc, String _placeName, String _time) async {
 }
 
 bool anyNotificationsEnabled() {
-  if (enabledCurrentLoc || enabledSavedLoc.any((entry) {return entry == true;})) {
+  if (loc.currentLocation.notify || loc.savedPlaces.any((_location) {return _location.notify == true;})) {
     return true;
   } else {
     return false;
@@ -86,13 +81,13 @@ void backgroundFetchCallback(String taskId) async {
   
   // Disable notifications this go-round for any locations that have already 
   // been shown for in the last minimumTimeBetweenNotifications (default 180 minutes).
-  if (DateTime.now().difference(lastShownNotificationCurrentLoc) < minimumTimeBetweenNotifications) {
+  if (DateTime.now().difference(loc.currentLocation.lastNotified) < minimumTimeBetweenNotifications) {
     print('notifications.backgroundFetchCallback: Might have notified for current location, but skipped because notified too soon ago.');
     _enabledCurrentLocCopy = false;
   }
   for (int _i in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
     if (_enabledSavedLocCopy[_i] == true) {
-      if ((DateTime.now().difference(lastShownNotificationSavedLoc[_i]) < minimumTimeBetweenNotifications)) {
+      if ((DateTime.now().difference(loc.savedPlaces[_i].lastNotified) < minimumTimeBetweenNotifications)) {
         print('notifications.backgroundFetchCallback: Might have notified for saved location '+loc.savedPlaces[_i].name+', but skipped because notified too soon ago.');
         _enabledSavedLocCopy[_i] = false;
       }
@@ -115,7 +110,7 @@ void backgroundFetchCallback(String taskId) async {
           // Disable this location for the next loop, update the time we last notified for it
           // and show the notification.
           _enabledCurrentLocCopy = false;
-          lastShownNotificationCurrentLoc = new DateTime.now();
+          loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
           // TODO save this to sharedpref
           showNotification(imagery.hex2desc(_thisLocPixel), "your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
@@ -135,7 +130,7 @@ void backgroundFetchCallback(String taskId) async {
             // Disable this location for the next loop, update the time we last notified for it
             // and show the notification.
             _enabledSavedLocCopy[_n] = false;
-            lastShownNotificationSavedLoc[_n] = new DateTime.now();
+            loc.savedPlaces[_n].lastNotified = new DateTime.now();
             io.savePlaceData();
             showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
           } else {
