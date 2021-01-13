@@ -58,7 +58,7 @@ saveNotificationPreferences() async {
   main.prefs.setInt('severityThreshold', notifications.severityThreshold);
   main.prefs.setInt('minNotifDelay', notifications.minimumTimeBetween.inMinutes);
   main.prefs.setInt('maxLookahead', notifications.maxLookahead);
-  main.prefs.setInt('checkIntervalMinutes', notifications.checkIntervalMinutes);
+  main.prefs.setInt('maxFrequency', notifications.checkIntervalMinutes);
 }
 
 loadNotificationPreferences() async {

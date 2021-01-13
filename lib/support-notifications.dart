@@ -121,7 +121,6 @@ void backgroundFetchCallback(String taskId) async {
       }
     }
   }
-  bool _triggerCompleteUpdate = false;
   for (int _i = 0; _i < maxLookahead; _i++) {
     // Check if any notify locations are left that we haven't found a result for.
     // If not, break out of the for loop, we've notified for all possible locations.
@@ -139,7 +138,6 @@ void backgroundFetchCallback(String taskId) async {
           _enabledCurrentLocCopy = false;
           loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
-          _triggerCompleteUpdate = true;
           showNotification(imagery.hex2desc(_thisLocPixel), "Your current location", imagery.nowcasts[_i].shownTime);
         } else {
           print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
@@ -158,7 +156,6 @@ void backgroundFetchCallback(String taskId) async {
             _enabledSavedLocCopy[_n] = false;
             loc.savedPlaces[_n].lastNotified = new DateTime.now();
             io.savePlaceData();
-            _triggerCompleteUpdate = true;
             showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, imagery.nowcasts[_i].shownTime);
           } else {
             print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
