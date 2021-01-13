@@ -12,7 +12,6 @@ import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
-import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -37,16 +36,16 @@ MapOptions getMapOptions(BuildContext context, {double centerLat = 45.5088, doub
 TileLayerOptions getTileLayerOptions(BuildContext context) {
   return TileLayerOptions(
     tileProvider: AssetTileProvider(), //CachedNetworkTileProvider(),
-    urlTemplate: ux.darkMode(context) 
-      ? "assets/jawg-dark/{z}/{x}/{y}.png" //"https://tile.jawg.io/5c69b784-52bc-408b-8d03-66e426232e15/{z}/{x}/{y}.png?access-token=$darkKey"
-      : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey", 
+    urlTemplate: ux.darkMode(context)
+        ? "assets/jawg-dark/{z}/{x}/{y}.png" //"https://tile.jawg.io/5c69b784-52bc-408b-8d03-66e426232e15/{z}/{x}/{y}.png?access-token=$darkKey"
+        : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey",
     minNativeZoom: 5,
     maxNativeZoom: 9,
     backgroundColor: ux.darkMode(context) 
-      ? Color(0xFF000000) 
-      : Color(0xFFCCE7FC),
-    overrideTilesWhenUrlChanges: true, 
-    tileFadeInDuration: 0, 
+    ? Color(0xFF000000) 
+    : Color(0xFFCCE7FC),
+    overrideTilesWhenUrlChanges: true,
+    tileFadeInDuration: 0,
     tileFadeInStartWhenOverride: 1.0,
     retinaMode: ux.retinaMode(context), // Set retinamode based on device DPI
   );
@@ -57,9 +56,7 @@ List<OverlayImage> _addAdditionalLayers({@required bool barbs, @required bool te
   if (barbs) {
     _returnMe.add(
       OverlayImage(
-        bounds: LatLngBounds(
-          imagery.sw, imagery.ne
-        ),
+        bounds: LatLngBounds(imagery.sw, imagery.ne),
         opacity: opacity,
         imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/velocity.png'),
         gaplessPlayback: true,
@@ -69,9 +66,7 @@ List<OverlayImage> _addAdditionalLayers({@required bool barbs, @required bool te
   if (temp) {
     _returnMe.add(
       OverlayImage(
-        bounds: LatLngBounds(
-          imagery.sw, imagery.ne
-        ),
+        bounds: LatLngBounds(imagery.sw, imagery.ne),
         opacity: opacity,
         imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_temp.$index.png'),
         gaplessPlayback: true,
@@ -119,6 +114,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _count = 0;
     });
   }
+
   _previousPressed() {
     setState(() {
       if (_count == 0)
@@ -127,6 +123,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         _count--;
     });
   }
+
   _togglePlaying() {
     setState(() {
       if (_playing) {
@@ -136,12 +133,13 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       } else {
         _playing = true;
         _playPauseIcon = Icon(Icons.pause);
-        changeImageTimer = Timer.periodic(speed, (timer) { _nextPressed();});
+        changeImageTimer = Timer.periodic(speed, (timer) {_nextPressed();});
       }
     });
   }
+
   _refreshPressed() async {
-    if (await update.completeUpdate(false, false, context: this.context) != job.CompletionStatus.failure) {
+    if (await update.completeUpdate(false, false, context: this.context) != update.CompletionStatus.failure) {
       setState( () {
         if (_playing) {
           _togglePlaying();
@@ -150,25 +148,30 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       });
     }
   }
+
   _locatePressed() async {
     if (await loc.checkLocPerm() == false || await loc.checkLocService() == false) {
       ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
     } else {
-      await loc.currentLocation.update(withRequests: true); 
-      setState(() {markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)]; mapController.move(loc.currentLocation.coordinates, 9);});
+      await loc.currentLocation.update(withRequests: true);
+      setState(() {
+        markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)];
+        mapController.move(loc.currentLocation.coordinates, 9);
+      });
     }
   }
+
   Widget _returnSpacer() {
     return Text('      ');
   }
 
   Widget _returnDrawerItems() {
     return Align(
-      alignment: Alignment(0,0), 
+      alignment: Alignment(0,0),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-        child: Column(
-          children: [
+          padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+          child: Column(
+            children: [
             // Legend
             Align(alignment: Alignment.center, child: Text("Legend", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color))),
             Container(child: Row(children: [Text("Rain", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), Spacer(), Text('Hail', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),), 
@@ -189,50 +192,51 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             Row(children: [ 
               for (Color _color in imagery.colorsObj.sublist(18))
                 Container(color: _color, child: _returnSpacer())
-            ]),
+            ]),            
             Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
             // Speed control
             Container(
-              alignment: Alignment.bottomCenter,
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: Column(children: <Widget>[
-                Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
-                Slider.adaptive(
-                  activeColor: ux.nowcastingColor,
-                  // possibly the dumbest way to implement this but it works.
-                  // maybe come back and clean up later without having to hard-code values in.
-                  value: speed.inMilliseconds.toInt() == 800
-                    ? 4
-                    : speed.inMilliseconds.toInt() == 1000
-                      ? 3
-                      : speed.inMilliseconds.toInt() == 1200
-                        ? 2
-                        : speed.inMilliseconds.toInt() == 1400
-                          ? 1
-                          : speed.inMilliseconds.toInt() == 1600
-                            ? 0
-                            : 0,
-                  min: 0,
-                  max: 4,
-                  divisions: 4,
-                  onChanged: (newSpeed) {
-                    setState(() {
-                      switch(newSpeed.toInt()) {
+                alignment: Alignment.bottomCenter,
+                margin: EdgeInsets.symmetric(vertical: 8),
+                child: Column(children: <Widget>[
+                  Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
+                  Slider.adaptive(
+                    activeColor: ux.nowcastingColor,
+                    // possibly the dumbest way to implement this but it works.
+                    // maybe come back and clean up later without having to hard-code values in.
+                    value: speed.inMilliseconds.toInt() == 800
+                        ? 4
+                        : speed.inMilliseconds.toInt() == 1000
+                            ? 3
+                            : speed.inMilliseconds.toInt() == 1200
+                                ? 2
+                                : speed.inMilliseconds.toInt() == 1400
+                                    ? 1
+                                    : speed.inMilliseconds.toInt() == 1600
+                                        ? 0
+                                        : 0,
+                    min: 0,
+                    max: 4,
+                    divisions: 4,
+                    onChanged: (newSpeed) {
+                      setState(() {
+                        switch(newSpeed.toInt()) {
                         case 0: {speed = Duration(milliseconds: 1600);} break;
                         case 1: {speed = Duration(milliseconds: 1400);} break;
                         case 2: {speed = Duration(milliseconds: 1200);} break;
                         case 3: {speed = Duration(milliseconds: 1000);} break;
                         case 4: {speed = Duration(milliseconds: 800);} break;
                       }
-                      if (_playing) {
-                        // stop and start so speed change occurs
-                        _togglePlaying();_togglePlaying();
-                      }
-                    });
-                  },
-                )
-              ])
-            ),
+                        if (_playing) {
+                          // stop and start so speed change occurs
+                          _togglePlaying();
+                          _togglePlaying();
+                        }
+                      });
+                    },
+                  )
+                ])
+              ),
             // Opacity control
             Container(
               alignment: Alignment.bottomCenter,
@@ -254,6 +258,7 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Additional Layers", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
             CheckboxListTile(
+              activeColor: ux.nowcastingColor,
               title: Text("Velocity Barbs", style: ux.latoForeground(context)),
               value: _barbsEnabled,
               onChanged: (newValue) {
@@ -261,9 +266,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   _barbsEnabled = newValue;
                 });
               },
-              controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
             ),
             CheckboxListTile(
+              activeColor: ux.nowcastingColor,
               title: Text("Temperature", style: ux.latoForeground(context)),
               value: _tempEnabled,
               onChanged: (newValue) {
@@ -271,20 +276,19 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   _tempEnabled = newValue;
                 });
               },
-              controlAffinity: ListTileControlAffinity.leading,  //  <-- leading Checkbox
             ),
             _tempEnabled
               ? Image.network(
-                'https://radar.mcgill.ca/imagery/images/temp_legend.png', 
-                loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes
+                  'https://radar.mcgill.ca/imagery/images/temp_legend.png',
+                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null 
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes 
                       : null,
-                  );
-                },
-              )
+                    );
+                  },
+                )
               : Container(),
           ]
         )
@@ -307,12 +311,10 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               OverlayImageLayerOptions(
                 overlayImages: _addAdditionalLayers(barbs: _barbsEnabled, temp: _tempEnabled, index: _count)+<OverlayImage>[
                   OverlayImage(
-                    bounds: LatLngBounds(
-                      imagery.sw, imagery.ne
-                    ),
+                    bounds: LatLngBounds(imagery.sw, imagery.ne),
                     opacity: _nowcastOpacity,
                     imageProvider: io.localFile('forecast.$_count.png').existsSync() 
-                      ? FileImage(io.localFile('forecast.$_count.png'))
+                      ? FileImage(io.localFile('forecast.$_count.png')) 
                       : AssetImage('assets/launcher/logo.png'),
                     gaplessPlayback: true,
                   )
@@ -323,17 +325,21 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
             ], // End of layers
           ),
-          Container (
+          Container(
             alignment: Alignment.bottomLeft,
             child: Container(
-              margin: EdgeInsets.all(12), 
+              margin: EdgeInsets.all(12),
               width: 64,
               height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Theme.of(context).canvasColor,
                 boxShadow: [
-                  BoxShadow(color: Colors.black54.withOpacity(0.4), blurRadius: 7.0, offset: const Offset(1, 2.5))
+                  BoxShadow(
+                    color: Colors.black54.withOpacity(0.4), 
+                    blurRadius: 7.0, 
+                    offset: const Offset(1, 2.5)
+                  )
                 ],
               ),
               child: CircularPercentIndicator(
@@ -345,8 +351,8 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 lineWidth: 4.0,
                 circularStrokeCap: CircularStrokeCap.round,
                 percent: _count/8,
-                center: (!imagery.legends.contains(null))
-                  ? Text(imagery.legends[_count].substring(imagery.legends[_count].length - 12, imagery.legends[_count].length - 7), style: ux.latoWhite.merge(TextStyle(color: Theme.of(context).textTheme.bodyText1.color))) 
+                center: (imagery.nowcasts[_count].legend != null) 
+                  ? Text(imagery.nowcasts[_count].shownTime, style: ux.latoWhite.merge(TextStyle(color: Theme.of(context).textTheme.bodyText1.color))) 
                   : Text("...", style: ux.latoWhite),
                 progressColor: Theme.of(context).accentColor,
                 backgroundColor: Theme.of(context).backgroundColor,
@@ -360,7 +366,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           children: [
             IconButton(
               icon: Icon(Icons.menu),
-              onPressed: () {mapScaffoldKey.currentState.openDrawer();}
+              onPressed: () {
+                mapScaffoldKey.currentState.openDrawer();
+              }
             ),
             Spacer(),
             IconButton(
@@ -378,29 +386,33 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             Spacer(),
             IconButton(
               icon: Icon(Icons.refresh),
-              onPressed: () {_refreshPressed();},
+              onPressed: () {
+                _refreshPressed();
+              },
             ),
           ],
         )
       ),
       // TODO possibly other layers e.g. barbs and temperature
-      drawer: Platform.isIOS 
-        ? SizedBox(
-          width: 342, 
-          child: Drawer(
-            child: ListView(
-              children: [_returnDrawerItems()]
+      drawer: Platform.isIOS
+          ? SizedBox(
+              width: 342,
+              child: Drawer(
+                child: ListView(
+                  children: [_returnDrawerItems()]
+                )
+              ),
             )
-          ),
-        ) 
-        : Drawer(
-          child: ListView(
-            children: [_returnDrawerItems()]
-          )
-        ),
+          : Drawer(
+              child: ListView(
+                children: [_returnDrawerItems()]
+                )
+            ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.my_location),
-        onPressed: () {_locatePressed();},
+        onPressed: () {
+          _locatePressed();
+        },
       ),
     );
   }

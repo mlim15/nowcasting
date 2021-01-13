@@ -10,7 +10,6 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
 import 'package:Nowcasting/support-location.dart' as loc;
-import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // TODO figure out for sure if the legends need 20 min added to their duration
 // or if forecasts are for the stated time
@@ -21,23 +20,22 @@ var dio = Dio(BaseOptions()); //connectTimeout: 3000, receiveTimeout: 6000));
 // Variables
 String headerFormat = "EEE, dd MMM yyyy HH:mm:ss zzz";
 
-// Extensions for manipulating DateTime
-extension on DateTime {
-  DateTime roundDown([Duration delta = const Duration(minutes: 10)]) {
-    return DateTime.fromMillisecondsSinceEpoch(
-        this.millisecondsSinceEpoch -
-        this.millisecondsSinceEpoch % delta.inMilliseconds
-    );
-  }
-  DateTime roundUp([Duration delta = const Duration(minutes: 10)]) {
-    return DateTime.fromMillisecondsSinceEpoch(
-        // add the duration then follow the round down procedure
-        this.millisecondsSinceEpoch + delta.inMilliseconds - 
-        this.millisecondsSinceEpoch % delta.inMilliseconds
-    );
+enum CompletionStatus {
+  success, // "cold" states
+  unnecessary, 
+  timedOut,
+  failure,
+  inactive,
+  inProgress, // "hot" states
+  isQueued, // either being processed or will be soon
+}
+bool isHotState(dynamic element) {
+  if (element == CompletionStatus.isQueued || element == CompletionStatus.inProgress) {
+    return true;
+  } else {
+    return false;
   }
 }
-
 // Functions for checking availability and updating files from remote source
 Future<bool> checkUpdateAvailable(String url, File file) async {
   var urlLastModHeader;
@@ -92,95 +90,59 @@ Future downloadFile(String url, String savePath, [int retryCount=0, int maxRetri
   }
 }
 
-remoteImage(bool forceRefresh, int i) async {
-  try {
-    if (forceRefresh || await checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFile('forecast.$i.png'))) {
-      await downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$i.png', io.localFilePath('forecast.$i.png'));
-    } else {
-      return false;
-    }
-  } catch(e) {
-    return false;
-  }
-  return true;
-}
-
 // Full local product generation from start to finish
-Future<job.CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
+Future<CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildContext context, bool parallel = false}) async {
   // If an update is already in progress, just return.
-  if (job.imageUpdateStatus.any(job.isHotState)) {return job.CompletionStatus.inProgress;}
+  if (imagery.nowcasts.any((nowcast) {return isHotState(nowcast.status);})) {return CompletionStatus.inProgress;}
   // Update location
   loc.currentLocation.update();
   // The actual update process
   print('update.completeUpdate: Starting update process.');
   await radarOutages();
-  job.setAll(job.imageUpdateStatus, job.CompletionStatus.isQueued);
+  imagery.nowcasts.forEach((nowcast) {nowcast.status = CompletionStatus.isQueued;});
   // Running all the requests at the same time could theoretically
   // speed up the process, but it unfortunately often results in
   // failed requests and breaks things.
   if (parallel) {
-    for (int _i = 0; _i <= 8; _i++) {
-      completeUpdateSingleImage(_i, forceRefresh);
-    }
+    imagery.nowcasts.forEach((nowcast) {nowcast.refresh(forceRefresh);});
   } else {
-    for (int _i = 0; _i <= 8; _i++) {
-      await completeUpdateSingleImage(_i, forceRefresh);
-    }
+    // TODO verify this awaits in order like the for loop used to
+    imagery.nowcasts.forEach((nowcast) async {await nowcast.refresh(forceRefresh);});
   }
-  job.CompletionStatus result = await job.completion(job.imageUpdateStatus);
-  if (context != null) {
-    if (result == job.CompletionStatus.timedOut) {
+    Duration interval = const Duration(milliseconds: 1000);
+  int counter = 0;
+  int maxTries = 10;
+  // All the garbage we use to determine when the job is actually done
+  // and give feedback to the user.
+  while(true) {
+    // Every 500 ms proceed to check to see if any ending condition is true.
+    await Future.delayed(interval);
+    // Check to see if we have exceeded the max waiting time.
+    if (counter >= maxTries) {
       ux.showSnackBarIf(!silent, ux.refreshTimedOutSnack, context, 'update.completeUpdate: Timed out waiting for success, but no failure detected.');
-    } else if (result == job.CompletionStatus.success) {
+      return CompletionStatus.timedOut;
+    }
+    if (imagery.nowcasts.every((image) {return image.status == CompletionStatus.success;})) {
+      // Then the update has fully succeeded.
       ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
-    } else if (result == job.CompletionStatus.failure) {
+      return CompletionStatus.success;
+    } else if (imagery.nowcasts.any((image) {return image.status == CompletionStatus.failure;})) {
+      // Then we know the update has failed somewhere.
       ux.showSnackBarIf(!silent, ux.errorRefreshSnack, context, 'update.completeUpdate: An image failed to update.');
-    } else if (result == job.CompletionStatus.unnecessary) {
+      return CompletionStatus.failure;
+    } else if (imagery.nowcasts.every((image) {return image.status == CompletionStatus.unnecessary;})) {
+      // Then the update was not necessary. Tell the user so.
       ux.showSnackBarIf(!silent, ux.noRefreshSnack, context, 'update.completeUpdate: No images needed updating.');
-    }
-  }
-  return result;
-}
-
-completeUpdateSingleImage(int index, bool forceRefresh) async {
-  job.imageUpdateStatus[index] = job.CompletionStatus.inProgress;
-  try {
-    // First check for remote update for the image and download it if necessary.
-    if (await remoteImage(forceRefresh, index)) {
-      // If an update occurred, then also update its legend and clear its cache.
-      imagery.forecastCache[index].clear();
-      // Evict the image from flutter's internal cache to force FileImages with it to reload.
-      FileImage(io.localFile('forecast.$index.png')).evict();
-      await legend(index);
-      job.imageUpdateStatus[index] = job.CompletionStatus.success;
-      return true;
+      return CompletionStatus.unnecessary;
+    } else if (imagery.nowcasts.every((image) {return (image.status == CompletionStatus.success)||(image.status == CompletionStatus.unnecessary);})) {
+      // Perhaps we have a mix of only success and unnecessary. In this case, just display to the user as a success.
+      ux.showSnackBarIf(!silent, ux.refreshedSnack, context, 'update.completeUpdate: Image update successful');
+      return CompletionStatus.success;
     } else {
-      // No update was needed for the image.
-      job.imageUpdateStatus[index] = job.CompletionStatus.unnecessary;
-      return false;
+      // Otherwise continue to wait until any of the above situations is true,
+      // or we time out.
+      counter += 1;
     }
-  } catch(e) {
-    print('update.completeUpdateSingleImage: Error updating image $index: '+e.toString());
-    job.imageUpdateStatus[index] = job.CompletionStatus.failure;
-    return false;
-  }
-}
-
-legend(int i) async {
-  DateTime _fileLastMod;
-  if (await io.localFile('forecast.$i.png').exists()) {
-    _fileLastMod = io.localFile('forecast.$i.png').lastModifiedSync();
-  } else {
-    throw('update.legends: Expected file forecast.$i.png does not exist. Stopping');
-  }
-  String _newLegend = _fileLastMod.toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20*i)).toString();
-  imagery.legends[i] = _newLegend;
-  print("update.legend: Legend "+_newLegend+" inferred from file forecast.$i.png last modified date");
-}
-
-legends() async {
-  for (int i = 0; i <= 8; i++) {
-    legend(i);
   }
 }
 

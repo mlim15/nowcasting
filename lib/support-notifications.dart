@@ -1,6 +1,5 @@
 import 'dart:io' show Platform;
 
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:background_fetch/background_fetch.dart';
@@ -10,7 +9,6 @@ import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-location.dart' as loc;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
-import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 bool notificationsEnabled = false;
 bool notificationsInitialized = false;
@@ -21,7 +19,7 @@ int checkIntervalMinutes = 60;
 // First items of each type (t1, s1, l1) will not generate notifications
 // When zero it is effectively disabled because the method that checks
 // this will only ever return a result that says it's not under the threshold
-int severityThreshold = 1; 
+int severityThreshold = 1;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('notification_icon');
@@ -92,6 +90,7 @@ void backgroundFetchCallback(String taskId) async {
     main.prefs = await SharedPreferences.getInstance();
     loc.currentLocation.update();
     await io.loadPlaceData();
+    await io.loadNowcastData();
     await io.loadNotificationPreferences();
   }
 
@@ -107,8 +106,8 @@ void backgroundFetchCallback(String taskId) async {
   List<bool> _enabledSavedLocCopy = new List<bool>.generate(loc.savedPlaces.length, (_index) {if (loc.savedPlaces[_index].notify == true) {return true;} else {return false;}});
   bool _enabledCurrentLocCopy;
   if (loc.currentLocation.notify) {_enabledCurrentLocCopy = true;} else {_enabledCurrentLocCopy = false;}
-  
-  // Disable notifications this go-round for any locations that have already 
+
+  // Disable notifications this go-round for any locations that have already
   // been shown for in the last minimumTimeBetween (default 180 minutes).
   if (DateTime.now().difference(loc.currentLocation.lastNotified) < minimumTimeBetween) {
     print('notifications.backgroundFetchCallback: Might have notified for current location, but skipped because notified too soon ago.');
@@ -128,11 +127,10 @@ void backgroundFetchCallback(String taskId) async {
     // If not, break out of the for loop, we've notified for all possible locations.
     if (!(_enabledCurrentLocCopy || _enabledSavedLocCopy.any((entry) {return entry == true;}))) {break;}
     // Otherwise, there is something to look for still. Fetch the next image.
-    await update.completeUpdateSingleImage(_i, false);
+    await imagery.nowcasts[_i].refresh(false);
     // Check this image for current location, if notifications are enabled for it
     if (_enabledCurrentLocCopy) {
-      List<int> _pixelCoord = imagery.geoToPixel(loc.currentLocation.coordinates.latitude, loc.currentLocation.coordinates.longitude);
-      String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
+      String _thisLocPixel = await imagery.getPixel(imagery.nowcasts[_i], loc.currentLocation);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
         if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
@@ -142,7 +140,7 @@ void backgroundFetchCallback(String taskId) async {
           loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
           _triggerCompleteUpdate = true;
-          showNotification(imagery.hex2desc(_thisLocPixel), "Your current location", DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+          showNotification(imagery.hex2desc(_thisLocPixel), "Your current location", imagery.nowcasts[_i].shownTime);
         } else {
           print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
         }
@@ -151,8 +149,7 @@ void backgroundFetchCallback(String taskId) async {
     // Check this image for any saved locations, if notifications are enabled for them
     for (int _n in Iterable<int>.generate(_enabledSavedLocCopy.length)) {
       if (_enabledSavedLocCopy[_n]) {
-        List<int> _pixelCoord = imagery.geoToPixel(loc.savedPlaces[_n].coordinates.latitude, loc.savedPlaces[_n].coordinates.longitude);
-        String _thisLocPixel = await imagery.getPixel(_pixelCoord[0], _pixelCoord[1], _i);
+        String _thisLocPixel = await imagery.getPixel(imagery.nowcasts[_i], loc.savedPlaces[_n]);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
           if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
@@ -162,9 +159,9 @@ void backgroundFetchCallback(String taskId) async {
             loc.savedPlaces[_n].lastNotified = new DateTime.now();
             io.savePlaceData();
             _triggerCompleteUpdate = true;
-            showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, DateFormat('kk:mm').format(DateTime.parse(imagery.legends[_i])));
+            showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, imagery.nowcasts[_i].shownTime);
           } else {
-          print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
+            print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
           }
         }
       }
@@ -181,21 +178,21 @@ scheduleBackgroundFetch() {
   // Configure background_fetch
   BackgroundFetch.configure(
     BackgroundFetchConfig(
-        minimumFetchInterval: checkIntervalMinutes, // TODO find best interval for Android.
-        startOnBoot: true,
-        stopOnTerminate: false,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.NOT_ROAMING // Not sure if this is the best default either
+      minimumFetchInterval: checkIntervalMinutes, // TODO find best interval for Android.
+      startOnBoot: true,
+      stopOnTerminate: false,
+      enableHeadless: true,
+      requiresBatteryNotLow: false,
+      requiresCharging: false,
+      requiresStorageNotLow: false,
+      requiresDeviceIdle: false,
+      requiredNetworkType: NetworkType.NOT_ROAMING // Not sure if this is the best default either
     ),
     backgroundFetchCallback
   ).then((int status) {
-      print('notifications.scheduleBackgroundFetch: configure success: $status');
-    }).catchError((e) {
-      print('notifications.scheduleBackgroundFetch: configure ERROR: $e');
+    print('notifications.scheduleBackgroundFetch: configure success: $status');
+  }).catchError((e) {
+    print('notifications.scheduleBackgroundFetch: configure ERROR: $e');
     }
   );
   // Register to receive BackgroundFetch events after app is terminated.
@@ -205,7 +202,7 @@ scheduleBackgroundFetch() {
   }
 }
 
-Future<job.CompletionStatus> notificationTapped(String payload) {
+Future<update.CompletionStatus> notificationTapped(String payload) {
   return update.completeUpdate(false, true);
 }
 

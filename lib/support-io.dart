@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:latlong/latlong.dart';
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-imagery.dart' as imagery;
@@ -25,37 +24,6 @@ File localFile(String fileName) {
 String localFilePath(String fileName) {
   String pathName = join(appDocPath.path, fileName);
   return pathName;
-}
-
-// This functionality is only useful if the app is opened within 10 minutes
-// and it has also been killed in the background before the user opens it again,
-// or the user has no internet when opening the second time.
-// Frankly it's of very limited use, but it will certainly improve the experience
-// on very low end devices if the app is frequently opened and closed.
-saveForecastCache(int _index) async {
-  File _file = localFile('forecast.$_index.cache');
-  _file.writeAsStringSync(json.encode(imagery.forecastCache[_index]));
-  print('imagery.saveForecastCache: Finished saving decoded values for image $_index');
-}
-
-loadForecastCaches() async {
-  Map<String, dynamic> _json;
-  for (int i = 0; i <= 8; i++) {
-    File _file = localFile('forecast.$i.cache');
-    if (_file.existsSync()) {
-      _json = json.decode(_file.readAsStringSync());
-      if(_json != null && _json.isNotEmpty) {
-        imagery.forecastCache[i] = _json;
-      } 
-    }
-  }
-  print('imagery.loadForecastCache: Finished loading cached image values');
-}
-
-restoreDefaultPlaceData([String errorMessage, Error e]) {
-  if (errorMessage != null && e != null) {print(errorMessage+' Reverting to defaults. Error was '+e.toString());}
-  else if (errorMessage != null) {print(errorMessage+' Reverting to defaults.');}
-  loc.savedPlaces = [loc.SavedLocation(name: "McGill Downtown Campus", coordinates: LatLng(45.504688, -73.574990), notify: false)];
 }
 
 // Save/restore/update functions for last known location, saved locations, 
@@ -82,7 +50,7 @@ savePlaceData() async {
     _savedPlacesJSON.add(json.encode(_place.toJson()));
   }
   main.prefs.setStringList('savedLocations', _savedPlacesJSON);
-  print('location.loadPlaceData: Successfully saved locations: '+loc.savedPlaces.toString());
+  print('location.savePlaceData: Successfully saved locations: '+loc.savedPlaces.toString());
 }
 
 saveNotificationPreferences() async {
@@ -114,4 +82,24 @@ loadNotificationPreferences() async {
   if (_loadCheckIntervalMinutes != null) {
     notifications.checkIntervalMinutes = _loadCheckIntervalMinutes;
   }
+}
+
+loadNowcastData() async {
+  List<String> _loadNowcasts = main.prefs.getStringList('nowcastData');
+  if (_loadNowcasts != null) {
+    imagery.nowcasts = [];
+    for (String _json in _loadNowcasts) {
+      imagery.nowcasts.add(imagery.Nowcast.fromJson(json.decode(_json)));
+    }
+  }
+  print('location.loadNowcastData: Successfully restored lastUpdated information for image products.');
+}
+
+saveNowcastData() async {
+  List<String> _saveNowcasts = [];
+  for (imagery.Nowcast _nowcast in imagery.nowcasts) {
+    _saveNowcasts.add(json.encode(_nowcast.toJson()));
+  }
+  main.prefs.setStringList('nowcastData', _saveNowcasts);
+  print('location.saveNowcastData: Successfully saved lastUpdated information for image products.');
 }

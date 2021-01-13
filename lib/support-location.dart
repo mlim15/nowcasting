@@ -6,11 +6,13 @@ import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
 
 import 'package:Nowcasting/support-io.dart' as io;
+import 'package:Nowcasting/support-imagery.dart' as imagery;
 
 // Location object used by library
 Location location = new Location();
 
 // Storage objects for our locations
+//List<NowcastingLocation> allLocations = <NowcastingLocation>[currentLocation] + savedPlaces;
 CurrentLocation currentLocation = CurrentLocation();
 List<SavedLocation> savedPlaces = [SavedLocation(name: "McGill Downtown Campus", coordinates: LatLng(45.504688, -73.574990), notify: false)];
 // Bools used to store whether or not things are happening
@@ -20,88 +22,109 @@ bool radarOutage = false;
 // Locations class definitions
 class NowcastingLocation {
   String name;
-  LatLng coordinates;
   bool notify;
   DateTime lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
+  LatLng _coordinates;
+  List<int> pixelCoordinates;
+  set coordinates(LatLng _newValue) {
+    this._coordinates = _newValue;
+    updatePixelCoordinates();
+  }
+
+  LatLng get coordinates {
+    return this._coordinates;
+  }
+
+  String toString() {
+    return this.name;
+  }
+
+  void updatePixelCoordinates() {
+    if (this.coordinates == null) {
+      return;
+    }
+    List<int> _newPixelCoordinates;
+    try {
+      _newPixelCoordinates = imagery.geoToPixel(this.coordinates.latitude, this.coordinates.longitude);
+    } catch(e) {
+      print(e);
+      return;
+    }
+    this.pixelCoordinates = _newPixelCoordinates;
+  }
+
 }
 
 class SavedLocation extends NowcastingLocation {
-  String name;
-  LatLng coordinates;
-  bool notify;
-  DateTime lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
-
-  // Default constructor
-  SavedLocation({@required this.name, @required this.coordinates, @required this.notify});
-
-  String toString() {
-    return name;
+  SavedLocation({@required String name, @required LatLng coordinates, @required bool notify}) {
+    super.name = name;
+    super.coordinates = coordinates;
+    super.notify = notify;
+    super.lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
   }
 
   // Constructor to load from JSON
-  SavedLocation.fromJson(Map<String, dynamic> json)
-      : name = json['name'],
-        coordinates = LatLng(double.parse(json['latitude']), double.parse(json['longitude'])),
-        notify = (json['notify'] == "true"),
-        lastNotified = DateTime.parse(json['lastNotified']);
+  SavedLocation.fromJson(Map<String, dynamic> json) {
+    super.name = json['name'];
+    super.coordinates = (json['latitude'] != null) && (json['longitude'] != null) ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null;
+    super.notify = json['notify'];
+    super.lastNotified = DateTime.parse(json['lastNotified']);
+  }
 
   // Export as JSON
-  Map<String, dynamic> toJson() =>
-    {
-      'name': name,
-      'latitude': coordinates.latitude.toString(),
-      'longitude': coordinates.longitude.toString(),
-      'notify' : notify.toString(),
-      'lastNotified' : lastNotified.toIso8601String()
-    };
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'latitude': coordinates != null ? coordinates.latitude.toString() : null,
+        'longitude': coordinates != null ? coordinates.longitude.toString() : null,
+        'notify': notify,
+        'lastNotified': lastNotified.toIso8601String(),
+      };
 }
 
 class CurrentLocation extends NowcastingLocation {
-  String name = "Current Location";
-  LatLng coordinates;
-  bool notify = false;
-  DateTime lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
-  DateTime lastUpdated = DateTime.fromMicrosecondsSinceEpoch(0);
+  DateTime lastUpdated;
 
-  // Default constructor
-  CurrentLocation();
+  CurrentLocation() {
+    super.name = "Current Location";
+    super.coordinates = null;
+    super.notify = false;
+    super.lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
+    this.lastUpdated = DateTime.fromMicrosecondsSinceEpoch(0);
+  }
 
-  // Constructor to load from JSON
-  CurrentLocation.fromJson(Map<String, dynamic> json)
-      : name = "Current Location",
-        coordinates = json['latitude'] != null ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null,
-        notify = json['notify'],
-        lastNotified = DateTime.parse(json['lastNotified']),
-        lastUpdated = DateTime.parse(json['lastUpdated']);
+  CurrentLocation.fromJson(Map<String, dynamic> json) {
+    super.name = "Current Location";
+    super.coordinates = (json['latitude'] != null) && (json['longitude'] != null) ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null;
+    super.notify = json['notify'];
+    super.lastNotified = DateTime.parse(json['lastNotified']);
+    this.lastUpdated = DateTime.parse(json['lastUpdated']);
+  }
 
   // Export as JSON
-  Map<String, dynamic> toJson() =>
-    {
-      'latitude': coordinates != null ? coordinates.latitude.toString() : null,
-      'longitude': coordinates != null ? coordinates.longitude.toString() : null,
-      'notify' : notify,
-      'lastNotified' : lastNotified.toIso8601String(),
-      'lastUpdated' : lastUpdated.toIso8601String()
+  Map<String, dynamic> toJson() => {
+    'latitude': this.coordinates != null ? this.coordinates.latitude.toString() : null, 
+    'longitude': this.coordinates != null ? this.coordinates.longitude.toString() : null, 
+    'notify': this.notify, 'lastNotified': this.lastNotified.toIso8601String(), 
+    'lastUpdated': this.lastUpdated.toIso8601String()
     };
 
   update({bool withRequests = false}) async {
     try {
       LocationData _newLoc = await getUserLocation(withRequests: withRequests);
       if (_newLoc != null) {
-        this.coordinates = new LatLng(_newLoc.latitude, _newLoc.longitude);
-        lastUpdated = DateTime.now();
+        super.coordinates = new LatLng(_newLoc.latitude, _newLoc.longitude);
+        this.lastUpdated = DateTime.now();
         await io.savePlaceData();
         return true;
       } else {
         print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
         return false;
       }
-    } catch(e) {
+    } catch (e) {
       print('loc.updateLastKnownLocation: Could not update location, update attempt yielded an error.');
       return false;
     }
   }
-
 }
 
 // Location plugin service related things
@@ -170,7 +193,7 @@ getUserLocation({bool withRequests = false}) async {
     }
   }
   _locationData = await location.getLocation();
-  print('support-location: Successfully got location '+_locationData.toString());
+  print('support-location: Successfully got location ' + _locationData.toString());
   timeoutTimer.cancel();
   return _locationData;
 }

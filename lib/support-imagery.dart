@@ -1,8 +1,10 @@
 import 'dart:core';
 import 'dart:io';
-import 'dart:math';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 import 'package:latlong/latlong.dart';
@@ -10,10 +12,125 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 import 'package:Nowcasting/main.dart' as main;
 import 'package:Nowcasting/support-io.dart' as io;
+import 'package:Nowcasting/support-update.dart' as update;
+import 'package:Nowcasting/support-location.dart' as loc;
+
+// Extensions for manipulating DateTime
+extension on DateTime {
+  DateTime roundDown([Duration delta = const Duration(minutes: 10)]) {
+    return DateTime.fromMillisecondsSinceEpoch(this.millisecondsSinceEpoch - this.millisecondsSinceEpoch % delta.inMilliseconds);
+  }
+
+  DateTime roundUp([Duration delta = const Duration(minutes: 10)]) {
+    return DateTime.fromMillisecondsSinceEpoch(
+        // add the duration then follow the round down procedure
+        this.millisecondsSinceEpoch + delta.inMilliseconds - this.millisecondsSinceEpoch % delta.inMilliseconds);
+  }
+}
+
+class Nowcast {
+  DateTime get lastUpdated {
+    if (this.file.existsSync()) {
+      return this.file.lastModifiedSync();
+    } else {
+      return null;
+    }
+  }
+
+  int index;
+  File file;
+  DateTime legend;
+  String shownTime;
+  Map<String, dynamic> pixelCache = {};
+  update.CompletionStatus status = update.CompletionStatus.inactive;
+
+  Nowcast(int i) {
+    this.index = i;
+    this.file = io.localFile('forecast.$i.png');
+    if (this.file.existsSync()) {
+      this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+      this.shownTime = DateFormat('kk:mm').format(this.legend);
+    }
+  }
+
+  // Constructor to load from JSON
+  Nowcast.fromJson(Map<String, dynamic> _loadjson) {
+    this.index = _loadjson['index'];
+    this.file = io.localFile('forecast.${this.index}.png');
+    this.pixelCache = json.decode(_loadjson['pixelCache']);
+    if (this.file.existsSync()) {
+      this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+      this.shownTime = DateFormat('kk:mm').format(this.legend);
+    }
+  }
+
+  // Export as JSON
+  Map<String, dynamic> toJson() => {
+        'index': index,
+        'pixelCache': json.encode(this.pixelCache),
+      };
+
+  Future<bool> refresh(bool forced) async {
+    this.status = update.CompletionStatus.inProgress;
+    try {
+      // First check for remote update for the image and download it if necessary.
+      if (await updateFile(forced)) {
+        // If an update occurred, its legend etc will be updated
+        // Its cache will also be cleared, and the image will be evicted
+        // from flutter's internal cache to force FileImages with it to reload.
+        this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+        this.shownTime = DateFormat('kk:mm').format(this.legend);
+        this.pixelCache.clear();
+        FileImage(this.file).evict();
+        this.status = update.CompletionStatus.success;
+        return true;
+      } else {
+        // No update was needed for the image.
+        this.status = update.CompletionStatus.unnecessary;
+        return false;
+      }
+    } catch (e) {
+      print('imagery.Nowcast.update: Error updating image $index: ' + e.toString());
+      this.status = update.CompletionStatus.failure;
+      return false;
+    }
+  }
+
+  Future<bool> updateFile(bool forced) async {
+    try {
+      if (forced || await update.checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png', this.file)) {
+        await update.downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png', this.file.path);
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  dynamic getCachedValue(_x, _y) {
+    if (this.pixelCache.containsKey("$_x,$_y")) {
+      return this.pixelCache["$_x,$_y"];
+    } else {
+      return false;
+    }
+  }
+
+  void cachePixel(int _x, int _y, String result) {
+    if (this.pixelCache.containsKey('$_x,$_y')) {
+      return;
+    } else {
+      this.pixelCache['$_x,$_y'] = result;
+    }
+  }
+}
+
+List<Nowcast> nowcasts = [for (int i = 0; i <= 8; i++) new Nowcast(i)];
 
 // Details relevant to nowcasting imagery products - pixel dimensions
 // and geographical bbox
-final int imageryDimensions = 1808;
+final int dimensions = 1808;
 final LatLng sw = LatLng(35.0491, -88.7654);
 final LatLng ne = LatLng(51.0000, -66.7500);
 
@@ -83,10 +200,6 @@ final rainStr = [l1str, l2str, l3str, l4str, l5str, l6str, l7str, l8str, l9str, 
 final transitionStr = [t1str, t2str, t3str, t4str, t5str];
 final snowStr = [s1str, s2str, s4str, s5str, s6str, s7str, s8str, s9str];
 
-// Lists that store information about local data products
-List<String> legends = new List(9);
-List<Map<String, dynamic>> forecastCache = new List.generate(9, (i) {return {};}, growable: false);
-
 // Functions that take decimal AABBGGRR values queried from the data products
 // and provide the corresponding hex color, icon, or text description
 Color hex2color(String _hex) {
@@ -140,29 +253,30 @@ bool isUnderThreshold(String _pixelColor, int _threshold) {
 
 // Helper functions to get pixel values, convert geographic coordinates to pixel coordinates
 List<int> geoToPixel(double lat, double lon) {
-  if (coordOutOfBounds(LatLng(lat, lon))) {
-    throw('imagery.geoToPixel: Error, passed coordinates were out of bounds');
+    // Check to see if the coordinates are out of bounds.
+    if (coordOutOfBounds(LatLng(lat, lon))) {
+      throw ('imagery.geoToPixel: Error, passed coordinates were out of bounds');
+    }
+    // If not, then calculate the pixel.
+    int mapWidth = dimensions;
+    int mapHeight = dimensions;
+
+    var mapLonLeft = sw.longitude;
+    var mapLonRight = ne.longitude;
+    var mapLonDelta = mapLonRight - mapLonLeft;
+
+    var mapLatBottom = sw.latitude;
+    var mapLatBottomDegree = mapLatBottom * pi / 180;
+
+    int x = ((lon - mapLonLeft) * (mapWidth / mapLonDelta)).toInt();
+    lat = lat * pi / 180;
+    var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
+    var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
+    int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
+    return [x,y];
   }
-  // If not, then calculate the pixel.
-  int mapWidth = imageryDimensions;
-  int mapHeight = imageryDimensions;
 
-  var mapLonLeft = sw.longitude;
-  var mapLonRight = ne.longitude;
-  var mapLonDelta = mapLonRight - mapLonLeft;
-
-  var mapLatBottom = sw.latitude;
-  var mapLatBottomDegree = mapLatBottom * pi / 180;
-
-  int x = ((lon - mapLonLeft) * (mapWidth / mapLonDelta)).toInt();
-  lat = lat * pi / 180;
-  var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
-  var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
-  int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
-  return [x,y];
-}
-
-bool coordOutOfBounds(LatLng coord) {
+  bool coordOutOfBounds(LatLng coord) {
   // Check to see if the coordinates are out of bounds.
   double eastBound = ne.longitude;
   double westBound = sw.longitude;
@@ -180,46 +294,29 @@ bool coordOutOfBounds(LatLng coord) {
   return false;
 }
 
-cachePixel(int _x, int _y, int _index, String _result) {
-  // Check to see if it's already cached.
-  if (forecastCache[_index].containsKey("$_x,$_y")) {
-    // Then we don't need to add anything.
-    return;
-  } else {
-    // Add it to the cache.
-    forecastCache[_index]["$_x,$_y"] = _result;
-    // Save the cache to disk.
-    io.saveForecastCache(_index);
-  }
-}
 
-Future<String> getPixel(int _x, int _y, int _index) async {
-    String _result;
-    // First check to see if the result is in the cache
-    // and return that if we can. This is less expensive.
-    if (forecastCache[_index] != null) {
-      if (forecastCache[_index].containsKey("$_x,$_y")) {
-        return forecastCache[_index]["$_x,$_y"];
-      }
-    } else {
-      // If the forecast cache was not initialized (e.g. bad load)
-      // just clear it.
-      forecastCache[_index] = {};
-    }
-    // If not then run the platform code to decode the image and
-    // retrieve the pixel value.
-    File _file = io.localFile('forecast.$_index.png');
-    try {
-      _result = await main.platform.invokeMethod('getPixel', <String, dynamic>{
-        "filePath": _file.path.toString(), 
-        "xCoord": _x, 
-        "yCoord": _y,
-      });
-      // Cache the result.
-      cachePixel(_x, _y, _index, _result);
-    } catch (e) {
-      print(e);
-      return null;
-    }
-    return _result;
+Future<String> getPixel(Nowcast _nowcast, loc.NowcastingLocation _location) async {
+  String _result;
+  int _x = _location.pixelCoordinates.first;
+  int _y = _location.pixelCoordinates.last;
+  // First check to see if the result is in the cache
+  // and return that if we can. This is less expensive.
+  if (_nowcast.getCachedValue(_x, _y) != false) {
+    return _nowcast.getCachedValue(_x, _y);
   }
+  // If not then run the platform code to decode the image and
+  // retrieve the pixel value.
+  try {
+    _result = await main.platform.invokeMethod('getPixel', <String, dynamic>{
+      "filePath": _nowcast.file.path.toString(),
+      "xCoord": _x,
+      "yCoord": _y,
+    });
+    // Cache the result.
+    _nowcast.cachePixel(_x, _y, _result);
+  } catch (e) {
+    print(e);
+    return null;
+  }
+  return _result;
+}

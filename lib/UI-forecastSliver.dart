@@ -38,13 +38,13 @@ class ForecastSliver extends StatelessWidget {
     // Infer whether notifications are on/off based on passed value and
     // store locally as boolean
     bool _notify = this.location.notify;
-    
+
     // Keys and controllers for later use
     final _formKey = GlobalKey<FormState>();
     final _latControl = TextEditingController();
     final _lonControl = TextEditingController();
     TextEditingController _nameTextController = new TextEditingController.fromValue(TextEditingValue(text: this.location.name));
-    
+
     // Button press methods
     _notifyPressed() async {
       // Request permissions on iOS if necessary
@@ -65,12 +65,12 @@ class ForecastSliver extends StatelessWidget {
 
     AlertDialog editPopup(bool _isEditable) {
       // Set initial text values using the controllers for each text field
-        _latControl.text = this.location.coordinates.latitude.toString();
-        _lonControl.text = this.location.coordinates.longitude.toString();
+      _latControl.text = this.location.coordinates.latitude.toString();
+      _lonControl.text = this.location.coordinates.longitude.toString();
 
       return AlertDialog(
         title: Text("Coordinates for '"+this.location.name+"'"),
-        content: SingleChildScrollView( 
+        content: SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Form(
             key: _formKey,
@@ -83,9 +83,6 @@ class ForecastSliver extends StatelessWidget {
                     controller: _latControl,
                     decoration: new InputDecoration(labelText: "Latitude (35 to 51)"),
                     keyboardType: TextInputType.number,
-                    onSaved: (newValue) {
-                      this.location.coordinates.latitude = double.parse(newValue);
-                    },
                     validator: (newValue) {
                       if (double.tryParse(newValue) == null) {
                         return 'Invalid latitude.';
@@ -103,9 +100,6 @@ class ForecastSliver extends StatelessWidget {
                     controller: _lonControl,
                     decoration: new InputDecoration(labelText: "Longitude (-88.7 to -66.7)"),
                     keyboardType: TextInputType.number,
-                    onSaved: (newValue) {
-                      this.location.coordinates.longitude = double.parse(newValue);
-                    },
                     validator: (newValue) {
                       if (double.tryParse(newValue) == null) {
                         return 'Invalid longitude.';
@@ -144,7 +138,7 @@ class ForecastSliver extends StatelessWidget {
                       ],
                     )
                   )
-                  : Container(),        
+                  : Container(),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -152,7 +146,7 @@ class ForecastSliver extends StatelessWidget {
                       FlatButton(
                         child: _isEditable
                           ? Text("Cancel")
-                          : Text("Close"), 
+                          : Text("Close"),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -167,7 +161,7 @@ class ForecastSliver extends StatelessWidget {
                         onPressed: _isEditable
                           ? () {
                             if (_formKey.currentState.validate()) {
-                              _formKey.currentState.save();
+                              this.location.coordinates = new LatLng(double.parse(_latControl.text), double.parse(_lonControl.text));
                               io.savePlaceData();
                               rebuildCallback();
                               Navigator.of(context).pop();
@@ -197,17 +191,14 @@ class ForecastSliver extends StatelessWidget {
     // Builds the inset horizontal scroll view with the actual forecast for each sliver
     Future<Widget> populateForecast() async {
       List<String> _pixelValues = [];
-      List<int> _pixelCoord = imagery.geoToPixel(this.location.coordinates.latitude, this.location.coordinates.longitude);
-      int _x = _pixelCoord[0];
-      int _y = _pixelCoord[1];
       for (int _i = 0; _i <= 8; _i++) {
-        _pixelValues.add(await imagery.getPixel(_x, _y, _i));
+        _pixelValues.add(await imagery.getPixel(imagery.nowcasts[_i], this.location));
       }
       if (_pixelValues.contains(null)) {
         return _showFailed();
       }
       return SingleChildScrollView(
-        scrollDirection: Axis.horizontal, 
+        scrollDirection: Axis.horizontal,
         child: Row(
           children: [ for (int _i = 0; _i <= 8; _i++)
             Container(
@@ -224,24 +215,21 @@ class ForecastSliver extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    child: Text(
-                      imagery.hex2desc(_pixelValues[_i]),
-                      style: ux.latoWhite
-                    ), 
+                    child: Text(imagery.hex2desc(_pixelValues[_i]), style: ux.latoWhite),
                   ),
-                  Text(DateFormat('HH:mm').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
-                  Text(DateFormat('EEE d').format(DateTime.parse(imagery.legends[_i])), style: ux.latoWhite), 
+                  Text(DateFormat('HH:mm').format(imagery.nowcasts[_i].legend), style: ux.latoWhite),
+                  Text(DateFormat('EEE d').format(imagery.nowcasts[_i].legend), style: ux.latoWhite),
                 ]
               )
             )
-          ] 
+          ]
         )
       );
     }
 
     Widget futureBuilder() {
       return FutureBuilder<Widget>(
-        future: populateForecast(), 
+        future: populateForecast(),
         builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return Padding(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)), padding: EdgeInsets.only(top: 16));
@@ -249,7 +237,7 @@ class ForecastSliver extends StatelessWidget {
             print(snapshot.error);
             return _showFailed();
           } else {
-            return snapshot.data; 
+            return snapshot.data;
           }
         },
       );
@@ -462,4 +450,3 @@ class ForecastSliver extends StatelessWidget {
     );
   }
 }
-

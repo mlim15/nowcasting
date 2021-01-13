@@ -17,7 +17,6 @@ import 'package:Nowcasting/support-ux.dart' as ux;
 import 'package:Nowcasting/support-io.dart' as io;
 import 'package:Nowcasting/support-update.dart' as update;
 import 'package:Nowcasting/support-notifications.dart' as notifications;
-import 'package:Nowcasting/support-jobStatus.dart' as job;
 
 // TODO animate splash screen
 // TODO localization including map images... maybe generate/redownload with localized per-region names?
@@ -123,17 +122,14 @@ class SplashState extends State<Splash> {
       // Try to refresh outdated images:
       print('SplashState: Staying on splash for now to attempt to update images');
       await io.loadPlaceData();
+      await io.loadNowcastData();
       await io.loadNotificationPreferences();
       print('SplashState: Done restoring places');
       try {
         _changeSplashText('Checking for Updates...');
-        if (await update.completeUpdate(false, true) != job.CompletionStatus.failure) {
+        if (await update.completeUpdate(false, true) != update.CompletionStatus.failure) {
           _setTextVisible(false);
-        } else {
-          _setTextVisible(false);
-          await io.loadForecastCaches();
         }
-        await update.legends();
         print('SplashState: Done attempting to update images');
       } catch (e) {
         print('SplashState: Error attempting image update');
