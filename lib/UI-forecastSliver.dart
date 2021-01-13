@@ -207,15 +207,15 @@ class ForecastSliver extends StatelessWidget {
                 children: <Widget>[
                   Container(
                     padding: EdgeInsets.all(2),
-                    child: imagery.hex2icon(_pixelValues[_i]),
+                    child: imagery.convert(_pixelValues[_i], imagery.NowcastDataType.icon),
                     decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: new BorderRadius.circular(8.0),
-                      color: imagery.hex2color(_pixelValues[_i])
+                      color: imagery.convert(_pixelValues[_i], imagery.NowcastDataType.colorObj)
                     ),
                   ),
                   Container(
-                    child: Text(imagery.hex2desc(_pixelValues[_i]), style: ux.latoWhite),
+                    child: Text(imagery.convert(_pixelValues[_i], imagery.NowcastDataType.description), style: ux.latoWhite),
                   ),
                   Text(DateFormat('HH:mm').format(imagery.nowcasts[_i].legend), style: ux.latoWhite),
                   Text(DateFormat('EEE d').format(imagery.nowcasts[_i].legend), style: ux.latoWhite),

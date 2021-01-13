@@ -190,17 +190,32 @@ List<Color> snowColors = const [const Color(0xFFCEFFFF), const Color(0xFF9CEEFF)
 
 // Convert by taking hex string of AARRGGBB color and
 // and provide the corresponding hex color, icon, or text description
-Color hex2color(String _hex) {
-  // Assumes 8 character hex.
-  return Color(int.parse(_hex, radix: 16));
+
+enum NowcastDataType {
+  level,
+  type,
+  colorObj,
+  hexString,
+  description,
+  icon
 }
 
-Icon hex2icon(String _pixelColor) {
-  return Icon(pixelValues.singleWhere((value) {return value.hexString.compareTo(_pixelColor) == 0;}).iconData);
-}
-
-String hex2desc(String _pixelColor) {
-  return pixelValues.singleWhere((value) {return value.hexString.compareTo(_pixelColor) == 0;}).description;
+dynamic convert(String _hex, NowcastDataType _dataType) {
+  PixelValue _pixelValue;
+  try {
+    _pixelValue = pixelValues.singleWhere((value) {return value.hexString.compareTo(_hex) == 0;});
+  } catch(e) {
+    print('imagery.convert: Passed in unrecognized pixel hex value. Returning equivalent of none.');
+    _pixelValue = none;
+  }
+  switch (_dataType) {
+    case NowcastDataType.level: return _pixelValue.level;
+    case NowcastDataType.colorObj: return _pixelValue.colorObj;
+    case NowcastDataType.description: return _pixelValue.description;
+    case NowcastDataType.hexString: return _pixelValue.hexString;
+    case NowcastDataType.icon: return Icon(_pixelValue.iconData, color: Colors.white);
+    case NowcastDataType.type: return _pixelValue.type;
+  }
 }
 
 // Helper functions to resolve relative severity

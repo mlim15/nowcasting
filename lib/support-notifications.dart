@@ -138,7 +138,7 @@ void backgroundFetchCallback(String taskId) async {
           _enabledCurrentLocCopy = false;
           loc.currentLocation.lastNotified = new DateTime.now();
           io.savePlaceData();
-          showNotification(imagery.hex2desc(_thisLocPixel), "Your current location", imagery.nowcasts[_i].shownTime);
+          showNotification(imagery.convert(_thisLocPixel, imagery.NowcastDataType.description), "Your current location", imagery.nowcasts[_i].shownTime);
         } else {
           print('notifications.backgroundFetchCallback: Would have notified for current location, but skipped because of threshold rules.');
         }
@@ -156,7 +156,7 @@ void backgroundFetchCallback(String taskId) async {
             _enabledSavedLocCopy[_n] = false;
             loc.savedPlaces[_n].lastNotified = new DateTime.now();
             io.savePlaceData();
-            showNotification(imagery.hex2desc(_thisLocPixel), loc.savedPlaces[_n].name, imagery.nowcasts[_i].shownTime);
+            showNotification(imagery.convert(_thisLocPixel, imagery.NowcastDataType.description), loc.savedPlaces[_n].name, imagery.nowcasts[_i].shownTime);
           } else {
             print('notifications.backgroundFetchCallback: Would have notified for saved location, but skipped because of threshold rules.');
           }
