@@ -234,7 +234,7 @@ class ForecastSliver extends StatelessWidget {
           if (snapshot.connectionState != ConnectionState.done) {
             return Padding(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)), padding: EdgeInsets.only(top: 16));
           } else if (snapshot.data == null) {
-            print(snapshot.error);
+            print(snapshot.error.toString());
             return _showFailed();
           } else {
             return snapshot.data;

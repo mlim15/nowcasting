@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
@@ -40,19 +40,39 @@ class NowcastingLocation {
   }
 
   void updatePixelCoordinates() {
-    if (this.coordinates == null) {
-      return;
-    }
-    List<int> _newPixelCoordinates;
     try {
-      _newPixelCoordinates = imagery.geoToPixel(this.coordinates.latitude, this.coordinates.longitude);
+      if (this.coordinates == null) {
+        throw('location.NowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are null');
+      }
+      double lat = this.coordinates.latitude;
+      double lon = this.coordinates.longitude;
+      if (imagery.coordOutOfBounds(LatLng(lat, lon))) {
+        throw('location.NowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are out of bounds');
+      }
+      // If not, then calculate the pixel.
+      int mapWidth = imagery.dimensions;
+      int mapHeight = imagery.dimensions;
+
+      var mapLonLeft = imagery.sw.longitude;
+      var mapLonRight = imagery.ne.longitude;
+      var mapLonDelta = mapLonRight - mapLonLeft;
+
+      var mapLatBottom = imagery.sw.latitude;
+      var mapLatBottomDegree = mapLatBottom * pi / 180;
+
+      int x = ((lon - mapLonLeft) * (mapWidth / mapLonDelta)).toInt();
+      lat = lat * pi / 180;
+      var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
+      var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
+      int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
+
+      this.pixelCoordinates = [x,y];
+      return;
     } catch(e) {
       print(e);
       return;
     }
-    this.pixelCoordinates = _newPixelCoordinates;
   }
-
 }
 
 class SavedLocation extends NowcastingLocation {
@@ -110,7 +130,7 @@ class CurrentLocation extends NowcastingLocation {
 
   update({bool withRequests = false}) async {
     try {
-      LocationData _newLoc = await getUserLocation(withRequests: withRequests);
+      LocationData _newLoc = await _getUserLocation(withRequests: withRequests);
       if (_newLoc != null) {
         super.coordinates = new LatLng(_newLoc.latitude, _newLoc.longitude);
         this.lastUpdated = DateTime.now();
@@ -125,75 +145,30 @@ class CurrentLocation extends NowcastingLocation {
       return false;
     }
   }
-}
 
-// Location plugin service related things
-Future<bool> checkLocService() async {
-  bool _serviceEnabled;
-  _serviceEnabled = await location.serviceEnabled();
-  if (!_serviceEnabled) {
-    return false;
-  }
-  return true;
-}
-
-Future<bool> checkLocPerm() async {
-  PermissionStatus _permissionGranted;
-  _permissionGranted = await location.hasPermission();
-  if (_permissionGranted != PermissionStatus.granted) {
-    return false;
-  }
-  return true;
-}
-
-requestLocService() async {
-  bool _serviceEnabled;
-  _serviceEnabled = await location.requestService();
-  if (!_serviceEnabled) {
-    print('support-location: Could not enable location service, user rejected prompt');
-    return false;
-  }
-  return true;
-}
-
-requestLocPerm() async {
-  PermissionStatus _permissionGranted;
-  _permissionGranted = await location.requestPermission();
-  if (_permissionGranted != PermissionStatus.granted) {
-    print('support-location: Could not get location permission, user rejected prompt');
-    return false;
-  }
-  return true;
-}
-
-getUserLocation({bool withRequests = false}) async {
-  LocationData _locationData;
-  Timer timeoutTimer = Timer(Duration(seconds: 5), () {
-    print('location.getUserLocation: Didn\'t get location within timeout limit, cancelling update');
-    return null;
-  });
-  if (await checkLocService() == false) {
-    if (withRequests) {
-      await requestLocService();
-    } else {
-      return null;
+  // Private helper method for location updating
+  _getUserLocation({bool withRequests = false}) async {
+    LocationData _locationData;
+    if (await location.serviceEnabled() == false) {
+      if (withRequests) {
+        await location.requestService();
+      } else {
+        return null;
+      }
     }
-    if (await checkLocService() == false) {
-      return null;
+    if (await location.hasPermission() == PermissionStatus.denied) {
+      if (withRequests) {
+        await location.requestPermission();
+      } else {
+        return null;
+      }
+    }
+    try {
+      _locationData = await location.getLocation();
+      print('location.CurrentLocation._getUserLocation: Successfully got location ' + _locationData.toString());
+      return _locationData;
+    } catch(e) {
+      print('location.CurrentLocation._getUserLocation: Could not get location due to service or permission error: '+e.toString());
     }
   }
-  if (await checkLocPerm() == false) {
-    if (withRequests) {
-      await requestLocPerm();
-    } else {
-      return null;
-    }
-    if (await checkLocPerm() == false) {
-      return null;
-    }
-  }
-  _locationData = await location.getLocation();
-  print('support-location: Successfully got location ' + _locationData.toString());
-  timeoutTimer.cancel();
-  return _locationData;
 }

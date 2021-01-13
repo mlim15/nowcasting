@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:latlong/latlong.dart';
+import 'package:location/location.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 import 'package:Nowcasting/support-ux.dart' as ux;
@@ -150,10 +151,10 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   _locatePressed() async {
-    if (await loc.checkLocPerm() == false || await loc.checkLocService() == false) {
+    if (await loc.location.hasPermission() == PermissionStatus.denied || await loc.location.serviceEnabled() == false) {
       ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
     } else {
-      await loc.currentLocation.update(withRequests: true);
+      await loc.currentLocation.update(withRequests: false);
       setState(() {
         markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)];
         mapController.move(loc.currentLocation.coordinates, 9);
@@ -178,19 +179,19 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             Row(children: [ 
               for (int _i=0; _i<1; _i++) 
                 _returnSpacer(),
-              for (Color _color in imagery.colorsObj.sublist(0,12))
+              for (Color _color in imagery.rainColors)
                 Container(color: _color, child: _returnSpacer())
             ]),
             Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
             Row(children: [ 
               for (int _i=0; _i<1; _i++) 
                 _returnSpacer(),
-              for (Color _color in imagery.colorsObj.sublist(12,17))
+              for (Color _color in imagery.transitionColors)
                 Container(color: _color, child: _returnSpacer())
             ]),
             Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
             Row(children: [ 
-              for (Color _color in imagery.colorsObj.sublist(18))
+              for (Color _color in imagery.snowColors)
                 Container(color: _color, child: _returnSpacer())
             ]),            
             Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
