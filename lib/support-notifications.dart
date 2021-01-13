@@ -88,7 +88,7 @@ void backgroundFetchCallback(String taskId) async {
     // Then we know the app is closed and we need to reload our variables.
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
     main.prefs = await SharedPreferences.getInstance();
-    loc.currentLocation.update();
+    //loc.currentLocation.update();
     await io.loadPlaceData();
     await io.loadNowcastData();
     await io.loadNotificationPreferences();
@@ -206,6 +206,7 @@ Future<update.CompletionStatus> notificationTapped(String payload) {
 initialize() async {
   // Initialize notification channels
   // TODO when launched using notification, trigger refresh
+  //loc.location.enableBackgroundMode(enable: true);
   if (await flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: notificationTapped)) {
     notificationsInitialized = true;
   }
