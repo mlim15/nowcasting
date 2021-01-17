@@ -109,13 +109,13 @@ Future<CompletionStatus> completeUpdate(bool forceRefresh, bool silent, {BuildCo
     // TODO verify this awaits in order like the for loop used to
     imagery.nowcasts.forEach((nowcast) async {await nowcast.refresh(forceRefresh);});
   }
-    Duration interval = const Duration(milliseconds: 1000);
+  Duration interval = const Duration(milliseconds: 1000);
   int counter = 0;
-  int maxTries = 10;
+  int maxTries = 15;
   // All the garbage we use to determine when the job is actually done
   // and give feedback to the user.
   while(true) {
-    // Every 500 ms proceed to check to see if any ending condition is true.
+    // Every ${interval} proceed to check to see if any ending condition is true.
     await Future.delayed(interval);
     // Check to see if we have exceeded the max waiting time.
     if (counter >= maxTries) {

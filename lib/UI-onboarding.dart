@@ -79,7 +79,8 @@ class OnboardingScreenState extends State<OnboardingScreen> {
                 try {
                   // TODO if I make the forecast screen a little more flexible
                   // the entire onboarding page here can be removed
-                  if (await update.completeUpdate(true, true) != update.CompletionStatus.failure) {
+                  update.CompletionStatus _result = await update.completeUpdate(true, true);
+                  if (_result == update.CompletionStatus.success || _result == update.CompletionStatus.unnecessary) {
                     doNotProceed = false;
                   }
                 } catch(e) {
