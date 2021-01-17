@@ -132,7 +132,7 @@ void backgroundFetchCallback(String taskId) async {
       String _thisLocPixel = await imagery.getPixel(imagery.nowcasts[_i], loc.currentLocation);
       if (!_thisLocPixel.startsWith("00")) {
         // Then it's not transparent. There is rain
-        if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
+        if (!imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
           // Disable this location for the next loop, update the time we last notified for it
           // and show the notification.
           _enabledCurrentLocCopy = false;
@@ -150,7 +150,7 @@ void backgroundFetchCallback(String taskId) async {
         String _thisLocPixel = await imagery.getPixel(imagery.nowcasts[_i], loc.savedPlaces[_n]);
         if (!_thisLocPixel.startsWith("00")) {
           // Then it's not transparent. There is rain
-          if (imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
+          if (!imagery.isUnderThreshold(_thisLocPixel, severityThreshold)) {
             // Disable this location for the next loop, update the time we last notified for it
             // and show the notification.
             _enabledSavedLocCopy[_n] = false;
