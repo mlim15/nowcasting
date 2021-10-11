@@ -1,5 +1,5 @@
-name: Nowcasting
-description: Short-term Forecasts with MAPLE Nowcasting
+name: nowcasting
+description: Short-term Forecasts with MAPLE nowcasting
 
 publish_to: 'none'
 

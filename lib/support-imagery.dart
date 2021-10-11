@@ -9,21 +9,24 @@ import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-import 'package:Nowcasting/main.dart' as main;
-import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-update.dart' as update;
-import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:nowcasting/main.dart' as main;
+import 'package:nowcasting/support-io.dart' as io;
+import 'package:nowcasting/support-update.dart' as update;
+import 'package:nowcasting/support-location.dart' as loc;
 
 // Extensions for manipulating DateTime
 extension on DateTime {
   DateTime roundDown([Duration delta = const Duration(minutes: 10)]) {
-    return DateTime.fromMillisecondsSinceEpoch(this.millisecondsSinceEpoch - this.millisecondsSinceEpoch % delta.inMilliseconds);
+    return DateTime.fromMillisecondsSinceEpoch(this.millisecondsSinceEpoch -
+        this.millisecondsSinceEpoch % delta.inMilliseconds);
   }
 
   DateTime roundUp([Duration delta = const Duration(minutes: 10)]) {
     return DateTime.fromMillisecondsSinceEpoch(
         // add the duration then follow the round down procedure
-        this.millisecondsSinceEpoch + delta.inMilliseconds - this.millisecondsSinceEpoch % delta.inMilliseconds);
+        this.millisecondsSinceEpoch +
+            delta.inMilliseconds -
+            this.millisecondsSinceEpoch % delta.inMilliseconds);
   }
 }
 
@@ -48,7 +51,12 @@ class Nowcast {
     this.index = i;
     this.file = io.localFile('forecast.$i.png');
     if (this.file.existsSync()) {
-      this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+      this.legend = this
+          .file
+          .lastModifiedSync()
+          .toUtc()
+          .roundUp(Duration(minutes: 10))
+          .add(Duration(minutes: 20 * this.index));
       this.shownTime = DateFormat('kk:mm').format(this.legend);
     }
   }
@@ -59,16 +67,21 @@ class Nowcast {
     this.file = io.localFile('forecast.${this.index}.png');
     this.pixelCache = json.decode(_loadjson['pixelCache']);
     if (this.file.existsSync()) {
-      this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+      this.legend = this
+          .file
+          .lastModifiedSync()
+          .toUtc()
+          .roundUp(Duration(minutes: 10))
+          .add(Duration(minutes: 20 * this.index));
       this.shownTime = DateFormat('kk:mm').format(this.legend);
     }
   }
 
   // Export as JSON
   Map<String, dynamic> toJson() => {
-    'index': index,
-    'pixelCache': json.encode(this.pixelCache),
-  };
+        'index': index,
+        'pixelCache': json.encode(this.pixelCache),
+      };
 
   // Public methods
   Future<bool> refresh(bool forced) async {
@@ -79,7 +92,12 @@ class Nowcast {
         // If an update occurred, its legend etc will be updated
         // Its cache will also be cleared, and the image will be evicted
         // from flutter's internal cache to force FileImages with it to reload.
-        this.legend = this.file.lastModifiedSync().toUtc().roundUp(Duration(minutes: 10)).add(Duration(minutes: 20 * this.index));
+        this.legend = this
+            .file
+            .lastModifiedSync()
+            .toUtc()
+            .roundUp(Duration(minutes: 10))
+            .add(Duration(minutes: 20 * this.index));
         this.shownTime = DateFormat('kk:mm').format(this.legend);
         this.pixelCache.clear();
         FileImage(this.file).evict();
@@ -91,7 +109,8 @@ class Nowcast {
         return false;
       }
     } catch (e) {
-      print('imagery.Nowcast.update: Error updating image $index: ' + e.toString());
+      print('imagery.Nowcast.update: Error updating image $index: ' +
+          e.toString());
       this.status = update.CompletionStatus.failure;
       return false;
     }
@@ -116,8 +135,13 @@ class Nowcast {
   // Private methods
   Future<bool> _updateFile(bool forced) async {
     try {
-      if (forced || await update.checkUpdateAvailable('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png', this.file)) {
-        await update.downloadFile('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png', this.file.path);
+      if (forced ||
+          await update.checkUpdateAvailable(
+              'https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png',
+              this.file)) {
+        await update.downloadFile(
+            'https://radar.mcgill.ca/dynamic_content/nowcasting/forecast.$index.png',
+            this.file.path);
       } else {
         return false;
       }
@@ -137,12 +161,7 @@ final int dimensions = 1808;
 final LatLng sw = LatLng(35.0491, -88.7654);
 final LatLng ne = LatLng(51.0000, -66.7500);
 
-enum PrecipitationType {
-  rain,
-  transition,
-  snow,
-  none
-}
+enum PrecipitationType { rain, transition, snow, none }
 
 class PixelValue {
   final Color colorObj;
@@ -152,75 +171,176 @@ class PixelValue {
   final PrecipitationType type;
   final int level;
   // Constructor
-  const PixelValue(final this.level, final this.type, final this.colorObj, final this.hexString, final this.description, final this.iconData);
+  const PixelValue(final this.level, final this.type, final this.colorObj,
+      final this.hexString, final this.description, final this.iconData);
 }
 
 // Imagery legend colors in AARRGGBB hex, string, description, icon forms, plus associated basic info
-const PixelValue r1 = const PixelValue(1, PrecipitationType.rain, Color(0xFF00FF00), "FF00FF00", "Light Drizzle",MdiIcons.weatherPartlyRainy);
-const PixelValue r2 = const PixelValue(2, PrecipitationType.rain, Color(0xFF00B400), "FF00B400", "Drizzle", MdiIcons.weatherPartlyRainy);
-const PixelValue r3 = const PixelValue(3, PrecipitationType.rain, Color(0xFF007300), "FF007300", "Light Rain", MdiIcons.weatherRainy);
-const PixelValue r4 = const PixelValue(4, PrecipitationType.rain, Color(0xFF005500), "FF005000", "Light Rain", MdiIcons.weatherRainy);
-const PixelValue r5 = const PixelValue(5, PrecipitationType.rain, Color(0xFFFFFF00), "FFFFFF00", "Rain", MdiIcons.weatherRainy);
-const PixelValue r6 = const PixelValue(6, PrecipitationType.rain, Color(0xFFFFB400), "FFFFB400", "Rain", MdiIcons.weatherRainy);
-const PixelValue r7 = const PixelValue(7, PrecipitationType.rain, Color(0xFFFF6400), "FFFF6400", "Heavy Rain", MdiIcons.weatherPouring);
-const PixelValue r8 = const PixelValue(8, PrecipitationType.rain, Color(0xFFC80000), "FFC80000", "Heavy Rain", MdiIcons.weatherPouring);
-const PixelValue r9 = const PixelValue(9, PrecipitationType.rain, Color(0xFFFF64FF), "FFFF64FF", "Storm", MdiIcons.weatherLightningRainy);
-const PixelValue r10 = const PixelValue(10, PrecipitationType.rain, Color(0xFFB400B4), "FFB400B4", "Storm",  MdiIcons.weatherLightningRainy);
-const PixelValue r11 = const PixelValue(11, PrecipitationType.rain, Color(0xFF640064), "FF640064", "Violent Storm",  MdiIcons.weatherHail);
-const PixelValue r12 = const PixelValue(12, PrecipitationType.rain, Color(0xFF000000), "FF000000", "Hailstorm",  MdiIcons.weatherHail);
-const PixelValue t1 = const PixelValue(1, PrecipitationType.transition, Color(0xFF37F0C8), "FF37F0C8", "Light Sleet", MdiIcons.weatherPartlySnowyRainy);
-const PixelValue t2 = const PixelValue(2, PrecipitationType.transition, Color(0xFF00A58C), "FF00A58C", "Light Sleet", MdiIcons.weatherPartlySnowyRainy);
-const PixelValue t3 = const PixelValue(3, PrecipitationType.transition, Color(0xFF287D8C), "FF287D8C", "Sleet", MdiIcons.weatherSnowyRainy);
-const PixelValue t4 = const PixelValue(4, PrecipitationType.transition, Color(0xFF4B5A6E), "FF4B5A6E", "Sleet", MdiIcons.weatherSnowyRainy);
-const PixelValue t5 = const PixelValue(5, PrecipitationType.transition, Color(0xFFFFC382), "FFFFC382", "Heavy Sleet", MdiIcons.weatherSnowyRainy);
-const PixelValue s1 = const PixelValue(1, PrecipitationType.snow, Color(0xFFCEFFFF), "FFCEFFFF", "Gentle Snow", MdiIcons.weatherPartlySnowy);
-const PixelValue s2 = const PixelValue(2, PrecipitationType.snow, Color(0xFF9CEEFF), "FF9CEEFF", "Light Snow", MdiIcons.weatherPartlySnowy);
-const PixelValue s4 = const PixelValue(4, PrecipitationType.snow, Color(0xFF86D9FF), "FF86D9FF", "Light Snow", MdiIcons.weatherPartlySnowy);
-const PixelValue s5 = const PixelValue(5, PrecipitationType.snow, Color(0xFF6DC1FF), "FF6DC1FF", "Snow", MdiIcons.weatherSnowy);
-const PixelValue s6 = const PixelValue(6, PrecipitationType.snow, Color(0xFF4196FF), "FF4196FF", "Snow", MdiIcons.weatherSnowy);
-const PixelValue s7 = const PixelValue(7, PrecipitationType.snow, Color(0xFF2050FF), "FF2050FF", "Heavy Snow", MdiIcons.weatherSnowyHeavy);
-const PixelValue s8 = const PixelValue(8, PrecipitationType.snow, Color(0xFF040ED8), "FF040ED8", "Blizzard", MdiIcons.weatherSnowyHeavy);
-const PixelValue s9 = const PixelValue(9, PrecipitationType.snow, Color(0xFFFF9898), "FFFF9898", "Wet Blizzard", MdiIcons.weatherSnowyRainy);
-const PixelValue none = const PixelValue(0, PrecipitationType.none, Color(0x0000FF00), "0000FF00", "None", Icons.wb_sunny);
-List<PixelValue> pixelValues = const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, t1, t2, t3, t4, t5, s1, s2, s4, s5, s6, s7, s8, s9, none];
+const PixelValue r1 = const PixelValue(
+    1,
+    PrecipitationType.rain,
+    Color(0xFF00FF00),
+    "FF00FF00",
+    "Light Drizzle",
+    MdiIcons.weatherPartlyRainy);
+const PixelValue r2 = const PixelValue(2, PrecipitationType.rain,
+    Color(0xFF00B400), "FF00B400", "Drizzle", MdiIcons.weatherPartlyRainy);
+const PixelValue r3 = const PixelValue(3, PrecipitationType.rain,
+    Color(0xFF007300), "FF007300", "Light Rain", MdiIcons.weatherRainy);
+const PixelValue r4 = const PixelValue(4, PrecipitationType.rain,
+    Color(0xFF005500), "FF005000", "Light Rain", MdiIcons.weatherRainy);
+const PixelValue r5 = const PixelValue(5, PrecipitationType.rain,
+    Color(0xFFFFFF00), "FFFFFF00", "Rain", MdiIcons.weatherRainy);
+const PixelValue r6 = const PixelValue(6, PrecipitationType.rain,
+    Color(0xFFFFB400), "FFFFB400", "Rain", MdiIcons.weatherRainy);
+const PixelValue r7 = const PixelValue(7, PrecipitationType.rain,
+    Color(0xFFFF6400), "FFFF6400", "Heavy Rain", MdiIcons.weatherPouring);
+const PixelValue r8 = const PixelValue(8, PrecipitationType.rain,
+    Color(0xFFC80000), "FFC80000", "Heavy Rain", MdiIcons.weatherPouring);
+const PixelValue r9 = const PixelValue(9, PrecipitationType.rain,
+    Color(0xFFFF64FF), "FFFF64FF", "Storm", MdiIcons.weatherLightningRainy);
+const PixelValue r10 = const PixelValue(10, PrecipitationType.rain,
+    Color(0xFFB400B4), "FFB400B4", "Storm", MdiIcons.weatherLightningRainy);
+const PixelValue r11 = const PixelValue(11, PrecipitationType.rain,
+    Color(0xFF640064), "FF640064", "Violent Storm", MdiIcons.weatherHail);
+const PixelValue r12 = const PixelValue(12, PrecipitationType.rain,
+    Color(0xFF000000), "FF000000", "Hailstorm", MdiIcons.weatherHail);
+const PixelValue t1 = const PixelValue(
+    1,
+    PrecipitationType.transition,
+    Color(0xFF37F0C8),
+    "FF37F0C8",
+    "Light Sleet",
+    MdiIcons.weatherPartlySnowyRainy);
+const PixelValue t2 = const PixelValue(
+    2,
+    PrecipitationType.transition,
+    Color(0xFF00A58C),
+    "FF00A58C",
+    "Light Sleet",
+    MdiIcons.weatherPartlySnowyRainy);
+const PixelValue t3 = const PixelValue(3, PrecipitationType.transition,
+    Color(0xFF287D8C), "FF287D8C", "Sleet", MdiIcons.weatherSnowyRainy);
+const PixelValue t4 = const PixelValue(4, PrecipitationType.transition,
+    Color(0xFF4B5A6E), "FF4B5A6E", "Sleet", MdiIcons.weatherSnowyRainy);
+const PixelValue t5 = const PixelValue(5, PrecipitationType.transition,
+    Color(0xFFFFC382), "FFFFC382", "Heavy Sleet", MdiIcons.weatherSnowyRainy);
+const PixelValue s1 = const PixelValue(1, PrecipitationType.snow,
+    Color(0xFFCEFFFF), "FFCEFFFF", "Gentle Snow", MdiIcons.weatherPartlySnowy);
+const PixelValue s2 = const PixelValue(2, PrecipitationType.snow,
+    Color(0xFF9CEEFF), "FF9CEEFF", "Light Snow", MdiIcons.weatherPartlySnowy);
+const PixelValue s4 = const PixelValue(4, PrecipitationType.snow,
+    Color(0xFF86D9FF), "FF86D9FF", "Light Snow", MdiIcons.weatherPartlySnowy);
+const PixelValue s5 = const PixelValue(5, PrecipitationType.snow,
+    Color(0xFF6DC1FF), "FF6DC1FF", "Snow", MdiIcons.weatherSnowy);
+const PixelValue s6 = const PixelValue(6, PrecipitationType.snow,
+    Color(0xFF4196FF), "FF4196FF", "Snow", MdiIcons.weatherSnowy);
+const PixelValue s7 = const PixelValue(7, PrecipitationType.snow,
+    Color(0xFF2050FF), "FF2050FF", "Heavy Snow", MdiIcons.weatherSnowyHeavy);
+const PixelValue s8 = const PixelValue(8, PrecipitationType.snow,
+    Color(0xFF040ED8), "FF040ED8", "Blizzard", MdiIcons.weatherSnowyHeavy);
+const PixelValue s9 = const PixelValue(9, PrecipitationType.snow,
+    Color(0xFFFF9898), "FFFF9898", "Wet Blizzard", MdiIcons.weatherSnowyRainy);
+const PixelValue none = const PixelValue(0, PrecipitationType.none,
+    Color(0x0000FF00), "0000FF00", "None", Icons.wb_sunny);
+List<PixelValue> pixelValues = const [
+  r1,
+  r2,
+  r3,
+  r4,
+  r5,
+  r6,
+  r7,
+  r8,
+  r9,
+  r10,
+  r11,
+  r12,
+  t1,
+  t2,
+  t3,
+  t4,
+  t5,
+  s1,
+  s2,
+  s4,
+  s5,
+  s6,
+  s7,
+  s8,
+  s9,
+  none
+];
 
-List<Color> rainColors = const [const Color(0xFF00FF00), const Color(0xFF00B400), const Color(0xFF007300), const Color(0xFF005500), const Color(0xFFFFFF00), const Color(0xFFFFB400), const Color(0xFFFF6400), const Color(0xFFC80000), const Color(0xFFFF64FF), const Color(0xFFB400B4), const Color(0xFF640064), const Color(0xFF000000)];
-List<Color> transitionColors = const [const Color(0xFF37F0C8), const Color(0xFF00A58C), const Color(0xFF287D8C), const Color(0xFF4B5A6E), const Color(0xFFFFC382)];
-List<Color> snowColors = const [const Color(0xFFCEFFFF), const Color(0xFF9CEEFF), const Color(0xFF86D9FF), const Color(0xFF6DC1FF), const Color(0xFF4196FF), const Color(0xFF2050FF), const Color(0xFF040ED8), const Color(0xFFFF9898)];
+List<Color> rainColors = const [
+  const Color(0xFF00FF00),
+  const Color(0xFF00B400),
+  const Color(0xFF007300),
+  const Color(0xFF005500),
+  const Color(0xFFFFFF00),
+  const Color(0xFFFFB400),
+  const Color(0xFFFF6400),
+  const Color(0xFFC80000),
+  const Color(0xFFFF64FF),
+  const Color(0xFFB400B4),
+  const Color(0xFF640064),
+  const Color(0xFF000000)
+];
+List<Color> transitionColors = const [
+  const Color(0xFF37F0C8),
+  const Color(0xFF00A58C),
+  const Color(0xFF287D8C),
+  const Color(0xFF4B5A6E),
+  const Color(0xFFFFC382)
+];
+List<Color> snowColors = const [
+  const Color(0xFFCEFFFF),
+  const Color(0xFF9CEEFF),
+  const Color(0xFF86D9FF),
+  const Color(0xFF6DC1FF),
+  const Color(0xFF4196FF),
+  const Color(0xFF2050FF),
+  const Color(0xFF040ED8),
+  const Color(0xFFFF9898)
+];
 
 // Convert by taking hex string of AARRGGBB color and
 // and provide the corresponding hex color, icon, or text description
 
-enum NowcastDataType {
-  level,
-  type,
-  colorObj,
-  hexString,
-  description,
-  icon
-}
+enum NowcastDataType { level, type, colorObj, hexString, description, icon }
 
 dynamic convert(String _hex, NowcastDataType _dataType) {
   PixelValue _pixelValue;
   try {
-    _pixelValue = pixelValues.singleWhere((value) {return value.hexString.compareTo(_hex) == 0;});
-  } catch(e) {
-    print('imagery.convert: Passed in unrecognized pixel hex value. Returning equivalent of none.');
+    _pixelValue = pixelValues.singleWhere((value) {
+      return value.hexString.compareTo(_hex) == 0;
+    });
+  } catch (e) {
+    print(
+        'imagery.convert: Passed in unrecognized pixel hex value. Returning equivalent of none.');
     _pixelValue = none;
   }
   switch (_dataType) {
-    case NowcastDataType.level: return _pixelValue.level;
-    case NowcastDataType.colorObj: return _pixelValue.colorObj;
-    case NowcastDataType.description: return _pixelValue.description;
-    case NowcastDataType.hexString: return _pixelValue.hexString;
-    case NowcastDataType.icon: return Icon(_pixelValue.iconData, color: Colors.white);
-    case NowcastDataType.type: return _pixelValue.type;
+    case NowcastDataType.level:
+      return _pixelValue.level;
+    case NowcastDataType.colorObj:
+      return _pixelValue.colorObj;
+    case NowcastDataType.description:
+      return _pixelValue.description;
+    case NowcastDataType.hexString:
+      return _pixelValue.hexString;
+    case NowcastDataType.icon:
+      return Icon(_pixelValue.iconData, color: Colors.white);
+    case NowcastDataType.type:
+      return _pixelValue.type;
   }
 }
 
 // Helper functions to resolve relative severity
 bool isUnderThreshold(String _pixelColor, int _threshold) {
-  int _level = pixelValues.singleWhere((value) {return value.hexString.compareTo(_pixelColor) == 0;}).level;
+  int _level = pixelValues.singleWhere((value) {
+    return value.hexString.compareTo(_pixelColor) == 0;
+  }).level;
   if (_level < _threshold) {
     return true;
   } else {
@@ -237,17 +357,19 @@ bool coordOutOfBounds(LatLng coord) {
   double southBound = sw.latitude;
   try {
     if (!(westBound <= coord.longitude && coord.longitude <= eastBound)) {
-      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
-    } else if (!(southBound <= coord.latitude && coord.latitude <= northBound)) {
-      throw('imagery.coordinateToPixel: Error, coordinates out of bounds');
+      throw ('imagery.coordinateToPixel: Error, coordinates out of bounds');
+    } else if (!(southBound <= coord.latitude &&
+        coord.latitude <= northBound)) {
+      throw ('imagery.coordinateToPixel: Error, coordinates out of bounds');
     }
-  } catch(e) {
+  } catch (e) {
     return true;
   }
   return false;
 }
 
-Future<String> getPixel(Nowcast _nowcast, loc.NowcastingLocation _location) async {
+Future<String> getPixel(
+    Nowcast _nowcast, loc.nowcastingLocation _location) async {
   String _result;
   int _x = _location.pixelCoordinates.first;
   int _y = _location.pixelCoordinates.last;

@@ -8,11 +8,11 @@ import 'package:latlong/latlong.dart';
 import 'package:location/location.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
-import 'package:Nowcasting/support-ux.dart' as ux;
-import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-update.dart' as update;
-import 'package:Nowcasting/support-imagery.dart' as imagery;
-import 'package:Nowcasting/support-location.dart' as loc;
+import 'package:nowcasting/support-ux.dart' as ux;
+import 'package:nowcasting/support-io.dart' as io;
+import 'package:nowcasting/support-update.dart' as update;
+import 'package:nowcasting/support-imagery.dart' as imagery;
+import 'package:nowcasting/support-location.dart' as loc;
 
 // Key for controlling scaffold (e.g. open drawer)
 GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
@@ -22,11 +22,16 @@ GlobalKey<ScaffoldState> mapScaffoldKey = GlobalKey();
 String lightKey = '**REMOVED**';
 String darkKey = '**REMOVED**';
 
-MapOptions getMapOptions(BuildContext context, {double centerLat = 45.5088, double centerLon = -73.5878, void Function(MapPosition, bool) positionChanged}) {
+MapOptions getMapOptions(BuildContext context,
+    {double centerLat = 45.5088,
+    double centerLon = -73.5878,
+    void Function(MapPosition, bool) positionChanged}) {
   return MapOptions(
     center: LatLng(centerLat, centerLon),
     zoom: 6.0,
-    maxZoom: ux.retinaMode(context) ? 8.4 : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
+    maxZoom: ux.retinaMode(context)
+        ? 8.4
+        : 9, // Dynamically determined because retina mode doesn't work with overzooming+limited native z, requires lower threshold
     minZoom: 5,
     swPanBoundary: imagery.sw,
     nePanBoundary: imagery.ne,
@@ -42,9 +47,8 @@ TileLayerOptions getTileLayerOptions(BuildContext context) {
         : "assets/jawg-sunny/{z}/{x}/{y}.png", //"https://tile.jawg.io/jawg-sunny/{z}/{x}/{y}.png?access-token=$lightKey",
     minNativeZoom: 5,
     maxNativeZoom: 9,
-    backgroundColor: ux.darkMode(context) 
-    ? Color(0xFF000000) 
-    : Color(0xFFCCE7FC),
+    backgroundColor:
+        ux.darkMode(context) ? Color(0xFF000000) : Color(0xFFCCE7FC),
     overrideTilesWhenUrlChanges: true,
     tileFadeInDuration: 0,
     tileFadeInStartWhenOverride: 1.0,
@@ -52,27 +56,29 @@ TileLayerOptions getTileLayerOptions(BuildContext context) {
   );
 }
 
-List<OverlayImage> _addAdditionalLayers({@required bool barbs, @required bool temp, @required int index, double opacity = 0.5}) {
+List<OverlayImage> _addAdditionalLayers(
+    {@required bool barbs,
+    @required bool temp,
+    @required int index,
+    double opacity = 0.5}) {
   List<OverlayImage> _returnMe = [];
   if (barbs) {
-    _returnMe.add(
-      OverlayImage(
-        bounds: LatLngBounds(imagery.sw, imagery.ne),
-        opacity: opacity,
-        imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/velocity.png'),
-        gaplessPlayback: true,
-      )
-    );
+    _returnMe.add(OverlayImage(
+      bounds: LatLngBounds(imagery.sw, imagery.ne),
+      opacity: opacity,
+      imageProvider: NetworkImage(
+          'https://radar.mcgill.ca/dynamic_content/nowcasting/velocity.png'),
+      gaplessPlayback: true,
+    ));
   }
   if (temp) {
-    _returnMe.add(
-      OverlayImage(
-        bounds: LatLngBounds(imagery.sw, imagery.ne),
-        opacity: opacity,
-        imageProvider: NetworkImage('https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_temp.$index.png'),
-        gaplessPlayback: true,
-      )
-    );
+    _returnMe.add(OverlayImage(
+      bounds: LatLngBounds(imagery.sw, imagery.ne),
+      opacity: opacity,
+      imageProvider: NetworkImage(
+          'https://radar.mcgill.ca/dynamic_content/nowcasting/forecast_temp.$index.png'),
+      gaplessPlayback: true,
+    ));
   }
   return _returnMe;
 }
@@ -97,7 +103,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // flutter_map and user_location variables
   MapController mapController = MapController();
-  List<Marker> markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)];
+  List<Marker> markerList = [
+    Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)
+  ];
 
   // Dark mode listening
   @override
@@ -134,14 +142,17 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       } else {
         _playing = true;
         _playPauseIcon = Icon(Icons.pause);
-        changeImageTimer = Timer.periodic(speed, (timer) {_nextPressed();});
+        changeImageTimer = Timer.periodic(speed, (timer) {
+          _nextPressed();
+        });
       }
     });
   }
 
   _refreshPressed() async {
-    if (await update.completeUpdate(false, false, context: this.context) != update.CompletionStatus.failure) {
-      setState( () {
+    if (await update.completeUpdate(false, false, context: this.context) !=
+        update.CompletionStatus.failure) {
+      setState(() {
         if (_playing) {
           _togglePlaying();
         }
@@ -151,12 +162,16 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   _locatePressed() async {
-    if (await loc.location.hasPermission() == PermissionStatus.denied || await loc.location.serviceEnabled() == false) {
-      ux.showSnackBarIf(true, ux.locationOffSnack, context, 'map.MapScreenState._locatePressed: Could not update location');
+    if (await loc.location.hasPermission() == PermissionStatus.denied ||
+        await loc.location.serviceEnabled() == false) {
+      ux.showSnackBarIf(true, ux.locationOffSnack, context,
+          'map.MapScreenState._locatePressed: Could not update location');
     } else {
       await loc.currentLocation.update(withRequests: false);
       setState(() {
-        markerList = [Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)];
+        markerList = [
+          Marker(point: loc.currentLocation.coordinates, builder: ux.locMarker)
+        ];
         mapController.move(loc.currentLocation.coordinates, 9);
       });
     }
@@ -168,39 +183,88 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   Widget _returnDrawerItems() {
     return Align(
-      alignment: Alignment(0,0),
+      alignment: Alignment(0, 0),
       child: Container(
           padding: EdgeInsets.symmetric(vertical: 24, horizontal: 8),
-          child: Column(
-            children: [
+          child: Column(children: [
             // Legend
-            Align(alignment: Alignment.center, child: Text("Legend", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color))),
-            Container(child: Row(children: [Text("Rain", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), Spacer(), Text('Hail', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),), 
-            Row(children: [ 
-              for (int _i=0; _i<1; _i++) 
-                _returnSpacer(),
+            Align(
+                alignment: Alignment.center,
+                child: Text("Legend",
+                    style: ux.latoWhite.copyWith(
+                        fontSize: 16,
+                        color: Theme.of(context).textTheme.bodyText1.color))),
+            Container(
+              child: Row(children: [
+                Text("Rain",
+                    style: ux.latoWhite.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1.color)),
+                Spacer(),
+                Text('Hail',
+                    style: ux.latoWhite.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1.color))
+              ]),
+              margin: EdgeInsets.all(8),
+            ),
+            Row(children: [
+              for (int _i = 0; _i < 1; _i++) _returnSpacer(),
               for (Color _color in imagery.rainColors)
                 Container(color: _color, child: _returnSpacer())
             ]),
-            Container(child: Align(alignment: Alignment.centerLeft, child: Text("Transition", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))), margin: EdgeInsets.all(8),),
-            Row(children: [ 
-              for (int _i=0; _i<1; _i++) 
-                _returnSpacer(),
+            Container(
+              child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Transition",
+                      style: ux.latoWhite.copyWith(
+                          color: Theme.of(context).textTheme.bodyText1.color))),
+              margin: EdgeInsets.all(8),
+            ),
+            Row(children: [
+              for (int _i = 0; _i < 1; _i++) _returnSpacer(),
               for (Color _color in imagery.transitionColors)
                 Container(color: _color, child: _returnSpacer())
             ]),
-            Container(child: Row(children: [Text("Snow", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color)), _returnSpacer(), _returnSpacer(), _returnSpacer(), Text('Wet Snow', style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))]), margin: EdgeInsets.all(8),),
-            Row(children: [ 
+            Container(
+              child: Row(children: [
+                Text("Snow",
+                    style: ux.latoWhite.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1.color)),
+                _returnSpacer(),
+                _returnSpacer(),
+                _returnSpacer(),
+                Text('Wet Snow',
+                    style: ux.latoWhite.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1.color))
+              ]),
+              margin: EdgeInsets.all(8),
+            ),
+            Row(children: [
               for (Color _color in imagery.snowColors)
                 Container(color: _color, child: _returnSpacer())
-            ]),            
-            Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Overlay Settings", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
+            ]),
+            Align(
+                alignment: Alignment.center,
+                child: Container(
+                    margin:
+                        EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8),
+                    child: Text("Overlay Settings",
+                        style: ux.latoWhite.copyWith(
+                            fontSize: 16,
+                            color:
+                                Theme.of(context).textTheme.bodyText1.color)))),
             // Speed control
             Container(
                 alignment: Alignment.bottomCenter,
                 margin: EdgeInsets.symmetric(vertical: 8),
                 child: Column(children: <Widget>[
-                  Align(alignment: Alignment.center, child: Text("Animation Speed", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
+                  Align(
+                      alignment: Alignment.center,
+                      child: Text("Animation Speed",
+                          style: ux.latoWhite.copyWith(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1
+                                  .color))),
                   Slider.adaptive(
                     activeColor: ux.nowcastingColor,
                     // possibly the dumbest way to implement this but it works.
@@ -221,13 +285,33 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     divisions: 4,
                     onChanged: (newSpeed) {
                       setState(() {
-                        switch(newSpeed.toInt()) {
-                        case 0: {speed = Duration(milliseconds: 1600);} break;
-                        case 1: {speed = Duration(milliseconds: 1400);} break;
-                        case 2: {speed = Duration(milliseconds: 1200);} break;
-                        case 3: {speed = Duration(milliseconds: 1000);} break;
-                        case 4: {speed = Duration(milliseconds: 800);} break;
-                      }
+                        switch (newSpeed.toInt()) {
+                          case 0:
+                            {
+                              speed = Duration(milliseconds: 1600);
+                            }
+                            break;
+                          case 1:
+                            {
+                              speed = Duration(milliseconds: 1400);
+                            }
+                            break;
+                          case 2:
+                            {
+                              speed = Duration(milliseconds: 1200);
+                            }
+                            break;
+                          case 3:
+                            {
+                              speed = Duration(milliseconds: 1000);
+                            }
+                            break;
+                          case 4:
+                            {
+                              speed = Duration(milliseconds: 800);
+                            }
+                            break;
+                        }
                         if (_playing) {
                           // stop and start so speed change occurs
                           _togglePlaying();
@@ -236,28 +320,42 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       });
                     },
                   )
-                ])
-              ),
+                ])),
             // Opacity control
             Container(
-              alignment: Alignment.bottomCenter,
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: Column(children: <Widget>[
-                Align(alignment: Alignment.center, child: Text("Nowcast Opacity", style: ux.latoWhite.copyWith(color: Theme.of(context).textTheme.bodyText1.color))),
-                Slider.adaptive(
-                  activeColor: ux.nowcastingColor,
-                  value: _nowcastOpacity,
-                  min: 0.1,
-                  max: 0.9,
-                  onChanged: (newOpacity) {
-                    setState(() {
-                      _nowcastOpacity = newOpacity;
-                    });
-                  },
-                )
-              ])
-            ),
-            Align(alignment: Alignment.center, child: Container(margin: EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8), child: Text("Additional Layers", style: ux.latoWhite.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyText1.color)))),
+                alignment: Alignment.bottomCenter,
+                margin: EdgeInsets.symmetric(vertical: 8),
+                child: Column(children: <Widget>[
+                  Align(
+                      alignment: Alignment.center,
+                      child: Text("Nowcast Opacity",
+                          style: ux.latoWhite.copyWith(
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyText1
+                                  .color))),
+                  Slider.adaptive(
+                    activeColor: ux.nowcastingColor,
+                    value: _nowcastOpacity,
+                    min: 0.1,
+                    max: 0.9,
+                    onChanged: (newOpacity) {
+                      setState(() {
+                        _nowcastOpacity = newOpacity;
+                      });
+                    },
+                  )
+                ])),
+            Align(
+                alignment: Alignment.center,
+                child: Container(
+                    margin:
+                        EdgeInsets.only(top: 32, bottom: 16, right: 8, left: 8),
+                    child: Text("Additional Layers",
+                        style: ux.latoWhite.copyWith(
+                            fontSize: 16,
+                            color:
+                                Theme.of(context).textTheme.bodyText1.color)))),
             CheckboxListTile(
               activeColor: ux.nowcastingColor,
               title: Text("Velocity Barbs", style: ux.latoForeground(context)),
@@ -279,21 +377,21 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               },
             ),
             _tempEnabled
-              ? Image.network(
-                  'https://radar.mcgill.ca/imagery/images/temp_legend.png',
-                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null 
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes 
-                      : null,
-                    );
-                  },
-                )
-              : Container(),
-          ]
-        )
-      ),
+                ? Image.network(
+                    'https://radar.mcgill.ca/imagery/images/temp_legend.png',
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes
+                            : null,
+                      );
+                    },
+                  )
+                : Container(),
+          ])),
     );
   }
 
@@ -302,33 +400,37 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       key: mapScaffoldKey,
-      body: Stack(
-        children: [
-          FlutterMap(
-            mapController: mapController,
-            options: getMapOptions(context),
-            layers: [
-              getTileLayerOptions(context),
-              OverlayImageLayerOptions(
-                overlayImages: _addAdditionalLayers(barbs: _barbsEnabled, temp: _tempEnabled, index: _count)+<OverlayImage>[
-                  OverlayImage(
-                    bounds: LatLngBounds(imagery.sw, imagery.ne),
-                    opacity: _nowcastOpacity,
-                    imageProvider: io.localFile('forecast.$_count.png').existsSync() 
-                      ? FileImage(io.localFile('forecast.$_count.png')) 
-                      : AssetImage('assets/launcher/logo.png'),
-                    gaplessPlayback: true,
-                  )
-                ]
-              ),
-              MarkerLayerOptions(
-                markers: markerList,
-              ),
-            ], // End of layers
-          ),
-          Container(
-            alignment: Alignment.bottomLeft,
-            child: Container(
+      body: Stack(children: [
+        FlutterMap(
+          mapController: mapController,
+          options: getMapOptions(context),
+          layers: [
+            getTileLayerOptions(context),
+            OverlayImageLayerOptions(
+                overlayImages: _addAdditionalLayers(
+                        barbs: _barbsEnabled,
+                        temp: _tempEnabled,
+                        index: _count) +
+                    <OverlayImage>[
+                      OverlayImage(
+                        bounds: LatLngBounds(imagery.sw, imagery.ne),
+                        opacity: _nowcastOpacity,
+                        imageProvider: io
+                                .localFile('forecast.$_count.png')
+                                .existsSync()
+                            ? FileImage(io.localFile('forecast.$_count.png'))
+                            : AssetImage('assets/launcher/logo.png'),
+                        gaplessPlayback: true,
+                      )
+                    ]),
+            MarkerLayerOptions(
+              markers: markerList,
+            ),
+          ], // End of layers
+        ),
+        Container(
+          alignment: Alignment.bottomLeft,
+          child: Container(
               margin: EdgeInsets.all(12),
               width: 64,
               height: 64,
@@ -337,10 +439,9 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 color: Theme.of(context).canvasColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black54.withOpacity(0.4), 
-                    blurRadius: 7.0, 
-                    offset: const Offset(1, 2.5)
-                  )
+                      color: Colors.black54.withOpacity(0.4),
+                      blurRadius: 7.0,
+                      offset: const Offset(1, 2.5))
                 ],
               ),
               child: CircularPercentIndicator(
@@ -351,64 +452,55 @@ class MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 radius: 56.0,
                 lineWidth: 4.0,
                 circularStrokeCap: CircularStrokeCap.round,
-                percent: _count/8,
-                center: (imagery.nowcasts[_count].legend != null) 
-                  ? Text(imagery.nowcasts[_count].shownTime, style: ux.latoWhite.merge(TextStyle(color: Theme.of(context).textTheme.bodyText1.color))) 
-                  : Text("...", style: ux.latoWhite),
+                percent: _count / 8,
+                center: (imagery.nowcasts[_count].legend != null)
+                    ? Text(imagery.nowcasts[_count].shownTime,
+                        style: ux.latoWhite.merge(TextStyle(
+                            color:
+                                Theme.of(context).textTheme.bodyText1.color)))
+                    : Text("...", style: ux.latoWhite),
                 progressColor: Theme.of(context).accentColor,
                 backgroundColor: Theme.of(context).backgroundColor,
-              )
-            ),
-          )
-        ]
-      ),
+              )),
+        )
+      ]),
       bottomNavigationBar: BottomAppBar(
-        child: Row(
-          children: [
-            IconButton(
+          child: Row(
+        children: [
+          IconButton(
               icon: Icon(Icons.menu),
               onPressed: () {
                 mapScaffoldKey.currentState.openDrawer();
-              }
-            ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.navigate_before),
-              onPressed: _previousPressed,
-            ),
-            IconButton(
-              icon: _playPauseIcon,
-              onPressed: _togglePlaying,
-            ),
-            IconButton(
-              icon: Icon(Icons.navigate_next),
-              onPressed: _nextPressed,
-            ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                _refreshPressed();
-              },
-            ),
-          ],
-        )
-      ),
+              }),
+          Spacer(),
+          IconButton(
+            icon: Icon(Icons.navigate_before),
+            onPressed: _previousPressed,
+          ),
+          IconButton(
+            icon: _playPauseIcon,
+            onPressed: _togglePlaying,
+          ),
+          IconButton(
+            icon: Icon(Icons.navigate_next),
+            onPressed: _nextPressed,
+          ),
+          Spacer(),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              _refreshPressed();
+            },
+          ),
+        ],
+      )),
       // TODO possibly other layers e.g. barbs and temperature
       drawer: Platform.isIOS
           ? SizedBox(
               width: 342,
-              child: Drawer(
-                child: ListView(
-                  children: [_returnDrawerItems()]
-                )
-              ),
+              child: Drawer(child: ListView(children: [_returnDrawerItems()])),
             )
-          : Drawer(
-              child: ListView(
-                children: [_returnDrawerItems()]
-                )
-            ),
+          : Drawer(child: ListView(children: [_returnDrawerItems()])),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.my_location),
         onPressed: () {

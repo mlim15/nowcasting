@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Nowcasting</string>
+	<string>nowcasting</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,11 +25,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Nowcasting uses your location to provide forecasts and rain alerts for your location.</string>
+	<string>nowcasting uses your location to provide forecasts and rain alerts for your location.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Nowcasting uses your location in the background to provide incoming rain alerts.</string>
+	<string>nowcasting uses your location in the background to provide incoming rain alerts.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Nowcasting uses your location when the app is open to provide local forecasts.</string>
+	<string>nowcasting uses your location when the app is open to provide local forecasts.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

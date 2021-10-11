@@ -5,22 +5,27 @@ import 'package:flutter/foundation.dart';
 import 'package:location/location.dart';
 import 'package:latlong/latlong.dart';
 
-import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-imagery.dart' as imagery;
+import 'package:nowcasting/support-io.dart' as io;
+import 'package:nowcasting/support-imagery.dart' as imagery;
 
 // Location object used by library
 Location location = new Location();
 
 // Storage objects for our locations
-//List<NowcastingLocation> allLocations = <NowcastingLocation>[currentLocation] + savedPlaces;
+//List<nowcastingLocation> allLocations = <nowcastingLocation>[currentLocation] + savedPlaces;
 CurrentLocation currentLocation = CurrentLocation();
-List<SavedLocation> savedPlaces = [SavedLocation(name: "McGill Downtown Campus", coordinates: LatLng(45.504688, -73.574990), notify: false)];
+List<SavedLocation> savedPlaces = [
+  SavedLocation(
+      name: "McGill Downtown Campus",
+      coordinates: LatLng(45.504688, -73.574990),
+      notify: false)
+];
 // Bools used to store whether or not things are happening
 bool weatherAlert = false;
 bool radarOutage = false;
 
 // Locations class definitions
-class NowcastingLocation {
+class nowcastingLocation {
   String name;
   bool notify;
   DateTime lastNotified = DateTime.fromMicrosecondsSinceEpoch(0);
@@ -42,12 +47,12 @@ class NowcastingLocation {
   void updatePixelCoordinates() {
     try {
       if (this.coordinates == null) {
-        throw('location.NowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are null');
+        throw ('location.nowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are null');
       }
       double lat = this.coordinates.latitude;
       double lon = this.coordinates.longitude;
       if (imagery.coordOutOfBounds(LatLng(lat, lon))) {
-        throw('location.NowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are out of bounds');
+        throw ('location.nowcastingLocation.updatePixelCoordinates: Cannot update, coordinates are out of bounds');
       }
       // If not, then calculate the pixel.
       int mapWidth = imagery.dimensions;
@@ -62,21 +67,29 @@ class NowcastingLocation {
 
       int x = ((lon - mapLonLeft) * (mapWidth / mapLonDelta)).toInt();
       lat = lat * pi / 180;
-      var worldMapWidth = ((mapWidth/mapLonDelta)*360)/(2*pi);
-      var mapOffsetY = (worldMapWidth / 2 * log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
-      int y = mapHeight - ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) - mapOffsetY).toInt();
+      var worldMapWidth = ((mapWidth / mapLonDelta) * 360) / (2 * pi);
+      var mapOffsetY = (worldMapWidth /
+          2 *
+          log((1 + sin(mapLatBottomDegree)) / (1 - sin(mapLatBottomDegree))));
+      int y = mapHeight -
+          ((worldMapWidth / 2 * log((1 + sin(lat)) / (1 - sin(lat)))) -
+                  mapOffsetY)
+              .toInt();
 
-      this.pixelCoordinates = [x,y];
+      this.pixelCoordinates = [x, y];
       return;
-    } catch(e) {
+    } catch (e) {
       print(e);
       return;
     }
   }
 }
 
-class SavedLocation extends NowcastingLocation {
-  SavedLocation({@required String name, @required LatLng coordinates, @required bool notify}) {
+class SavedLocation extends nowcastingLocation {
+  SavedLocation(
+      {@required String name,
+      @required LatLng coordinates,
+      @required bool notify}) {
     super.name = name;
     super.coordinates = coordinates;
     super.notify = notify;
@@ -86,7 +99,11 @@ class SavedLocation extends NowcastingLocation {
   // Constructor to load from JSON
   SavedLocation.fromJson(Map<String, dynamic> json) {
     super.name = json['name'];
-    super.coordinates = (json['latitude'] != null) && (json['longitude'] != null) ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null;
+    super.coordinates =
+        (json['latitude'] != null) && (json['longitude'] != null)
+            ? LatLng(
+                double.parse(json['latitude']), double.parse(json['longitude']))
+            : null;
     super.notify = json['notify'];
     super.lastNotified = DateTime.parse(json['lastNotified']);
   }
@@ -94,14 +111,16 @@ class SavedLocation extends NowcastingLocation {
   // Export as JSON
   Map<String, dynamic> toJson() => {
         'name': name,
-        'latitude': coordinates != null ? coordinates.latitude.toString() : null,
-        'longitude': coordinates != null ? coordinates.longitude.toString() : null,
+        'latitude':
+            coordinates != null ? coordinates.latitude.toString() : null,
+        'longitude':
+            coordinates != null ? coordinates.longitude.toString() : null,
         'notify': notify,
         'lastNotified': lastNotified.toIso8601String(),
       };
 }
 
-class CurrentLocation extends NowcastingLocation {
+class CurrentLocation extends nowcastingLocation {
   DateTime lastUpdated;
 
   CurrentLocation() {
@@ -114,7 +133,11 @@ class CurrentLocation extends NowcastingLocation {
 
   CurrentLocation.fromJson(Map<String, dynamic> json) {
     super.name = "Current Location";
-    super.coordinates = (json['latitude'] != null) && (json['longitude'] != null) ? LatLng(double.parse(json['latitude']), double.parse(json['longitude'])) : null;
+    super.coordinates =
+        (json['latitude'] != null) && (json['longitude'] != null)
+            ? LatLng(
+                double.parse(json['latitude']), double.parse(json['longitude']))
+            : null;
     super.notify = json['notify'];
     super.lastNotified = DateTime.parse(json['lastNotified']);
     this.lastUpdated = DateTime.parse(json['lastUpdated']);
@@ -122,11 +145,16 @@ class CurrentLocation extends NowcastingLocation {
 
   // Export as JSON
   Map<String, dynamic> toJson() => {
-    'latitude': this.coordinates != null ? this.coordinates.latitude.toString() : null, 
-    'longitude': this.coordinates != null ? this.coordinates.longitude.toString() : null, 
-    'notify': this.notify, 'lastNotified': this.lastNotified.toIso8601String(), 
-    'lastUpdated': this.lastUpdated.toIso8601String()
-    };
+        'latitude': this.coordinates != null
+            ? this.coordinates.latitude.toString()
+            : null,
+        'longitude': this.coordinates != null
+            ? this.coordinates.longitude.toString()
+            : null,
+        'notify': this.notify,
+        'lastNotified': this.lastNotified.toIso8601String(),
+        'lastUpdated': this.lastUpdated.toIso8601String()
+      };
 
   update({bool withRequests = false}) async {
     try {
@@ -137,11 +165,13 @@ class CurrentLocation extends NowcastingLocation {
         await io.savePlaceData();
         return true;
       } else {
-        print('loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
+        print(
+            'loc.updateLastKnownLocation: Could not update location, update attempt yielded a null.');
         return false;
       }
     } catch (e) {
-      print('loc.updateLastKnownLocation: Could not update location, update attempt yielded an error.');
+      print(
+          'loc.updateLastKnownLocation: Could not update location, update attempt yielded an error.');
       return false;
     }
   }
@@ -165,10 +195,14 @@ class CurrentLocation extends NowcastingLocation {
     }
     try {
       _locationData = await location.getLocation();
-      print('location.CurrentLocation._getUserLocation: Successfully got location ' + _locationData.toString());
+      print(
+          'location.CurrentLocation._getUserLocation: Successfully got location ' +
+              _locationData.toString());
       return _locationData;
-    } catch(e) {
-      print('location.CurrentLocation._getUserLocation: Could not get location due to service or permission error: '+e.toString());
+    } catch (e) {
+      print(
+          'location.CurrentLocation._getUserLocation: Could not get location due to service or permission error: ' +
+              e.toString());
     }
   }
 }

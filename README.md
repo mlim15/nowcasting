@@ -1,4 +1,4 @@
-# MAPLE Nowcasting
+# MAPLE nowcasting
 <img src="https://github.com/the-salami/nowcasting/raw/master/assets/launcher/icon_android.png" width="128" height="128" />
 
 This repository contains a Flutter app for Android and iOS that facilitates access to [precipitation nowcasting data](https://radar.mcgill.ca/imagery/nowcasting.html) provided by [McGill University](https://mcgill.ca/)'s J.S. Marshall Radar Observatory.
@@ -12,6 +12,6 @@ This repository contains a Flutter app for Android and iOS that facilitates acce
 <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/forecast.png" width="225" height="400" /> <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/lightmap.png" width="225" height="400" /> <img src="https://github.com/the-salami/nowcasting/raw/master/screenshots/darkmap.png" width="200" height="400" />
 
 
-## What is Nowcasting
+## What is nowcasting
 
-Put simply, [nowcasting](https://en.wikipedia.org/wiki/Nowcasting_(meteorology)) is a practice which aims to accurately extrapolate very-near-future data using past trends. In meteorology, nowcasting algorithms have been developed to predict rainfall 2-6 hours in advance. McGill's MAPLE algorithm does so by extrapolation from recent radar composite imagery and wind directions, and this data is generously calculated and provided by the university for central Canada and the US northeast, updated every 10 minutes.
+Put simply, [nowcasting](https://en.wikipedia.org/wiki/nowcasting_(meteorology)) is a practice which aims to accurately extrapolate very-near-future data using past trends. In meteorology, nowcasting algorithms have been developed to predict rainfall 2-6 hours in advance. McGill's MAPLE algorithm does so by extrapolation from recent radar composite imagery and wind directions, and this data is generously calculated and provided by the university for central Canada and the US northeast, updated every 10 minutes.

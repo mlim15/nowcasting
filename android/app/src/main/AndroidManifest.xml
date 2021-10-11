@@ -8,7 +8,7 @@
          FlutterApplication and put your custom class here. -->
     <application
         tools:replace="android:label"
-        android:label="Nowcasting"
+        android:label="nowcasting"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

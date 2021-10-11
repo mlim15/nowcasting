@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'package:Nowcasting/main.dart' as main;
-import 'package:Nowcasting/support-imagery.dart' as imagery;
-import 'package:Nowcasting/support-location.dart' as loc;
-import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:nowcasting/main.dart' as main;
+import 'package:nowcasting/support-imagery.dart' as imagery;
+import 'package:nowcasting/support-location.dart' as loc;
+import 'package:nowcasting/support-notifications.dart' as notifications;
 
 Directory appDocPath;
 
@@ -26,12 +26,13 @@ String localFilePath(String fileName) {
   return pathName;
 }
 
-// Save/restore/update functions for last known location, saved locations, 
+// Save/restore/update functions for last known location, saved locations,
 // and notification preferences using SharedPreferences.
 loadPlaceData() async {
   String _loadCurrentLoc = main.prefs.getString('currentLocation');
   if (_loadCurrentLoc != null) {
-    loc.currentLocation = loc.CurrentLocation.fromJson(json.decode(_loadCurrentLoc));
+    loc.currentLocation =
+        loc.CurrentLocation.fromJson(json.decode(_loadCurrentLoc));
   }
   List<String> _loadPlacesJSON = main.prefs.getStringList('savedLocations');
   if (_loadPlacesJSON != null) {
@@ -40,7 +41,8 @@ loadPlaceData() async {
       loc.savedPlaces.add(loc.SavedLocation.fromJson(json.decode(_json)));
     }
   }
-  print('location.loadPlaceData: Successfully restored locations: '+loc.savedPlaces.toString());
+  print('location.loadPlaceData: Successfully restored locations: ' +
+      loc.savedPlaces.toString());
 }
 
 savePlaceData() async {
@@ -50,13 +52,16 @@ savePlaceData() async {
     _savedPlacesJSON.add(json.encode(_place.toJson()));
   }
   main.prefs.setStringList('savedLocations', _savedPlacesJSON);
-  print('location.savePlaceData: Successfully saved locations: '+loc.savedPlaces.toString());
+  print('location.savePlaceData: Successfully saved locations: ' +
+      loc.savedPlaces.toString());
 }
 
 saveNotificationPreferences() async {
-  main.prefs.setBool('notificationsEnabled', notifications.notificationsEnabled);
+  main.prefs
+      .setBool('notificationsEnabled', notifications.notificationsEnabled);
   main.prefs.setInt('severityThreshold', notifications.severityThreshold);
-  main.prefs.setInt('minNotifDelay', notifications.minimumTimeBetween.inMinutes);
+  main.prefs
+      .setInt('minNotifDelay', notifications.minimumTimeBetween.inMinutes);
   main.prefs.setInt('maxLookahead', notifications.maxLookahead);
   main.prefs.setInt('maxFrequency', notifications.checkIntervalMinutes);
 }
@@ -92,7 +97,8 @@ loadNowcastData() async {
       imagery.nowcasts.add(imagery.Nowcast.fromJson(json.decode(_json)));
     }
   }
-  print('location.loadNowcastData: Successfully restored lastUpdated information for image products.');
+  print(
+      'location.loadNowcastData: Successfully restored lastUpdated information for image products.');
 }
 
 saveNowcastData() async {
@@ -101,5 +107,6 @@ saveNowcastData() async {
     _saveNowcasts.add(json.encode(_nowcast.toJson()));
   }
   main.prefs.setStringList('nowcastData', _saveNowcasts);
-  print('location.saveNowcastData: Successfully saved lastUpdated information for image products.');
+  print(
+      'location.saveNowcastData: Successfully saved lastUpdated information for image products.');
 }

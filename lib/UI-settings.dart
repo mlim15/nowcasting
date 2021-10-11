@@ -7,18 +7,17 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:Nowcasting/support-ux.dart' as ux;
-import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-notifications.dart' as notifications;
-import 'package:Nowcasting/UI-settings-places.dart';
+import 'package:nowcasting/support-ux.dart' as ux;
+import 'package:nowcasting/support-io.dart' as io;
+import 'package:nowcasting/support-notifications.dart' as notifications;
+import 'package:nowcasting/UI-settings-places.dart';
 
-class SettingsScreen extends StatefulWidget  {
+class SettingsScreen extends StatefulWidget {
   @override
   SettingsScreenState createState() => new SettingsScreenState();
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
-
   _rebuild() {
     setState(() {});
   }
@@ -32,67 +31,84 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
       ),
       body: SettingsList(
-          darkBackgroundColor: ux.darkTheme.canvasColor,
-          lightBackgroundColor: ux.lightTheme.canvasColor,
-          sections: [
-            CustomSection(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Container(),
-                  ),
-                ],
-              ),
-            ),
-            SettingsSection(
-              title: 'Notifications',
-              tiles: [
-                SettingsTile.switchTile(
-                  switchActiveColor: ux.nowcastingColor,
-                  title: 'Enable Notifications',
-                  leading: Icon(Icons.notifications),
-                  switchValue: notifications.notificationsEnabled,
-                  onToggle: (bool value) async {
-                    if (value) {
-                      // To turn them on on iOS, we'll need permissions.
-                      if (Platform.isIOS && await notifications.flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(alert: true, badge: true, sound: true)) {
-                        ux.showSnackBarIf(true, ux.notificationPermissionErrorSnack, context);
-                        return;
-                      }
-                    }
-                    // Toggle
-                    setState(() {notifications.notificationsEnabled = value;});
-                    if (value) {
-                      notifications.scheduleBackgroundFetch();
-                    } else {
-                      notifications.cancelBackgroundFetch();
-                    }
-                  },
+        darkBackgroundColor: ux.darkTheme.canvasColor,
+        lightBackgroundColor: ux.lightTheme.canvasColor,
+        sections: [
+          CustomSection(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(),
                 ),
-                SettingsTile(
+              ],
+            ),
+          ),
+          SettingsSection(
+            title: 'Notifications',
+            tiles: [
+              SettingsTile.switchTile(
+                switchActiveColor: ux.nowcastingColor,
+                title: 'Enable Notifications',
+                leading: Icon(Icons.notifications),
+                switchValue: notifications.notificationsEnabled,
+                onToggle: (bool value) async {
+                  if (value) {
+                    // To turn them on on iOS, we'll need permissions.
+                    if (Platform.isIOS &&
+                        await notifications.flutterLocalNotificationsPlugin
+                            .resolvePlatformSpecificImplementation<
+                                IOSFlutterLocalNotificationsPlugin>()
+                            ?.requestPermissions(
+                                alert: true, badge: true, sound: true)) {
+                      ux.showSnackBarIf(
+                          true, ux.notificationPermissionErrorSnack, context);
+                      return;
+                    }
+                  }
+                  // Toggle
+                  setState(() {
+                    notifications.notificationsEnabled = value;
+                  });
+                  if (value) {
+                    notifications.scheduleBackgroundFetch();
+                  } else {
+                    notifications.cancelBackgroundFetch();
+                  }
+                },
+              ),
+              SettingsTile(
                   title: 'Locations',
                   enabled: notifications.notificationsEnabled,
                   subtitle: (notifications.notificationsEnabled)
-                    ? (notifications.countEnabledLocations() != 0) 
-                      ? (notifications.countEnabledLocations() == 1)
-                        ? 'Notifications enabled for '+notifications.countEnabledLocations().toString()+' location.' 
-                        : 'Notifications enabled for '+notifications.countEnabledLocations().toString()+' locations.' 
-                      : 'Tap to choose locations to notify for.'
-                    : 'Notifications are disabled.',
+                      ? (notifications.countEnabledLocations() != 0)
+                          ? (notifications.countEnabledLocations() == 1)
+                              ? 'Notifications enabled for ' +
+                                  notifications
+                                      .countEnabledLocations()
+                                      .toString() +
+                                  ' location.'
+                              : 'Notifications enabled for ' +
+                                  notifications
+                                      .countEnabledLocations()
+                                      .toString() +
+                                  ' locations.'
+                          : 'Tap to choose locations to notify for.'
+                      : 'Notifications are disabled.',
                   leading: Icon(Icons.language),
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => PlaceSettingsScreen(_rebuild)));
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            PlaceSettingsScreen(_rebuild)));
                   },
-                  trailing: Icon(MdiIcons.menuRight)
-                ),
-                SettingsTile.switchTile(
+                  trailing: Icon(MdiIcons.menuRight)),
+              SettingsTile.switchTile(
                   // This could be more configurable but for now
                   // it will be presented to the user as an on/off
                   title: 'Ignore Drizzle',
@@ -110,14 +126,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                       }
                     });
                   },
-                  switchValue: (notifications.severityThreshold == 1)
-                ),
-                SettingsTile(
-                  title: 'Check max every...',
-                  subtitle: notifications.checkIntervalMinutes.toString()+' Minutes',
-                  enabled: notifications.notificationsEnabled,
-                  leading: Icon(Icons.timer),
-                  trailing: Container(
+                  switchValue: (notifications.severityThreshold == 1)),
+              SettingsTile(
+                title: 'Check max every...',
+                subtitle:
+                    notifications.checkIntervalMinutes.toString() + ' Minutes',
+                enabled: notifications.notificationsEnabled,
+                leading: Icon(Icons.timer),
+                trailing: Container(
                     width: 128,
                     child: Slider.adaptive(
                       activeColor: ux.nowcastingColor,
@@ -125,77 +141,81 @@ class SettingsScreenState extends State<SettingsScreen> {
                       max: 120,
                       divisions: 7,
                       value: notifications.checkIntervalMinutes.toDouble(),
-                      onChanged: notifications.notificationsEnabled ? 
-                        (value) {
-                          setState(() {
-                            notifications.checkIntervalMinutes = value.toInt();
-                          });
-                          notifications.updateDataUsageEstimate();   
-                          io.saveNotificationPreferences();
-                        }
-                        : null,
+                      onChanged: notifications.notificationsEnabled
+                          ? (value) {
+                              setState(() {
+                                notifications.checkIntervalMinutes =
+                                    value.toInt();
+                              });
+                              notifications.updateDataUsageEstimate();
+                              io.saveNotificationPreferences();
+                            }
+                          : null,
                       onChangeEnd: (value) {
                         // Re-schedule notification events with the new time.
                         notifications.cancelBackgroundFetch();
                         notifications.scheduleBackgroundFetch();
                       },
-                    )
-                  ),
-                ),
-                SettingsTile(
+                    )),
+              ),
+              SettingsTile(
                   title: 'Looking ahead...',
-                  subtitle: (20+notifications.maxLookahead*20).toString()+' Minutes',
+                  subtitle: (20 + notifications.maxLookahead * 20).toString() +
+                      ' Minutes',
                   enabled: notifications.notificationsEnabled,
                   leading: Icon(MdiIcons.crystalBall),
                   trailing: Container(
-                    width: 128,
-                    child: Slider.adaptive(
-                      activeColor: ux.nowcastingColor,
-                      min: 0,
-                      max: 8,
-                      divisions: 9,
-                      value: notifications.maxLookahead.toDouble(),
-                      onChanged: notifications.notificationsEnabled ? 
-                        (value) {
-                          notifications.updateDataUsageEstimate();
-                          setState(() {
-                            notifications.maxLookahead = value.toInt();
-                          });
-                          io.saveNotificationPreferences();
-                        }
-                        : null,
-                    )
-                  )
-                ),
-                SettingsTile(
-                  title: 'Estimated Data Usage',
-                  subtitle: notifications.notificationsEnabled ? 'Up to '+notifications.dataUsage.toStringAsFixed(1)+' MB/day' : 'No data will be used in the background.',
-                  leading: Icon(MdiIcons.gauge),
-                  enabled: notifications.notificationsEnabled,
-                ),
-              ],
-            ),
-            SettingsSection(
-              title: 'Information',
-              tiles: [
-                SettingsTile(
-                  title: 'Privacy Policy', 
-                  leading: Icon(Icons.description),
-                  onTap: () {
-                    _launchURL('https://raw.githubusercontent.com/mlim15/nowcasting/master/privacy-policy.txt');
-                  },
-                ),
-                //SettingsTile(
-                //  title: 'Source Licenses',
-                //  leading: Icon(Icons.collections_bookmark),
-                //  onTap: () {
-                //    
-                //  }
-                //),
-              ],
-            )
-          ],
-        ),
+                      width: 128,
+                      child: Slider.adaptive(
+                        activeColor: ux.nowcastingColor,
+                        min: 0,
+                        max: 8,
+                        divisions: 9,
+                        value: notifications.maxLookahead.toDouble(),
+                        onChanged: notifications.notificationsEnabled
+                            ? (value) {
+                                notifications.updateDataUsageEstimate();
+                                setState(() {
+                                  notifications.maxLookahead = value.toInt();
+                                });
+                                io.saveNotificationPreferences();
+                              }
+                            : null,
+                      ))),
+              SettingsTile(
+                title: 'Estimated Data Usage',
+                subtitle: notifications.notificationsEnabled
+                    ? 'Up to ' +
+                        notifications.dataUsage.toStringAsFixed(1) +
+                        ' MB/day'
+                    : 'No data will be used in the background.',
+                leading: Icon(MdiIcons.gauge),
+                enabled: notifications.notificationsEnabled,
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: 'Information',
+            tiles: [
+              SettingsTile(
+                title: 'Privacy Policy',
+                leading: Icon(Icons.description),
+                onTap: () {
+                  _launchURL(
+                      'https://raw.githubusercontent.com/mlim15/nowcasting/master/privacy-policy.txt');
+                },
+              ),
+              //SettingsTile(
+              //  title: 'Source Licenses',
+              //  leading: Icon(Icons.collections_bookmark),
+              //  onTap: () {
+              //
+              //  }
+              //),
+            ],
+          )
+        ],
+      ),
     );
   }
 }

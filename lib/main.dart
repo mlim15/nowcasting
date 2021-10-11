@@ -9,14 +9,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 import 'package:package_info/package_info.dart';
 
-import 'package:Nowcasting/UI-onboarding.dart' as onboarding;
-import 'package:Nowcasting/UI-map.dart' as map;
-import 'package:Nowcasting/UI-forecast.dart' as forecast;
-import 'package:Nowcasting/UI-info.dart' as info;
-import 'package:Nowcasting/support-ux.dart' as ux;
-import 'package:Nowcasting/support-io.dart' as io;
-import 'package:Nowcasting/support-update.dart' as update;
-import 'package:Nowcasting/support-notifications.dart' as notifications;
+import 'package:nowcasting/UI-onboarding.dart' as onboarding;
+import 'package:nowcasting/UI-map.dart' as map;
+import 'package:nowcasting/UI-forecast.dart' as forecast;
+import 'package:nowcasting/UI-info.dart' as info;
+import 'package:nowcasting/support-ux.dart' as ux;
+import 'package:nowcasting/support-io.dart' as io;
+import 'package:nowcasting/support-update.dart' as update;
+import 'package:nowcasting/support-notifications.dart' as notifications;
 
 // TODO animate splash screen
 // TODO localization including map images... maybe generate/redownload with localized per-region names?
@@ -68,7 +68,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  static const String _title = 'MAPLE Nowcasting';
+  static const String _title = 'MAPLE nowcasting';
   @override
   Widget build(BuildContext context) {
     return MaterialApp (
